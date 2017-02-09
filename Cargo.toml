@@ -1,0 +1,8 @@
+[package]
+name = "enumflags"
+version = "0.1.0"
+authors = ["maik klein <maikklein@googlemail.com>"]
+
+[dependencies]
+
+num = "0.1.36"
