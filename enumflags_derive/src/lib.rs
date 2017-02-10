@@ -14,7 +14,7 @@ pub fn derive_enum_flags(input: TokenStream) -> TokenStream {
 
     let quote_tokens = match ast.body {
         Body::Enum(ref data) => gen_enumflags(&ast.ident, &ast, data),
-        _ => panic!("`derive(Enum*)` may only be applied to enum items"),
+        _ => panic!("`derive(EnumFlags)` may only be applied to enums"),
     };
 
     // println!("{:?}", quote_tokens);
@@ -32,7 +32,6 @@ fn max_value_of(ty: &str) -> Option<usize> {
 }
 
 fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Tokens {
-    println!("{:?}", item);
     let variants: Vec<_> = data.iter().map(|v| v.ident.clone()).collect();
     let variants_ref = &variants;
     let flag_values: Vec<_> = data.iter()
@@ -74,7 +73,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             format!("Value '0b{val:b}' is too big for an {ty}",
                     val = max_flag_value,
                     ty = ty));
-    let mut wrong_flag_values: &Vec<_> = &flag_values.iter()
+    let wrong_flag_values: &Vec<_> = &flag_values.iter()
         .enumerate()
         .map(|(i, &val)| {
             (i,
@@ -94,8 +93,6 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
                     value = flag_values[index])
         })
         .collect();
-    println!("{:?}", wrong_flag_values);
-
     assert!(wrong_flag_values.len() == 0,
             format!("The following flags are not unique: {data:?}",
                      data = wrong_flag_values));
@@ -195,7 +192,6 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
                 let new_val = *self ^ other;
                 *self = new_val;
             }
-
         }
 
         impl Into<#ty> for #inner_name{
@@ -271,15 +267,6 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
                 (l | r).into()
             }
         }
-
-        //impl ::std::ops::BitOr<enumflags::BitFlags<#ident>> for #ident {
-        //    type Output = enumflags::BitFlags<#ident>;
-        //    fn bitor(self, other: enumflags::BitFlags<#ident>) -> Self::Output {
-        //        let l: enumflags::BitFlags<#ident> = self.into();
-        //        let r = other;
-        //        (l | r)
-        //    }
-        //}
 
         impl ::std::ops::BitAnd for #ident {
             type Output = enumflags::BitFlags<#ident>;

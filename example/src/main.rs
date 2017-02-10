@@ -18,6 +18,9 @@ fn print_test<B: Into<BitFlags<Test>>>(bitflag: B) {
 
 fn main() {
     // BitFlags { 0b1111, Flags::[A, B, C, D] }
+    print_test(BitFlags::<Test>::all());
+
+    // BitFlags { 0b1111, Flags::[A, B, C, D] }
     print_test(BitFlags::all());
 
     // BitFlags { 0b0, Flags::[] }
