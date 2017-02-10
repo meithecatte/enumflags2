@@ -3,6 +3,13 @@
 
 ## Features
 
+- [x] Uses enums to represent BitFlags
+- [x] Detects incorrect BitFlags at compile time
+- [x] Has a similar API compared to the popular `bitfields` crate
+- [x] Does not expose the generated types explicity. The user interacts exclusivly with `struct BitFields<Enum>;`
+- [x] Better debugging by printing the binary flag value as well as the flag enums `BitFlags { 0b1111, Flags::[A, B, C, D] }`
+
+
 #### Detects incorrect flags values
 
 ```Rust
@@ -74,6 +81,7 @@ error: custom derive attribute panicked
   |
   = help: message: At least one variant was not initialized explicity with a value.
 ```
+
 
 ```Rust
 extern crate enumflags;
