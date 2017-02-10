@@ -5,7 +5,6 @@ authors = ["maik klein <maikklein@googlemail.com>"]
 description = "Bitflags"
 license = "MIT"
 repository = "https://github.com/MaikKlein/enumflags"
-readme = "README.md"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
 
 [dependencies]
