@@ -9,7 +9,6 @@
 - [x] Does not expose the generated types explicity. The user interacts exclusivly with `struct BitFields<Enum>;`.
 - [x] Prints the binary flag value as well as the flag enums `BitFlags { 0b1111, Flags::[A, B, C, D] }`.
 
-
 #### Detects incorrect flags values
 
 ```Rust

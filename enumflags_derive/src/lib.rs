@@ -17,7 +17,7 @@ pub fn derive_enum_flags(input: TokenStream) -> TokenStream {
         _ => panic!("`derive(Enum*)` may only be applied to enum items"),
     };
 
-    //println!("{:?}", quote_tokens);
+    // println!("{:?}", quote_tokens);
     quote_tokens.parse().unwrap()
 }
 
@@ -74,7 +74,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             format!("Value '0b{val:b}' is too big for an {ty}",
                     val = max_flag_value,
                     ty = ty));
-    let mut wrong_flag_values: Vec<_> = flag_values.iter()
+    let mut wrong_flag_values: &Vec<_> = &flag_values.iter()
         .enumerate()
         .map(|(i, &val)| {
             (i,
@@ -86,19 +86,19 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
                 }
             }))
         })
+        .filter(|&(_, count)| count > 0)
+        .map(|(index, _)| {
+            format!("{name}::{variant} = 0b{value:b}",
+                    name = ident,
+                    variant = variants_ref[index],
+                    value = flag_values[index])
+        })
         .collect();
-    wrong_flag_values.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
+    println!("{:?}", wrong_flag_values);
 
-    let index_wrong_val = wrong_flag_values.iter().nth(0);
-
-    if let Some(&(index, count)) = index_wrong_val {
-        assert!(count <= 1,
-                format!("{name}::{variant} = 0b{value:b} is not unique value.",
-                        name = ident,
-                        variant = variants[index],
-                        value = flag_values[index]));
-
-    }
+    assert!(wrong_flag_values.len() == 0,
+            format!("The following flags are not unique: {data:?}",
+                     data = wrong_flag_values));
     let inner_name = Ident::new(format!("Inner{}", ident));
     quote!{
         #[derive(Copy, Clone, Eq, PartialEq, Hash)]
@@ -168,6 +168,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             }
 
             fn from_bits(bits: #ty) -> Option<Self> {
+                println!("{:?}", #inner_name(bits) & Self::all().not());
                 if #inner_name(bits) & Self::all().not() == Self::empty(){
                     Some(#inner_name(bits))
                 }
