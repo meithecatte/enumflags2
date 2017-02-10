@@ -5,7 +5,7 @@
 
 #### Detects incorrect flags values
 
-```
+```Rust
 #[derive(EnumFlags, Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum Test {
@@ -17,7 +17,7 @@ pub enum Test {
 ```
 
 Error:
-```
+```Rust
 error: custom derive attribute panicked
  --> src/main.rs:6:10
   |
@@ -29,7 +29,7 @@ error: custom derive attribute panicked
 
 
 #### Detects flags that are too big
-```
+```Rust
 #[derive(EnumFlags, Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum Test {
@@ -41,7 +41,7 @@ pub enum Test {
 ```
 
 Error:
-```
+```Rust
 error: custom derive attribute panicked
  --> src/main.rs:6:10
   |
@@ -53,7 +53,7 @@ error: custom derive attribute panicked
 
 #### Detects missing flags
 
-```
+```Rust
 #[derive(EnumFlags, Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum Test {
@@ -65,7 +65,7 @@ pub enum Test {
 ```
 
 Error:
-```
+```Rust
 error: custom derive attribute panicked
  --> src/main.rs:6:10
   |
@@ -75,7 +75,7 @@ error: custom derive attribute panicked
   = help: message: At least one variant was not initialized explicity with a value.
 ```
 
-```
+```Rust
 extern crate enumflags;
 #[macro_use]
 extern crate enumflags_derive;
