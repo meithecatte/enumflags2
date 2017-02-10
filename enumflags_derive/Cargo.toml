@@ -2,6 +2,11 @@
 name = "enumflags_derive"
 version = "0.1.0"
 authors = ["maik klein <maikklein@googlemail.com>"]
+description = "Bitflags"
+license = "MIT"
+repository = "https://github.com/MaikKlein/enumflags"
+readme = "README.md"
+keywords = ["enum", "bitflag", "flag", "bitflags"]
 
 [dependencies]
 syn = "0.11.4"
