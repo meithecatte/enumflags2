@@ -1,5 +1,18 @@
 #Bitflags in Rust
 
+## Usage
+
+Cargo.toml
+```Toml
+enumflags = "0.1.0"
+enumflags_derive = "0.1.0"
+```
+
+```Rust
+extern crate enumflags;
+#[macro_use]
+extern crate enumflags_derive;
+```
 
 ## Features
 
