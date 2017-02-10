@@ -157,7 +157,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             }
 
             fn contains(self, other: Self) -> bool{
-                (self & other) == self
+                (self & other) == other
             }
 
             fn not(self) -> Self {
