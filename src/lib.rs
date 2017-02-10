@@ -5,11 +5,12 @@ use std::ops::{BitOr, BitAnd, BitXor, Not};
 use std::cmp;
 
 pub trait EnumFlagSize {
-    type Size: InnerBitflag;
+    type Size: InnerBitFlags;
 }
 
-pub trait InnerBitflag: BitOr<Self> + cmp::PartialEq + cmp::Eq
-    where Self: Sized{
+pub trait InnerBitFlags: BitOr<Self> + cmp::PartialEq + cmp::Eq
+    where Self: Sized
+{
     type Type;
     fn all() -> Self;
     fn empty() -> Self;
@@ -27,99 +28,99 @@ pub trait InnerBitflag: BitOr<Self> + cmp::PartialEq + cmp::Eq
 }
 
 #[derive(Eq, Copy, Clone)]
-pub struct Bitflag<T: EnumFlagSize> {
+pub struct BitFlags<T: EnumFlagSize> {
     val: T::Size,
 }
 
-impl<T> ::std::fmt::Debug for Bitflag<T>
+impl<T> ::std::fmt::Debug for BitFlags<T>
     where T: EnumFlagSize,
           T::Size: ::std::fmt::Debug
 {
     fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        fmt.write_str(&format!("Bitflag {o} {inner:?} {c} ",
+        fmt.write_str(&format!("BitFlags {o} {inner:?} {c} ",
                                o = "{",
                                inner = self.val,
                                c = "}"))
     }
 }
 
-impl<T> Bitflag<T>
+impl<T> BitFlags<T>
     where T: EnumFlagSize
 {
-    /// Create a new Bitflag unsafely. Consider using `from_bits` or `from_bits_truncate`.
+    /// Create a new BitFlags unsafely. Consider using `from_bits` or `from_bits_truncate`.
     pub unsafe fn new(val: T::Size) -> Self {
-        Bitflag { val: val }
+        BitFlags { val: val }
     }
 }
 
-impl<T> Bitflag<T>
+impl<T> BitFlags<T>
     where T: EnumFlagSize,
-          T::Size: InnerBitflag + Into<Bitflag<T>>
+          T::Size: InnerBitFlags + Into<BitFlags<T>>
 {
-    /// Create an empty Bitflag. Empty means `0`.
-    pub fn empty() -> Self{
+    /// Create an empty BitFlags. Empty means `0`.
+    pub fn empty() -> Self {
         T::Size::empty().into()
     }
 
     /// Sets all flags.
-    pub fn all() -> Self{
+    pub fn all() -> Self {
         T::Size::all().into()
     }
 
     /// Returns true if all flags are set
-    pub fn is_all(self) -> bool{
+    pub fn is_all(self) -> bool {
         self.val.is_all()
     }
 
     /// Returns true if no flag is set
-    pub fn is_empty(self) -> bool{
+    pub fn is_empty(self) -> bool {
         self.val.is_empty()
     }
 
     /// Returns the underlying type value
-    pub fn bits(self) -> <T::Size as InnerBitflag>::Type {
+    pub fn bits(self) -> <T::Size as InnerBitFlags>::Type {
         self.val.bits()
     }
 
     /// Returns true if at least one flag is shared.
-    pub fn intersects<B: Into<Bitflag<T>>>(self, other: B) -> bool{
+    pub fn intersects<B: Into<BitFlags<T>>>(self, other: B) -> bool {
         T::Size::intersects(self.val, other.into().val)
     }
 
     /// Returns true iff all flags are contained.
-    pub fn contains<B: Into<Bitflag<T>>>(self, other: B) -> bool{
+    pub fn contains<B: Into<BitFlags<T>>>(self, other: B) -> bool {
         T::Size::contains(self.val, other.into().val)
     }
 
     /// Flips all flags
-    pub fn not(self) -> Self{
+    pub fn not(self) -> Self {
         self.val.not().into()
     }
 
-    /// Returns a Bitflag iff the bits value does not contain any illegal flags.
-    pub fn from_bits(bits: <T::Size as InnerBitflag>::Type) -> Option<Self>{
+    /// Returns a BitFlags iff the bits value does not contain any illegal flags.
+    pub fn from_bits(bits: <T::Size as InnerBitFlags>::Type) -> Option<Self> {
         T::Size::from_bits(bits).map(|v| v.into())
     }
 
     /// Truncates flags that are illegal
-    pub fn from_bits_truncate(bits: <T::Size as InnerBitflag>::Type) -> Self{
+    pub fn from_bits_truncate(bits: <T::Size as InnerBitFlags>::Type) -> Self {
         T::Size::from_bits_truncate(bits).into()
     }
 
-    pub fn toggle(&mut self, other: Self){
+    pub fn toggle(&mut self, other: Self) {
         T::Size::toggle(&mut self.val, other.val);
     }
 
-    pub fn insert(&mut self, other: Self){
+    pub fn insert(&mut self, other: Self) {
         T::Size::insert(&mut self.val, other.val);
     }
 
-    pub fn remove(&mut self, other: Self){
+    pub fn remove(&mut self, other: Self) {
         T::Size::remove(&mut self.val, other.val);
     }
 }
 
-impl<T> std::cmp::PartialEq for Bitflag<T>
+impl<T> std::cmp::PartialEq for BitFlags<T>
     where T: EnumFlagSize
 {
     fn eq(&self, other: &Self) -> bool {
@@ -127,42 +128,55 @@ impl<T> std::cmp::PartialEq for Bitflag<T>
     }
 }
 
-impl<T> std::ops::BitOr for Bitflag<T>
-    where T: EnumFlagSize ,
-          T::Size: BitOr<T::Size, Output = T::Size> + Into<Bitflag<T>>
+// impl<T> std::ops::BitOr for BitFlags<T>
+//    where T: EnumFlagSize ,
+//          T::Size: BitOr<T::Size, Output = T::Size> + Into<BitFlags<T>>
+// {
+//    type Output = BitFlags<T>;
+//    fn bitor(self, other: Self) -> BitFlags<T> {
+//        (self.val | other.val).into()
+//    }
+// }
+
+impl<T, B> std::ops::BitOr<B> for BitFlags<T>
+    where T: EnumFlagSize,
+          B: Into<BitFlags<T>>,
+          T::Size: BitOr<T::Size, Output = T::Size> + Into<BitFlags<T>>
 {
-    type Output = Bitflag<T>;
-    fn bitor(self, other: Self) -> Bitflag<T> {
-        (self.val | other.val).into()
+    type Output = BitFlags<T>;
+    fn bitor(self, other: B) -> BitFlags<T> {
+        (self.val | other.into().val).into()
     }
 }
 
-impl<T> std::ops::BitAnd for Bitflag<T>
+impl<T, B> std::ops::BitAnd<B> for BitFlags<T>
     where T: EnumFlagSize,
-          T::Size: BitAnd<T::Size, Output = T::Size> + Into<Bitflag<T>>
+          B: Into<BitFlags<T>>,
+          T::Size: BitAnd<T::Size, Output = T::Size> + Into<BitFlags<T>>
 {
-    type Output = Bitflag<T>;
-    fn bitand(self, other: Self) -> Bitflag<T> {
-        (self.val & other.val).into()
+    type Output = BitFlags<T>;
+    fn bitand(self, other: B) -> BitFlags<T> {
+        (self.val & other.into().val).into()
     }
 }
 
-impl<T> std::ops::BitXor for Bitflag<T>
+impl<T, B> std::ops::BitXor<B> for BitFlags<T>
     where T: EnumFlagSize,
-          T::Size: BitXor<T::Size, Output = T::Size> + Into<Bitflag<T>>
+          B: Into<BitFlags<T>>,
+          T::Size: BitXor<T::Size, Output = T::Size> + Into<BitFlags<T>>
 {
-    type Output = Bitflag<T>;
-    fn bitxor(self, other: Self) -> Bitflag<T> {
-        (self.val ^ other.val).into()
+    type Output = BitFlags<T>;
+    fn bitxor(self, other: B) -> BitFlags<T> {
+        (self.val ^ other.into().val).into()
     }
 }
 
-impl<T> std::ops::Not for Bitflag<T>
+impl<T> std::ops::Not for BitFlags<T>
     where T: EnumFlagSize,
-          T::Size: Not<Output = T::Size> + Into<Bitflag<T>>
+          T::Size: Not<Output = T::Size> + Into<BitFlags<T>>
 {
-    type Output = Bitflag<T>;
-    fn not(self) -> Bitflag<T> {
+    type Output = BitFlags<T>;
+    fn not(self) -> BitFlags<T> {
         (!self.val).into()
     }
 }
