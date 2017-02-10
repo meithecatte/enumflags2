@@ -1,6 +1,3 @@
-extern crate num;
-
-use num::{Unsigned, Zero};
 use std::ops::{BitOr, BitAnd, BitXor, Not};
 use std::cmp;
 

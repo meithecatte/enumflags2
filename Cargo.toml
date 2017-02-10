@@ -2,7 +2,11 @@
 name = "enumflags"
 version = "0.1.0"
 authors = ["maik klein <maikklein@googlemail.com>"]
+description = "Bitflags"
+license = "MIT"
+repository = "https://github.com/MaikKlein/enumflags"
+readme = "README.md"
+keywords = ["enum", "bitflag", "flag", "bitflags"]
+documentation = "https://docs.rs/enumflags"
 
 [dependencies]
-
-num = "0.1.36"
