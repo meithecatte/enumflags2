@@ -1,6 +1,6 @@
 [package]
 name = "enumflags"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["maik klein <maikklein@googlemail.com>"]
 description = "Bitflags"
 license = "MIT"
