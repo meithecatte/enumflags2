@@ -68,9 +68,9 @@ fn main() {
     // true
     println!("{}", flag1.contains(Test::A | Test::B));
 
-    // true
+    // false
     println!("{}", flag1.contains(Test::A | Test::B | Test::C));
 
-    // false
+    // true
     println!("{}", flag1.contains(Test::A));
 }
