@@ -11,8 +11,8 @@
 Cargo.toml
 ```Toml
 [dependencies]
-enumflags = "0.1.0"
-enumflags_derive = "0.1.0"
+enumflags = "*"
+enumflags_derive = "*"
 ```
 
 ```Rust
