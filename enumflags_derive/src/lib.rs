@@ -227,7 +227,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
                         _ => None
                     }
                 }).collect();
-                fmt.write_str(&format!("0b{:b}, Flags::", self.0));
+                fmt.write_str(&format!("0b{:b}, Flags::", self.0))?;
                 fmt.debug_list().entries(v.iter()).finish()
             }
         }
