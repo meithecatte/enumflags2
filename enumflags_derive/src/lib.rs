@@ -212,9 +212,9 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             }
         }
 
-        impl Into<BitFlags<#ident>> for #inner_name{
-            fn into(self) -> BitFlags<#ident> {
-                unsafe{ BitFlags::new(self)}
+        impl Into<enumflags::BitFlags<#ident>> for #inner_name{
+            fn into(self) -> enumflags::BitFlags<#ident> {
+                unsafe{ enumflags::BitFlags::new(self)}
             }
         }
 
