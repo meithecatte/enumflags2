@@ -245,11 +245,11 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
 
            pub fn max_bitflag() -> enumflags::BitFlags<#ident> {
                let val = (#(#flag_values_ref1)|*) as #ty;
-               unsafe{ BitFlags::new(#inner_name(val)) }
+               unsafe{ enumflags::BitFlags::new(#inner_name(val)) }
            }
 
            pub fn empty_bitflag() -> enumflags::BitFlags<#ident>{
-               unsafe{ BitFlags::new(#inner_name(0)) }
+               unsafe{ enumflags::BitFlags::new(#inner_name(0)) }
            }
         }
 
