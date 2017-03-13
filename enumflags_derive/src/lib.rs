@@ -129,7 +129,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             }
         }
 
-        impl enumflags::InnerBitFlags for #inner_name{
+        impl ::enumflags::InnerBitFlags for #inner_name{
             type Type = #ty;
             fn all() -> Self {
                let val = (#(#flag_values_ref1)|*) as #ty;
@@ -212,9 +212,9 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             }
         }
 
-        impl Into<enumflags::BitFlags<#ident>> for #inner_name{
-            fn into(self) -> enumflags::BitFlags<#ident> {
-                unsafe{ enumflags::BitFlags::new(self)}
+        impl Into<::enumflags::BitFlags<#ident>> for #inner_name{
+            fn into(self) -> ::enumflags::BitFlags<#ident> {
+                unsafe{ ::enumflags::BitFlags::new(self)}
             }
         }
 
@@ -233,7 +233,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
         }
 
         impl #ident{
-           pub fn from_bitflag(bitflag: enumflags::BitFlags<#ident>) -> Vec<#ident> {
+           pub fn from_bitflag(bitflag: ::enumflags::BitFlags<#ident>) -> Vec<#ident> {
                #flag_values_ref1.iter().filter_map(|val|{
                    let val = *val as #ty & bitflag.bits();
                    match val {
@@ -243,24 +243,24 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
                }).collect()
            }
 
-           pub fn max_bitflag() -> enumflags::BitFlags<#ident> {
+           pub fn max_bitflag() -> ::enumflags::BitFlags<#ident> {
                let val = (#(#flag_values_ref1)|*) as #ty;
-               unsafe{ enumflags::BitFlags::new(#inner_name(val)) }
+               unsafe{ ::enumflags::BitFlags::new(#inner_name(val)) }
            }
 
-           pub fn empty_bitflag() -> enumflags::BitFlags<#ident>{
-               unsafe{ enumflags::BitFlags::new(#inner_name(0)) }
+           pub fn empty_bitflag() -> ::enumflags::BitFlags<#ident>{
+               unsafe{ ::enumflags::BitFlags::new(#inner_name(0)) }
            }
         }
 
-        impl From<#ident> for enumflags::BitFlags<#ident> {
+        impl From<#ident> for ::enumflags::BitFlags<#ident> {
             fn from(t: #ident) -> Self {
-                unsafe { enumflags::BitFlags::new(t.into()) }
+                unsafe { ::enumflags::BitFlags::new(t.into()) }
             }
         }
 
         impl ::std::ops::BitOr for #ident {
-            type Output = enumflags::BitFlags<#ident>;
+            type Output = ::enumflags::BitFlags<#ident>;
             fn bitor(self, other: Self) -> Self::Output {
                 let l: #inner_name = self.into();
                 let r: #inner_name = other.into();
@@ -269,7 +269,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
         }
 
         impl ::std::ops::BitAnd for #ident {
-            type Output = enumflags::BitFlags<#ident>;
+            type Output = ::enumflags::BitFlags<#ident>;
             fn bitand(self, other: Self) -> Self::Output {
                 let l: #inner_name = self.into();
                 let r: #inner_name = other.into();
@@ -278,7 +278,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
         }
 
         impl ::std::ops::BitXor for #ident {
-            type Output = enumflags::BitFlags<#ident>;
+            type Output = ::enumflags::BitFlags<#ident>;
             fn bitxor(self, other: Self) -> Self::Output {
                 let l: #inner_name = self.into();
                 let r: #inner_name = other.into();
@@ -287,14 +287,14 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
         }
 
         impl ::std::ops::Not for #ident {
-            type Output = enumflags::BitFlags<#ident>;
+            type Output = ::enumflags::BitFlags<#ident>;
             fn not(self) -> Self::Output {
                 let r: #inner_name = self.into();
                 (!r).into()
             }
         }
 
-        impl enumflags::EnumFlagSize for #ident {
+        impl ::enumflags::EnumFlagSize for #ident {
             type Size = #inner_name;
         }
     }
