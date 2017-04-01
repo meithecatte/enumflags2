@@ -1,5 +1,7 @@
-use std::ops::{BitOr, BitAnd, BitXor, Not};
-use std::cmp;
+#![no_std]
+
+use core::ops::{BitOr, BitAnd, BitXor, Not};
+use core::cmp;
 
 pub trait EnumFlagSize {
     type Size: InnerBitFlags;
@@ -29,15 +31,16 @@ pub struct BitFlags<T: EnumFlagSize> {
     val: T::Size,
 }
 
-impl<T> ::std::fmt::Debug for BitFlags<T>
+impl<T> ::core::fmt::Debug for BitFlags<T>
     where T: EnumFlagSize,
-          T::Size: ::std::fmt::Debug
+          T::Size: ::core::fmt::Debug
 {
-    fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        fmt.write_str(&format!("BitFlags {o} {inner:?} {c} ",
-                               o = "{",
-                               inner = self.val,
-                               c = "}"))
+    fn fmt(&self, fmt: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(fmt,
+               "BitFlags {} {:?} {} ",
+               "{",
+               self.val,
+               "}")
     }
 }
 
@@ -117,7 +120,7 @@ impl<T> BitFlags<T>
     }
 }
 
-impl<T> std::cmp::PartialEq for BitFlags<T>
+impl<T> core::cmp::PartialEq for BitFlags<T>
     where T: EnumFlagSize
 {
     fn eq(&self, other: &Self) -> bool {
@@ -125,7 +128,7 @@ impl<T> std::cmp::PartialEq for BitFlags<T>
     }
 }
 
-// impl<T> std::ops::BitOr for BitFlags<T>
+// impl<T> core::ops::BitOr for BitFlags<T>
 //    where T: EnumFlagSize ,
 //          T::Size: BitOr<T::Size, Output = T::Size> + Into<BitFlags<T>>
 // {
@@ -135,7 +138,7 @@ impl<T> std::cmp::PartialEq for BitFlags<T>
 //    }
 // }
 
-impl<T, B> std::ops::BitOr<B> for BitFlags<T>
+impl<T, B> core::ops::BitOr<B> for BitFlags<T>
     where T: EnumFlagSize,
           B: Into<BitFlags<T>>,
           T::Size: BitOr<T::Size, Output = T::Size> + Into<BitFlags<T>>
@@ -146,7 +149,7 @@ impl<T, B> std::ops::BitOr<B> for BitFlags<T>
     }
 }
 
-impl<T, B> std::ops::BitAnd<B> for BitFlags<T>
+impl<T, B> core::ops::BitAnd<B> for BitFlags<T>
     where T: EnumFlagSize,
           B: Into<BitFlags<T>>,
           T::Size: BitAnd<T::Size, Output = T::Size> + Into<BitFlags<T>>
@@ -157,7 +160,7 @@ impl<T, B> std::ops::BitAnd<B> for BitFlags<T>
     }
 }
 
-impl<T, B> std::ops::BitXor<B> for BitFlags<T>
+impl<T, B> core::ops::BitXor<B> for BitFlags<T>
     where T: EnumFlagSize,
           B: Into<BitFlags<T>>,
           T::Size: BitXor<T::Size, Output = T::Size> + Into<BitFlags<T>>
@@ -168,7 +171,7 @@ impl<T, B> std::ops::BitXor<B> for BitFlags<T>
     }
 }
 
-impl<T> std::ops::Not for BitFlags<T>
+impl<T> core::ops::Not for BitFlags<T>
     where T: EnumFlagSize,
           T::Size: Not<Output = T::Size> + Into<BitFlags<T>>
 {
