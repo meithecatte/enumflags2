@@ -37,10 +37,10 @@ impl<T> ::core::fmt::Debug for BitFlags<T>
 {
     fn fmt(&self, fmt: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(fmt,
-               "BitFlags {} {:?} {} ",
-               "{",
-               self.val,
-               "}")
+               "BitFlags {o} {inner:?} {c} ",
+               o = "{",
+               inner = self.val,
+               c = "}")
     }
 }
 
