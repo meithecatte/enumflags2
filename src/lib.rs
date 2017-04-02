@@ -1,5 +1,9 @@
 #![no_std]
 
+#[allow(private_in_public)]
+#[doc(hidden)]
+pub use core as __core;
+
 use core::ops::{BitOr, BitAnd, BitXor, Not};
 use core::cmp;
 
@@ -31,11 +35,11 @@ pub struct BitFlags<T: EnumFlagSize> {
     val: T::Size,
 }
 
-impl<T> ::core::fmt::Debug for BitFlags<T>
+impl<T> ::__core::fmt::Debug for BitFlags<T>
     where T: EnumFlagSize,
-          T::Size: ::core::fmt::Debug
+          T::Size: ::__core::fmt::Debug
 {
-    fn fmt(&self, fmt: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+    fn fmt(&self, fmt: &mut ::__core::fmt::Formatter) -> ::__core::fmt::Result {
         write!(fmt,
                "BitFlags {o} {inner:?} {c} ",
                o = "{",
