@@ -101,28 +101,28 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
         #[derive(Copy, Clone, Eq, PartialEq, Hash)]
         pub struct #inner_name(#ty);
 
-        impl ::std::ops::BitOr for #inner_name{
+        impl ::core::ops::BitOr for #inner_name{
             type Output = Self;
             fn bitor(self, other: Self) -> Self{
                 #inner_name(self.0 | other.0)
             }
         }
 
-        impl ::std::ops::BitAnd for #inner_name{
+        impl ::core::ops::BitAnd for #inner_name{
             type Output = Self;
             fn bitand(self, other: Self) -> Self{
                 #inner_name(self.0 & other.0)
             }
         }
 
-        impl ::std::ops::BitXor for #inner_name{
+        impl ::core::ops::BitXor for #inner_name{
             type Output = Self;
             fn bitxor(self, other: Self) -> Self{
                 #inner_name(self.0 ^ other.0)
             }
         }
 
-        impl ::std::ops::Not for #inner_name{
+        impl ::core::ops::Not for #inner_name{
             type Output = Self;
             fn not(self) -> Self{
                 #inner_name(!self.0)
@@ -165,7 +165,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             }
 
             fn from_bits(bits: #ty) -> Option<Self> {
-                println!("{:?}", #inner_name(bits) & Self::all().not());
+                // println!("{:?}", #inner_name(bits) & Self::all().not());
                 if #inner_name(bits) & Self::all().not() == Self::empty(){
                     Some(#inner_name(bits))
                 }
@@ -218,17 +218,18 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             }
         }
 
-        impl ::std::fmt::Debug for #inner_name{
-            fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                let v: Vec<_> = #flag_values_ref1.iter().filter_map(|val|{
+        impl ::core::fmt::Debug for #inner_name{
+            fn fmt(&self, fmt: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+                let v = #flag_values_ref1;
+                let v = v.iter().filter_map(|val|{
                     let val: #ty = *val as #ty & self.0;
                     match val {
                         #(#flag_value_names => Some(#names_ref :: #variants_ref),)*
                         _ => None
                     }
-                }).collect();
-                fmt.write_str(&format!("0b{:b}, Flags::", self.0))?;
-                fmt.debug_list().entries(v.iter()).finish()
+                });
+                write!(fmt, "0b{:b}, Flags::", self.0)?;
+                fmt.debug_list().entries(v).finish()
             }
         }
 
@@ -259,7 +260,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             }
         }
 
-        impl ::std::ops::BitOr for #ident {
+        impl ::core::ops::BitOr for #ident {
             type Output = ::enumflags::BitFlags<#ident>;
             fn bitor(self, other: Self) -> Self::Output {
                 let l: #inner_name = self.into();
@@ -268,7 +269,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             }
         }
 
-        impl ::std::ops::BitAnd for #ident {
+        impl ::core::ops::BitAnd for #ident {
             type Output = ::enumflags::BitFlags<#ident>;
             fn bitand(self, other: Self) -> Self::Output {
                 let l: #inner_name = self.into();
@@ -277,7 +278,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             }
         }
 
-        impl ::std::ops::BitXor for #ident {
+        impl ::core::ops::BitXor for #ident {
             type Output = ::enumflags::BitFlags<#ident>;
             fn bitxor(self, other: Self) -> Self::Output {
                 let l: #inner_name = self.into();
@@ -286,7 +287,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             }
         }
 
-        impl ::std::ops::Not for #ident {
+        impl ::core::ops::Not for #ident {
             type Output = ::enumflags::BitFlags<#ident>;
             fn not(self) -> Self::Output {
                 let r: #inner_name = self.into();
