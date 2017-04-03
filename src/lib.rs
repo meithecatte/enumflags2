@@ -1,5 +1,7 @@
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(feature = "std")]
+extern crate core;
 #[allow(private_in_public)]
 #[doc(hidden)]
 pub use core as __core;

@@ -12,12 +12,16 @@ pub fn derive_enum_flags(input: TokenStream) -> TokenStream {
     let input = input.to_string();
     let ast = syn::parse_macro_input(&input).unwrap();
 
+    #[cfg(feature = "std")]
+    let gen_std = true;
+    #[cfg(not(feature = "std"))]
+    let gen_std = false;
     let quote_tokens = match ast.body {
-        Body::Enum(ref data) => gen_enumflags(&ast.ident, &ast, data),
+        Body::Enum(ref data) => gen_enumflags(&ast.ident, &ast, data, gen_std),
         _ => panic!("`derive(EnumFlags)` may only be applied to enums"),
     };
 
-    // println!("{:?}", quote_tokens);
+    //println!("{:?}", quote_tokens);
     quote_tokens.parse().unwrap()
 }
 
@@ -31,7 +35,8 @@ fn max_value_of(ty: &str) -> Option<usize> {
     }
 }
 
-fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Tokens {
+fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std: bool) -> Tokens {
+    println!("gen {}", gen_std);
     let variants: Vec<_> = data.iter().map(|v| v.ident.clone()).collect();
     let variants_ref = &variants;
     let flag_values: Vec<_> = data.iter()
@@ -97,6 +102,24 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
             format!("The following flags are not unique: {data:?}",
                      data = wrong_flag_values));
     let inner_name = Ident::new(format!("Inner{}", ident));
+    let std = if gen_std {
+        quote! {
+            impl #ident{
+                pub fn from_bitflag(bitflag: ::enumflags::BitFlags<#ident>) -> Vec<#ident> {
+                    #flag_values_ref1.iter().filter_map(|val|{
+                        let val = *val as #ty & bitflag.bits();
+                        match val {
+                            #(#flag_value_names => Some(#names_ref :: #variants_ref),)*
+                            _ => None
+                        }
+                    }).collect()
+                }
+            }
+        }
+    }
+    else{
+        quote!{}
+    };
     quote!{
         #[derive(Copy, Clone, Eq, PartialEq, Hash)]
         pub struct #inner_name(#ty);
@@ -220,30 +243,22 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>) -> Token
 
         impl ::enumflags::__core::fmt::Debug for #inner_name{
             fn fmt(&self, fmt: &mut ::enumflags::__core::fmt::Formatter) -> ::enumflags::__core::fmt::Result {
-                //let v = #flag_values_ref1;
-                //let v = v.iter().filter_map(|val|{
-                //    let val: #ty = *val as #ty & self.0;
-                //    match val {
-                //        #(#flag_value_names => Some(#names_ref :: #variants_ref),)*
-                //        _ => None
-                //    }
-                //});
-                write!(fmt, "0b{:b}, Flags::", self.0)
-                //fmt.debug_list().entries(v).finish()
+                let v = #flag_values_ref1;
+                let v = v.iter().filter_map(|val|{
+                    let val: #ty = *val as #ty & self.0;
+                    match val {
+                        #(#flag_value_names => Some(#names_ref :: #variants_ref),)*
+                        _ => None
+                    }
+                });
+                write!(fmt, "0b{:b}, Flags::", self.0);
+                fmt.debug_list().entries(v).finish()
             }
         }
 
-        impl #ident{
-           //pub fn from_bitflag(bitflag: ::enumflags::BitFlags<#ident>) -> Vec<#ident> {
-           //    #flag_values_ref1.iter().filter_map(|val|{
-           //        let val = *val as #ty & bitflag.bits();
-           //        match val {
-           //            #(#flag_value_names => Some(#names_ref :: #variants_ref),)*
-           //            _ => None
-           //        }
-           //    }).collect()
-           //}
+        #std
 
+        impl #ident{
            pub fn max_bitflag() -> ::enumflags::BitFlags<#ident> {
                let val = (#(#flag_values_ref1)|*) as #ty;
                unsafe{ ::enumflags::BitFlags::new(#inner_name(val)) }

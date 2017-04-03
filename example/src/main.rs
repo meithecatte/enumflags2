@@ -2,7 +2,6 @@ extern crate enumflags;
 #[macro_use]
 extern crate enumflags_derive;
 use enumflags::*;
-
 #[derive(EnumFlags, Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum Test {
@@ -43,6 +42,7 @@ fn main() {
 
     // BitFlags { 0b11, Flags::[A, B] }
     let flag1 = Test::A | Test::B;
+    println!("Flags {:?}", Test::from_bitflag(flag1));
     print_test(flag1);
 
     // BitFlags { 0b1100, Flags::[C, D] }

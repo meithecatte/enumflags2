@@ -10,3 +10,7 @@ keywords = ["enum", "bitflag", "flag", "bitflags"]
 documentation = "https://docs.rs/enumflags"
 
 [dependencies]
+
+[features]
+default = ["std"]
+std = []
