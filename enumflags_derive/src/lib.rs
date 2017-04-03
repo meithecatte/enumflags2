@@ -36,7 +36,6 @@ fn max_value_of(ty: &str) -> Option<usize> {
 }
 
 fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std: bool) -> Tokens {
-    println!("gen {}", gen_std);
     let variants: Vec<_> = data.iter().map(|v| v.ident.clone()).collect();
     let variants_ref = &variants;
     let flag_values: Vec<_> = data.iter()
@@ -188,7 +187,6 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
             }
 
             fn from_bits(bits: #ty) -> Option<Self> {
-                // println!("{:?}", #inner_name(bits) & Self::all().not());
                 if #inner_name(bits) & Self::all().not() == Self::empty(){
                     Some(#inner_name(bits))
                 }
