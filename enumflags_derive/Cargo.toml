@@ -15,5 +15,5 @@ quote = "0.3.12"
 proc-macro = true
 
 [features]
-default = ["std"]
-std = []
+default = []
+nostd = []
