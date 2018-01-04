@@ -149,7 +149,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
         impl #std_path::ops::Not for #inner_name{
             type Output = Self;
             fn not(self) -> Self{
-                #inner_name(!self.0)
+                #inner_name(!self.0 & #inner_name::all().0)
             }
         }
 
