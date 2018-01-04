@@ -4,7 +4,7 @@
 [![Crates.io Version](https://img.shields.io/crates/v/enumflags.svg)](https://crates.io/crates/enumflags)
 
 
-#Bitflags in Rust
+# Bitflags
 
 ## Usage
 
