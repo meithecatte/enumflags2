@@ -122,196 +122,69 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
         quote!{}
     };
     quote!{
-        #[derive(Copy, Clone, Eq, PartialEq, Hash)]
-        pub struct #inner_name(#ty);
-
-        impl #std_path::ops::BitOr for #inner_name{
-            type Output = Self;
-            fn bitor(self, other: Self) -> Self{
-                #inner_name(self.0 | other.0)
+        impl #std_path::ops::Not for #ident{
+            type Output = ::enumflags::BitFlags<#ident>;
+            fn not(self) -> Self::Output {
+                unsafe { BitFlags::new(self.bits()).not() }
             }
         }
 
-        impl #std_path::ops::BitAnd for #inner_name{
-            type Output = Self;
-            fn bitand(self, other: Self) -> Self{
-                #inner_name(self.0 & other.0)
+        impl #std_path::ops::BitOr for #ident{
+            type Output = ::enumflags::BitFlags<#ident>;
+            fn bitor(self, other: Self) -> Self::Output {
+                unsafe { BitFlags::new(self.bits() | other.bits())}
             }
         }
 
-        impl #std_path::ops::BitXor for #inner_name{
-            type Output = Self;
-            fn bitxor(self, other: Self) -> Self{
-                #inner_name(self.0 ^ other.0)
+        impl #std_path::ops::BitAnd for #ident{
+            type Output = ::enumflags::BitFlags<#ident>;
+            fn bitand(self, other: Self) -> Self::Output {
+                unsafe { BitFlags::new(self.bits() & other.bits())}
             }
         }
 
-        impl #std_path::ops::Not for #inner_name{
-            type Output = Self;
-            fn not(self) -> Self{
-                #inner_name(!self.0 & #inner_name::all().0)
+        impl #std_path::ops::BitXor for #ident{
+            type Output = ::enumflags::BitFlags<#ident>;
+            fn bitxor(self, other: Self) -> Self::Output {
+                unsafe { BitFlags::new(Self::xor(self.bits(), other.bits())) }
             }
         }
 
-        impl ::enumflags::InnerBitFlags for #inner_name{
+        impl ::enumflags::BitFlagsFmt for #ident {
+            fn fmt(flags: ::enumflags::BitFlags<#ident>,
+                   fmt: &mut #std_path::fmt::Formatter)
+                   -> #std_path::fmt::Result {
+                let v:Vec<&str> =
+                    [#((#names_ref :: #variants_ref).bits(),)*]
+                    .iter()
+                    .filter_map(|val|{
+                        let val: #ty = *val as #ty & flags.bits();
+                        match val {
+                            #(#flag_value_names => Some(stringify!(#variants_ref)),)*
+                            _ => None
+                        }
+                    })
+                    .collect();
+                write!(fmt, "BitFlags<{}>(0b{:b}, [{}]) ",
+                       stringify!(#ident),
+                       flags.bits(),
+                       v.join(", "))
+            }
+        }
+
+        impl ::enumflags::RawBitFlags for #ident {
             type Type = #ty;
-            fn all() -> Self {
-               let val = (#(#flag_values_ref1)|*) as #ty;
-               #inner_name(val)
-            }
 
-            fn empty() -> Self {
-                #inner_name(0)
-            }
-
-            fn is_empty(self) -> bool {
-                self == Self::empty()
-            }
-
-            fn is_all(self) -> bool {
-                self == Self::all()
+            fn all() -> Self::Type {
+               (#(#flag_values_ref1)|*) as #ty
             }
 
             fn bits(self) -> Self::Type {
-                self.0
-            }
-
-            fn intersects(self, other: Self) -> bool{
-                (self & other).0 > 0
-            }
-
-            fn contains(self, other: Self) -> bool{
-                (self & other) == other
-            }
-
-            fn not(self) -> Self {
-                #inner_name(!self.0)
-            }
-
-            fn from_bits(bits: #ty) -> Option<Self> {
-                if #inner_name(bits) & Self::all().not() == Self::empty(){
-                    Some(#inner_name(bits))
-                }
-                else{
-                    None
-                }
-            }
-
-            fn from_bits_truncate(bits: #ty) -> Self {
-                #inner_name(bits) & Self::all()
-            }
-
-            fn insert(&mut self, other: Self){
-                let new_val = *self | other;
-                *self = new_val;
-            }
-
-            fn remove(&mut self, other: Self){
-                let new_val = *self | other.not();
-                *self = new_val;
-            }
-
-            fn toggle(&mut self, other: Self){
-                let new_val = *self ^ other;
-                *self = new_val;
-            }
-        }
-
-        impl Into<#ty> for #inner_name{
-            fn into(self) -> #ty{
-                self.0 as #ty
-            }
-        }
-
-        impl Into<#inner_name> for #ident{
-            fn into(self) -> #inner_name{
-                #inner_name(self.into())
-            }
-        }
-
-        impl Into<#ty> for #ident{
-            fn into(self) -> #ty{
                 self as #ty
             }
         }
 
-        impl Into<::enumflags::BitFlags<#ident>> for #inner_name{
-            fn into(self) -> ::enumflags::BitFlags<#ident> {
-                unsafe{ ::enumflags::BitFlags::new(self)}
-            }
-        }
-
-        impl #std_path::fmt::Debug for #inner_name{
-            fn fmt(&self, fmt: &mut #std_path::fmt::Formatter) -> #std_path::fmt::Result {
-                let v = #flag_values_ref1;
-                let v = v.iter().filter_map(|val|{
-                    let val: #ty = *val as #ty & self.0;
-                    match val {
-                        #(#flag_value_names => Some(#names_ref :: #variants_ref),)*
-                        _ => None
-                    }
-                });
-                write!(fmt, "0b{:b}, Flags::", self.0)?;
-                fmt.debug_list().entries(v).finish()
-            }
-        }
 
         #std
-
-        impl #ident{
-           pub fn max_bitflag() -> ::enumflags::BitFlags<#ident> {
-               let val = (#(#flag_values_ref1)|*) as #ty;
-               unsafe{ ::enumflags::BitFlags::new(#inner_name(val)) }
-           }
-
-           pub fn empty_bitflag() -> ::enumflags::BitFlags<#ident>{
-               unsafe{ ::enumflags::BitFlags::new(#inner_name(0)) }
-           }
-        }
-
-        impl From<#ident> for ::enumflags::BitFlags<#ident> {
-            fn from(t: #ident) -> Self {
-                unsafe { ::enumflags::BitFlags::new(t.into()) }
-            }
-        }
-
-        impl #std_path::ops::BitOr for #ident {
-            type Output = ::enumflags::BitFlags<#ident>;
-            fn bitor(self, other: Self) -> Self::Output {
-                let l: #inner_name = self.into();
-                let r: #inner_name = other.into();
-                (l | r).into()
-            }
-        }
-
-        impl #std_path::ops::BitAnd for #ident {
-            type Output = ::enumflags::BitFlags<#ident>;
-            fn bitand(self, other: Self) -> Self::Output {
-                let l: #inner_name = self.into();
-                let r: #inner_name = other.into();
-                (l & r).into()
-            }
-        }
-
-        impl #std_path::ops::BitXor for #ident {
-            type Output = ::enumflags::BitFlags<#ident>;
-            fn bitxor(self, other: Self) -> Self::Output {
-                let l: #inner_name = self.into();
-                let r: #inner_name = other.into();
-                (l ^ r).into()
-            }
-        }
-
-        impl #std_path::ops::Not for #ident {
-            type Output = ::BitFlags<#ident>;
-            fn not(self) -> Self::Output {
-                let r: #inner_name = self.into();
-                (!r).into()
-            }
-        }
-
-        impl ::enumflags::EnumFlagSize for #ident {
-            type Size = #inner_name;
-        }
     }
 }
