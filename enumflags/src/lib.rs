@@ -127,14 +127,17 @@ where
         unsafe { BitFlags::new(bits & T::all()) }
     }
 
+    /// Toggles the matching bits
     pub fn toggle<B: Into<BitFlags<T>>>(&mut self, other: B) {
         *self = *self ^ other.into();
     }
 
+    /// Inserts the flags into the BitFlag
     pub fn insert<B: Into<BitFlags<T>>>(&mut self, other: B) {
         *self = *self | other.into();
     }
 
+    /// Removes the matching flags
     pub fn remove<B: Into<BitFlags<T>>>(&mut self, other: B) {
         *self = *self & !other.into();
     }

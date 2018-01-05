@@ -46,4 +46,9 @@ fn test_foo() {
     assert_eq!((Test::A | Test::B).bits(), 3);
     assert_eq!((Test::A | Test::B).not().bits(), 12);
     assert_eq!(BitFlags::<Test>::all().bits(), 15);
+    {
+        let mut b = Test::A | Test::B | Test::C;
+        b.remove(Test::B);
+        assert_eq!(b, Test::A | Test::C);
+    }
 }
