@@ -1,8 +1,8 @@
-#![recursion_limit="2048"]
+#![recursion_limit = "2048"]
 extern crate proc_macro;
-extern crate syn;
 #[macro_use]
 extern crate quote;
+extern crate syn;
 use syn::{Body, Ident, MacroInput, Variant};
 use quote::Tokens;
 use proc_macro::TokenStream;
@@ -46,23 +46,32 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
         })
         .collect();
     let flag_values_ref1 = &flag_values;
-    let flag_value_names: &Vec<_> =
-        &flag_values.iter().map(|val| Ident::new(format!("{}", val))).collect();
+    let flag_value_names: &Vec<_> = &flag_values
+        .iter()
+        .map(|val| Ident::new(format!("{}", val)))
+        .collect();
     let names: Vec<_> = flag_values.iter().map(|_| ident.clone()).collect();
     let names_ref = &names;
-    assert!(variants.len() == flag_values.len(),
-            "At least one variant was not initialized explicity with a value.");
+    assert!(
+        variants.len() == flag_values.len(),
+        "At least one variant was not initialized explicity with a value."
+    );
     let ty_attr = item.attrs
         .iter()
         .filter_map(|a| {
             if let syn::MetaItem::List(ref ident, ref items) = a.value {
                 if ident.as_ref() == "repr" {
-                    return items.iter().filter_map(|mi| {
-                        if let &syn::NestedMetaItem::MetaItem(syn::MetaItem::Word(ref ident)) = mi {
+                    return items
+                        .iter()
+                        .filter_map(|mi| {
+                            if let &syn::NestedMetaItem::MetaItem(syn::MetaItem::Word(ref ident)) =
+                                mi
+                            {
                                 return Some(Ident::new(ident.clone()));
-                        }
-                        None
-                    }).nth(0);
+                            }
+                            None
+                        })
+                        .nth(0);
                 }
             }
             None
@@ -71,33 +80,49 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
     let ty = ty_attr.unwrap_or(Ident::new("usize"));
     let max_flag_value = flag_values.iter().max().unwrap();
     let max_allowed_value = max_value_of(ty.as_ref()).expect(&format!("{} is not supported", ty));
-    assert!(*max_flag_value as usize <= max_allowed_value,
-            format!("Value '0b{val:b}' is too big for an {ty}",
-                    val = max_flag_value,
-                    ty = ty));
-    let wrong_flag_values: &Vec<_> = &flag_values.iter()
+    assert!(
+        *max_flag_value as usize <= max_allowed_value,
+        format!(
+            "Value '0b{val:b}' is too big for an {ty}",
+            val = max_flag_value,
+            ty = ty
+        )
+    );
+    let wrong_flag_values: &Vec<_> = &flag_values
+        .iter()
         .enumerate()
         .map(|(i, &val)| {
-            (i,
-             flag_values.iter().enumerate().fold(0u32, |acc, (other_i, &other_val)| {
-                if other_i == i || other_val > 0 && other_val & val == 0 {
-                    acc
-                } else {
-                    acc + 1
-                }
-            }))
+            (
+                i,
+                flag_values
+                    .iter()
+                    .enumerate()
+                    .fold(0u32, |acc, (other_i, &other_val)| {
+                        if other_i == i || other_val > 0 && other_val & val == 0 {
+                            acc
+                        } else {
+                            acc + 1
+                        }
+                    }),
+            )
         })
         .filter(|&(_, count)| count > 0)
         .map(|(index, _)| {
-            format!("{name}::{variant} = 0b{value:b}",
-                    name = ident,
-                    variant = variants_ref[index],
-                    value = flag_values[index])
+            format!(
+                "{name}::{variant} = 0b{value:b}",
+                name = ident,
+                variant = variants_ref[index],
+                value = flag_values[index]
+            )
         })
         .collect();
-    assert!(wrong_flag_values.len() == 0,
-            format!("The following flags are not unique: {data:?}",
-                     data = wrong_flag_values));
+    assert!(
+        wrong_flag_values.len() == 0,
+        format!(
+            "The following flags are not unique: {data:?}",
+            data = wrong_flag_values
+        )
+    );
     let inner_name = Ident::new(format!("Inner{}", ident));
     #[cfg(not(feature = "nostd"))]
     let std_path = Ident::from("::std");
@@ -117,8 +142,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
                 }
             }
         }
-    }
-    else{
+    } else {
         quote!{}
     };
     quote!{

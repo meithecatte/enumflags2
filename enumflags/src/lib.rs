@@ -2,18 +2,22 @@
 extern crate core as std;
 extern crate num;
 
-use std::ops::{BitOr, BitAnd, BitXor, Not};
+use std::ops::{BitAnd, BitOr, BitXor, Not};
 use std::cmp;
-use std::cmp::{PartialEq, Eq,PartialOrd};
-use std::fmt::{self, Formatter, Debug};
+use std::cmp::{Eq, PartialEq, PartialOrd};
+use std::fmt::{self, Debug, Formatter};
 use num::{Num, Zero};
 
-pub trait BitFlagNum: Num + BitOr<Self, Output=Self>
-    + BitAnd<Self, Output=Self>
-    + BitXor<Self, Output=Self>
-    + Not<Output=Self>
+pub trait BitFlagNum
+    : Num
+    + BitOr<Self, Output = Self>
+    + BitAnd<Self, Output = Self>
+    + BitXor<Self, Output = Self>
+    + Not<Output = Self>
     + PartialOrd<Self>
-    + Copy + Clone {}
+    + Copy
+    + Clone {
+}
 
 impl BitFlagNum for u8 {}
 impl BitFlagNum for u16 {}
@@ -22,7 +26,9 @@ impl BitFlagNum for u64 {}
 impl BitFlagNum for usize {}
 
 pub trait BitFlagsFmt
-where Self: RawBitFlags {
+where
+    Self: RawBitFlags,
+{
     fn fmt(flags: BitFlags<Self>, f: &mut Formatter) -> fmt::Result;
 }
 
@@ -34,11 +40,12 @@ pub trait RawBitFlags: Copy + Clone {
 
 #[derive(Copy, Clone)]
 pub struct BitFlags<T: RawBitFlags> {
-    val: T::Type
+    val: T::Type,
 }
 
 impl<T> ::std::fmt::Debug for BitFlags<T>
-    where T: RawBitFlags + BitFlagsFmt
+where
+    T: RawBitFlags + BitFlagsFmt,
 {
     fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         T::fmt(self.clone(), fmt)
@@ -46,7 +53,8 @@ impl<T> ::std::fmt::Debug for BitFlags<T>
 }
 
 impl<T> BitFlags<T>
-    where T: RawBitFlags
+where
+    T: RawBitFlags,
 {
     /// Create a new BitFlags unsafely. Consider using `from_bits` or `from_bits_truncate`.
     pub unsafe fn new(val: T::Type) -> Self {
@@ -54,27 +62,24 @@ impl<T> BitFlags<T>
     }
 }
 
-impl<T: RawBitFlags> From<T> for BitFlags<T>{
-    fn from(t: T) -> BitFlags<T>{
-        BitFlags{
-            val: t.bits()
-        }
+impl<T: RawBitFlags> From<T> for BitFlags<T> {
+    fn from(t: T) -> BitFlags<T> {
+        BitFlags { val: t.bits() }
     }
 }
 
 impl<T> BitFlags<T>
-    where 
-          T: RawBitFlags + Copy,
-T::Type: Copy
+where
+    T: RawBitFlags,
 {
     /// Create an empty BitFlags. Empty means `0`.
     pub fn empty() -> Self {
-        unsafe{BitFlags::new(T::Type::zero())}
+        unsafe { BitFlags::new(T::Type::zero()) }
     }
 
     /// Sets all flags.
     pub fn all() -> Self {
-        unsafe{BitFlags::new(T::all())}
+        unsafe { BitFlags::new(T::all()) }
     }
 
     /// Returns true if all flags are set
@@ -112,33 +117,33 @@ T::Type: Copy
     pub fn from_bits(bits: T::Type) -> Option<Self> {
         if bits & !Self::all().bits() == Self::empty().bits() {
             unsafe { Some(BitFlags::new(bits)) }
-        }
-        else{
+        } else {
             None
         }
     }
 
     /// Truncates flags that are illegal
     pub fn from_bits_truncate(bits: T::Type) -> Self {
-        unsafe{ BitFlags::new(bits & T::all()) }
+        unsafe { BitFlags::new(bits & T::all()) }
     }
 
-    pub fn toggle(&mut self, other: Self) {
-        *self = *self ^ other;
+    pub fn toggle<B: Into<BitFlags<T>>>(&mut self, other: B) {
+        *self = *self ^ other.into();
     }
 
-    pub fn insert(&mut self, other: Self) {
-        *self = *self | other;
+    pub fn insert<B: Into<BitFlags<T>>>(&mut self, other: B) {
+        *self = *self | other.into();
     }
 
-    pub fn remove(&mut self, other: Self) {
-        *self = *self & !other;
+    pub fn remove<B: Into<BitFlags<T>>>(&mut self, other: B) {
+        *self = *self & !other.into();
     }
 }
 
 impl<T, B> std::cmp::PartialEq<B> for BitFlags<T>
-    where T: RawBitFlags,
-          B: Into<BitFlags<T>> + Copy
+where
+    T: RawBitFlags,
+    B: Into<BitFlags<T>> + Copy,
 {
     fn eq(&self, other: &B) -> bool {
         self.bits() == Into::<Self>::into(*other).bits()
@@ -146,40 +151,41 @@ impl<T, B> std::cmp::PartialEq<B> for BitFlags<T>
 }
 
 impl<T, B> std::ops::BitOr<B> for BitFlags<T>
-    where
+where
     T: RawBitFlags,
     B: Into<BitFlags<T>>,
 {
     type Output = BitFlags<T>;
     fn bitor(self, other: B) -> BitFlags<T> {
-        unsafe{BitFlags::new(self.bits() | other.into().bits())}
+        unsafe { BitFlags::new(self.bits() | other.into().bits()) }
     }
 }
 
 impl<T, B> std::ops::BitAnd<B> for BitFlags<T>
-    where
+where
     T: RawBitFlags,
     B: Into<BitFlags<T>>,
 {
     type Output = BitFlags<T>;
     fn bitand(self, other: B) -> BitFlags<T> {
-        unsafe{BitFlags::new(self.bits() & other.into().bits())}
+        unsafe { BitFlags::new(self.bits() & other.into().bits()) }
     }
 }
 
 impl<T, B> std::ops::BitXor<B> for BitFlags<T>
-    where
+where
     T: RawBitFlags,
     B: Into<BitFlags<T>>,
 {
     type Output = BitFlags<T>;
     fn bitxor(self, other: B) -> BitFlags<T> {
-        unsafe{BitFlags::new((self.bits() ^ other.into().bits()) & T::all())}
+        unsafe { BitFlags::new((self.bits() ^ other.into().bits()) & T::all()) }
     }
 }
 
 impl<T> std::ops::Not for BitFlags<T>
-    where T: RawBitFlags
+where
+    T: RawBitFlags,
 {
     type Output = BitFlags<T>;
     fn not(self) -> BitFlags<T> {
