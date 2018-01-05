@@ -3,9 +3,8 @@ extern crate core as std;
 extern crate num;
 
 use std::ops::{BitAnd, BitOr, BitXor, Not};
-use std::cmp;
-use std::cmp::{Eq, PartialEq, PartialOrd};
-use std::fmt::{self, Debug, Formatter};
+use std::cmp::PartialOrd;
+use std::fmt::{self, Formatter};
 use num::{Num, Zero};
 
 pub trait BitFlagNum

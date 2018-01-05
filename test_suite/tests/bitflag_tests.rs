@@ -51,4 +51,5 @@ fn test_foo() {
         b.remove(Test::B);
         assert_eq!(b, Test::A | Test::C);
     }
+    assert_eq!((Test::A ^ Test::B) , Test::A | Test::B);
 }

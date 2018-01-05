@@ -123,7 +123,6 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
             data = wrong_flag_values
         )
     );
-    let inner_name = Ident::new(format!("Inner{}", ident));
     #[cfg(not(feature = "nostd"))]
     let std_path = Ident::from("::std");
     #[cfg(feature = "nostd")]
@@ -173,7 +172,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
         impl #std_path::ops::BitXor for #ident{
             type Output = ::enumflags::BitFlags<#ident>;
             fn bitxor(self, other: Self) -> Self::Output {
-                Into::<#ident>::into(self) ^ other.into()
+                Into::<Self::Output>::into(self) ^ Into::<Self::Output>::into(other)
             }
         }
 
