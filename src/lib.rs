@@ -28,42 +28,8 @@ where Self: RawBitFlags {
 
 pub trait RawBitFlags: Copy + Clone {
     type Type: BitFlagNum;
-
     fn all() -> Self::Type;
     fn bits(self) -> Self::Type;
-
-    fn empty() -> Self::Type {
-        Self::Type::zero()
-    }
-
-    fn intersects(l: Self::Type, r: Self::Type) -> bool {
-        (l & r) > Self::Type::zero()
-    }
-
-    fn contains(l: Self::Type, r: Self::Type) -> bool {
-        (l & r) == r
-    }
-
-    fn xor(l: Self::Type, r: Self::Type) -> Self::Type {
-        (l ^ r) & Self::all()
-    }
-
-    fn not(val: Self::Type) -> Self::Type {
-        !val & Self::all()
-    }
-
-    fn from_bits(bits: Self::Type) -> Option<Self::Type> {
-        if bits & !Self::all() == Self::empty() {
-            Some(bits)
-        }
-        else{
-            None
-        }
-    }
-
-    fn from_bits_truncate(bits: Self::Type) -> Self::Type{
-        bits & Self::all()
-    }
 }
 
 #[derive(Copy, Clone)]
@@ -103,7 +69,7 @@ T::Type: Copy
 {
     /// Create an empty BitFlags. Empty means `0`.
     pub fn empty() -> Self {
-        unsafe{BitFlags::new(T::empty())}
+        unsafe{BitFlags::new(T::Type::zero())}
     }
 
     /// Sets all flags.
@@ -118,7 +84,7 @@ T::Type: Copy
 
     /// Returns true if no flag is set
     pub fn is_empty(self) -> bool {
-        self.val == T::empty()
+        self.val == Self::empty().bits()
     }
 
     /// Returns the underlying type value
@@ -128,27 +94,33 @@ T::Type: Copy
 
     /// Returns true if at least one flag is shared.
     pub fn intersects<B: Into<BitFlags<T>>>(self, other: B) -> bool {
-        T::intersects(self.val, other.into().bits())
+        (self.bits() & other.into().bits()) > Self::empty().bits()
     }
 
     /// Returns true iff all flags are contained.
     pub fn contains<B: Into<BitFlags<T>>>(self, other: B) -> bool {
-        T::contains(self.bits(), other.into().bits())
+        let other = other.into();
+        (self.bits() & other.bits()) == other.bits()
     }
 
     /// Flips all flags
     pub fn not(self) -> Self {
-        unsafe{BitFlags::new(T::not(self.bits()))}
+        unsafe { BitFlags::new(!self.bits() & T::all()) }
     }
 
     /// Returns a BitFlags iff the bits value does not contain any illegal flags.
     pub fn from_bits(bits: T::Type) -> Option<Self> {
-        T::from_bits(bits).map(|val| unsafe {BitFlags::new(val) })
+        if bits & !Self::all().bits() == Self::empty().bits() {
+            unsafe { Some(BitFlags::new(bits)) }
+        }
+        else{
+            None
+        }
     }
 
     /// Truncates flags that are illegal
     pub fn from_bits_truncate(bits: T::Type) -> Self {
-        unsafe { BitFlags::new(T::from_bits_truncate(bits)) }
+        unsafe{ BitFlags::new(bits & T::all()) }
     }
 
     pub fn toggle(&mut self, other: Self) {
@@ -202,7 +174,7 @@ impl<T, B> std::ops::BitXor<B> for BitFlags<T>
 {
     type Output = BitFlags<T>;
     fn bitxor(self, other: B) -> BitFlags<T> {
-        unsafe{BitFlags::new(T::xor(self.bits(), other.into().bits()))}
+        unsafe{BitFlags::new((self.bits() ^ other.into().bits()) & T::all())}
     }
 }
 

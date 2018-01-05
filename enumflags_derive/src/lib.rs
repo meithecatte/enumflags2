@@ -146,7 +146,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
         impl #std_path::ops::BitXor for #ident{
             type Output = ::enumflags::BitFlags<#ident>;
             fn bitxor(self, other: Self) -> Self::Output {
-                unsafe { BitFlags::new(Self::xor(self.bits(), other.bits())) }
+                Into::<#ident>::into(self) ^ other.into()
             }
         }
 
