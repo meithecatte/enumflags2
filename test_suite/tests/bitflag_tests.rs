@@ -2,8 +2,6 @@ extern crate enumflags;
 #[macro_use]
 extern crate enumflags_derive;
 
-//use enumflags::BitFlags;
-
 #[derive(EnumFlags, Copy, Clone, Debug)]
 #[repr(u8)]
 enum Test {
