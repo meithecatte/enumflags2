@@ -1,17 +1,7 @@
-[package]
-name = "enumflags"
-version = "0.1.2"
-authors = ["maik klein <maikklein@googlemail.com>"]
-description = "Bitflags"
-license = "MIT"
-repository = "https://github.com/MaikKlein/enumflags"
-readme = "README.md"
-keywords = ["enum", "bitflag", "flag", "bitflags"]
-documentation = "https://docs.rs/enumflags"
-
-[dependencies]
-num = "0.1.41"
-
-[features]
-default = []
-nostd = []
+[workspace]
+members = [
+    "enumflags",
+    "enumflags_derive",
+    "example",
+    "test_suite",
+]

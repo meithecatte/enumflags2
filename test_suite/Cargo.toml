@@ -1,0 +1,9 @@
+[package]
+name = "bitflags-test-suite"
+version = "0.0.0"
+publish = false
+
+[dev-dependencies]
+
+enumflags = {path = "../enumflags"}
+enumflags_derive = {path = "../enumflags_derive"}

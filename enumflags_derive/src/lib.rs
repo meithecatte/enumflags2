@@ -125,6 +125,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
         impl #std_path::ops::Not for #ident{
             type Output = ::enumflags::BitFlags<#ident>;
             fn not(self) -> Self::Output {
+                use ::enumflags::{BitFlags, RawBitFlags};
                 unsafe { BitFlags::new(self.bits()).not() }
             }
         }
@@ -132,6 +133,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
         impl #std_path::ops::BitOr for #ident{
             type Output = ::enumflags::BitFlags<#ident>;
             fn bitor(self, other: Self) -> Self::Output {
+                use ::enumflags::{BitFlags, RawBitFlags};
                 unsafe { BitFlags::new(self.bits() | other.bits())}
             }
         }
@@ -139,6 +141,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
         impl #std_path::ops::BitAnd for #ident{
             type Output = ::enumflags::BitFlags<#ident>;
             fn bitand(self, other: Self) -> Self::Output {
+                use ::enumflags::{BitFlags, RawBitFlags};
                 unsafe { BitFlags::new(self.bits() & other.bits())}
             }
         }
@@ -154,6 +157,7 @@ fn gen_enumflags(ident: &Ident, item: &MacroInput, data: &Vec<Variant>, gen_std:
             fn fmt(flags: ::enumflags::BitFlags<#ident>,
                    fmt: &mut #std_path::fmt::Formatter)
                    -> #std_path::fmt::Result {
+                use ::enumflags::RawBitFlags;
                 let v:Vec<&str> =
                     [#((#names_ref :: #variants_ref).bits(),)*]
                     .iter()

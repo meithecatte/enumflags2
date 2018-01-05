@@ -5,5 +5,5 @@ authors = ["maik klein <maikklein@googlemail.com>"]
 
 [dependencies]
 
-enumflags = {path = "../"}
+enumflags = {path = "../enumflags"}
 enumflags_derive = {path = "../enumflags_derive"}
