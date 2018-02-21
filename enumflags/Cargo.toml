@@ -9,9 +9,6 @@ readme = "../README.md"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
 documentation = "https://docs.rs/enumflags"
 
-[dependencies]
-num = "0.1.41"
-
 [features]
 default = []
 nostd = []
