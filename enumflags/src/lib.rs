@@ -1,14 +1,12 @@
 #[cfg(feature = "nostd")]
 extern crate core as std;
-extern crate num;
 
 use std::ops::{BitAnd, BitOr, BitXor, Not};
 use std::cmp::PartialOrd;
 use std::fmt::{self, Formatter};
-use num::{Num, Zero};
 
 pub trait BitFlagNum
-    : Num
+    : Default
     + BitOr<Self, Output = Self>
     + BitAnd<Self, Output = Self>
     + BitXor<Self, Output = Self>
@@ -73,7 +71,7 @@ where
 {
     /// Create an empty BitFlags. Empty means `0`.
     pub fn empty() -> Self {
-        unsafe { BitFlags::new(T::Type::zero()) }
+        unsafe { BitFlags::new(T::Type::default()) }
     }
 
     /// Sets all flags.
