@@ -20,6 +20,19 @@ enum Test1 {
 }
 
 #[test]
+fn module() {
+    mod some_modules {
+        #[derive(EnumFlags, Copy, Clone, Debug)]
+        #[repr(u8)]
+        enum Test2 {
+            A = 1 << 0,
+            B = 1 << 1,
+            C = 1 << 2,
+            D = 1 << 3,
+        }
+    }
+}
+#[test]
 fn test_foo() {
     use enumflags::BitFlags;
     assert_eq!(
@@ -59,5 +72,5 @@ fn test_foo() {
         b.remove(Test::B);
         assert_eq!(b, Test::A | Test::C);
     }
-    assert_eq!((Test::A ^ Test::B) , Test::A | Test::B);
+    assert_eq!((Test::A ^ Test::B), Test::A | Test::B);
 }

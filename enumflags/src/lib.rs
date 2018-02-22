@@ -1,3 +1,6 @@
+#![no_std]
+#[cfg(not(feature = "nostd"))]
+extern crate std;
 #[cfg(feature = "nostd")]
 extern crate core as std;
 

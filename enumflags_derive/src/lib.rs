@@ -148,7 +148,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
     #[cfg(not(feature = "nostd"))]
     let std_path = Ident::new("std", span);
     #[cfg(feature = "nostd")]
-    let std_path = Ident::from("core", span);
+    let std_path = Ident::new("core", span);
     let std: quote::Tokens = if gen_std {
         quote_spanned! {
             span =>
@@ -170,7 +170,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
     let scope_ident = Ident::new(&format!("__scope_enumderive_{}",
                                           item.ident.as_ref().to_lowercase()), span);
     quote_spanned!{
-        span => 
+        span =>
         mod #scope_ident {
             extern crate #std_path;
             impl #std_path::ops::Not for #ident{
