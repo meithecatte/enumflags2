@@ -5,10 +5,18 @@ extern crate enumflags_derive;
 #[derive(EnumFlags, Copy, Clone, Debug)]
 #[repr(u8)]
 enum Test {
-    A = 0b0001,
-    B = 0b0010,
-    C = 0b0100,
-    D = 0b1000,
+    A = 1 << 0,
+    B = 1 << 1,
+    C = 1 << 2,
+    D = 1 << 3,
+}
+#[derive(EnumFlags, Copy, Clone, Debug)]
+#[repr(u8)]
+enum Test1 {
+    A = 1 << 0,
+    B = 1 << 1,
+    C = 1 << 2,
+    D = 1 << 3,
 }
 
 #[test]
@@ -34,7 +42,7 @@ fn test_foo() {
         Some(BitFlags::<Test>::all())
     );
     {
-        let mut b = (Test::A | Test::B);
+        let mut b = Test::A | Test::B;
         b.insert(Test::C);
         assert_eq!(b, Test::A | Test::B | Test::C);
     }
