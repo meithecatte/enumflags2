@@ -186,6 +186,35 @@ where
     }
 }
 
+impl<T, B> std::ops::BitOrAssign<B> for BitFlags<T>
+where
+    T: RawBitFlags,
+    B: Into<BitFlags<T>>,
+{
+    fn bitor_assign(&mut self, other: B) {
+        *self = *self | other;
+    }
+}
+
+impl<T, B> std::ops::BitAndAssign<B> for BitFlags<T>
+where
+    T: RawBitFlags,
+    B: Into<BitFlags<T>>,
+{
+    fn bitand_assign(&mut self, other: B) {
+        *self = *self & other;
+    }
+}
+impl<T, B> std::ops::BitXorAssign<B> for BitFlags<T>
+where
+    T: RawBitFlags,
+    B: Into<BitFlags<T>>,
+{
+    fn bitxor_assign(&mut self, other: B) {
+        *self = *self ^ other;
+    }
+}
+
 impl<T> std::ops::Not for BitFlags<T>
 where
     T: RawBitFlags,
