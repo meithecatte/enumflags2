@@ -74,3 +74,18 @@ fn test_foo() {
     }
     assert_eq!((Test::A ^ Test::B), Test::A | Test::B);
 }
+
+#[test]
+fn assign_ops() {
+    let mut x = Test::A | Test::B;
+    x |= Test::C;
+    assert_eq!(x, Test::A | Test::B | Test::C);
+
+    let mut x = Test::A | Test::B;
+    x &= Test::B | Test::C;
+    assert_eq!(x, Test::B);
+
+    let mut x = Test::A | Test::B;
+    x ^= Test::B | Test::C;
+    assert_eq!(x, Test::A | Test::C);
+}
