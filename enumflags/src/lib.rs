@@ -7,6 +7,7 @@ extern crate core as std;
 use std::ops::{BitAnd, BitOr, BitXor, Not};
 use std::cmp::PartialOrd;
 use std::fmt::{self, Formatter};
+use std::iter::FromIterator;
 
 pub trait BitFlagNum
     : Default
@@ -222,5 +223,22 @@ where
     type Output = BitFlags<T>;
     fn not(self) -> BitFlags<T> {
         self.not()
+    }
+}
+
+impl<T, B> FromIterator<B> for BitFlags<T>
+where
+    T: RawBitFlags,
+    B: Into<BitFlags<T>>
+{
+    fn from_iter<I>(it: I) -> BitFlags<T>
+    where 
+        I: IntoIterator<Item = B>
+    {
+        let mut flags = BitFlags::empty();
+        for flag in it {
+            flags |= flag.into();
+        }
+        flags
     }
 }
