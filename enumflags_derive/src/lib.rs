@@ -4,7 +4,7 @@ extern crate proc_macro;
 extern crate quote;
 extern crate syn;
 extern crate proc_macro2;
-use syn::{Data, Ident, DeriveInput, Variant, DataEnum};
+use syn::{Data, Ident, DeriveInput, DataEnum};
 use quote::Tokens;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -153,6 +153,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
         quote_spanned! {
             span =>
             impl #ident{
+                #[allow(dead_code)]
                 pub fn from_bitflag(bitflag: ::enumflags::BitFlags<#ident>) -> Vec<#ident> {
                     [#(#flag_values_ref1,)*].iter().filter_map(|val|{
                         let val = *val as #ty & bitflag.bits();
