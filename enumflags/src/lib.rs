@@ -78,7 +78,7 @@ where
         unsafe { BitFlags::new(T::Type::default()) }
     }
 
-    /// Sets all flags.
+    /// Create a BitFlags with all flags set.
     pub fn all() -> Self {
         unsafe { BitFlags::new(T::all()) }
     }
