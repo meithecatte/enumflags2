@@ -37,6 +37,7 @@ pub trait RawBitFlags: Copy + Clone {
     type Type: BitFlagNum;
     fn all() -> Self::Type;
     fn bits(self) -> Self::Type;
+    fn flag_list() -> &'static [Self];
 }
 
 #[derive(Copy, Clone)]
@@ -141,6 +142,11 @@ where
     /// Removes the matching flags
     pub fn remove<B: Into<BitFlags<T>>>(&mut self, other: B) {
         *self = *self & !other.into();
+    }
+
+    /// Returns an iterator that yields each set flag
+    pub fn iter(self) -> impl Iterator<Item = T> {
+        T::flag_list().iter().cloned().filter(move |&flag| self.contains(flag))
     }
 }
 

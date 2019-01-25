@@ -34,6 +34,7 @@ fn module() {
         }
     }
 }
+
 #[test]
 fn test_foo() {
     use enumflags::BitFlags;
@@ -75,10 +76,25 @@ fn test_foo() {
         assert_eq!(b, Test::A | Test::C);
     }
     assert_eq!((Test::A ^ Test::B), Test::A | Test::B);
+}
 
-    assert_eq!(Test::from_bitflag(BitFlags::<Test>::empty()), []);
-    assert_eq!(Test::from_bitflag(Test::A.into()), [Test::A]);
-    assert_eq!(Test::from_bitflag(Test::A | Test::B), [Test::A, Test::B]);
+#[test]
+fn iterator() {
+    use enumflags::BitFlags;
+
+    // it's a separate statement because type ascription is nightly
+    let tests: &[(BitFlags<Test>, &[Test])] = &[
+        (BitFlags::empty(), &[]),
+        (Test::A.into(), &[Test::A]),
+        (Test::A | Test::B, &[Test::A, Test::B]),
+    ];
+
+    for &(bitflag, expected) in tests {
+        assert!(bitflag.iter().zip(expected.iter().cloned()).all(|(a, b)| a == b));
+        #[allow(deprecated)] {
+            assert_eq!(Test::from_bitflag(bitflag), expected);
+        }
+    }
 }
 
 #[test]

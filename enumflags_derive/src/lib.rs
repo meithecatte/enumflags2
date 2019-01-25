@@ -149,14 +149,9 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
             span =>
             impl #ident{
                 #[allow(dead_code)]
+                #[deprecated(since="0.4.2", note="use iter on BitFlags instead")]
                 pub fn from_bitflag(bitflag: ::enumflags::BitFlags<#ident>) -> Vec<#ident> {
-                    [#(#flag_values,)*].iter().filter_map(|val|{
-                        let val = *val as #ty & bitflag.bits();
-                        match val {
-                            #(#flag_value_names => Some(#names :: #variants),)*
-                            _ => None
-                        }
-                    }).collect()
+                    bitflag.iter().collect()
                 }
             }
         }
@@ -170,7 +165,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
         mod #scope_ident {
             extern crate #std_path;
             use super::#ident;
-            impl #std_path::ops::Not for #ident{
+            impl #std_path::ops::Not for #ident {
                 type Output = ::enumflags::BitFlags<#ident>;
                 fn not(self) -> Self::Output {
                     use ::enumflags::{BitFlags, RawBitFlags};
@@ -178,7 +173,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
                 }
             }
 
-            impl #std_path::ops::BitOr for #ident{
+            impl #std_path::ops::BitOr for #ident {
                 type Output = ::enumflags::BitFlags<#ident>;
                 fn bitor(self, other: Self) -> Self::Output {
                     use ::enumflags::{BitFlags, RawBitFlags};
@@ -186,7 +181,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
                 }
             }
 
-            impl #std_path::ops::BitAnd for #ident{
+            impl #std_path::ops::BitAnd for #ident {
                 type Output = ::enumflags::BitFlags<#ident>;
                 fn bitand(self, other: Self) -> Self::Output {
                     use ::enumflags::{BitFlags, RawBitFlags};
@@ -194,7 +189,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
                 }
             }
 
-            impl #std_path::ops::BitXor for #ident{
+            impl #std_path::ops::BitXor for #ident {
                 type Output = ::enumflags::BitFlags<#ident>;
                 fn bitxor(self, other: Self) -> Self::Output {
                     Into::<Self::Output>::into(self) ^ Into::<Self::Output>::into(other)
@@ -233,6 +228,10 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
 
                 fn bits(self) -> Self::Type {
                     self as #ty
+                }
+
+                fn flag_list() -> &'static [Self] {
+                    &[#(#names::#variants,)*]
                 }
             }
 
