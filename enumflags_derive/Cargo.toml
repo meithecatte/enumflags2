@@ -8,9 +8,9 @@ repository = "https://github.com/MaikKlein/enumflags"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
 
 [dependencies]
-syn = {version = "0.12.5", features = ["extra-traits"]}
-quote = "0.4"
-proc-macro2 = "0.2"
+syn = {version = "^0.15", features = ["extra-traits"]}
+quote = "^0.6"
+proc-macro2 = "^0.4"
 
 [lib]
 proc-macro = true

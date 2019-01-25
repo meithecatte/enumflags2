@@ -5,13 +5,12 @@ extern crate quote;
 extern crate syn;
 extern crate proc_macro2;
 use syn::{Data, Ident, DeriveInput, DataEnum};
-use quote::Tokens;
-use proc_macro::TokenStream;
+use proc_macro2::TokenStream;
 use proc_macro2::Span;
 use std::convert::From;
 
 #[proc_macro_derive(EnumFlags, attributes(EnumFlags))]
-pub fn derive_enum_flags(input: TokenStream) -> TokenStream {
+pub fn derive_enum_flags(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
 
     #[cfg(not(feature = "nostd"))]
@@ -62,8 +61,8 @@ fn extract_repr(attrs: &[syn::Attribute]) -> Option<syn::Ident> {
     attrs
         .iter()
         .filter_map(|a| {
-            if let syn::Meta::List(ref meta) = a.interpret_meta().expect("Metalist") {
-                if meta.ident.as_ref() == "repr" {
+            if let syn::Meta::List(ref meta) = a.parse_meta().expect("Metalist") {
+                if meta.ident.to_string() == "repr" {
                     return meta.nested
                         .iter()
                         .filter_map(|mi| {
@@ -81,7 +80,7 @@ fn extract_repr(attrs: &[syn::Attribute]) -> Option<syn::Ident> {
         })
         .nth(0)
 }
-fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bool) -> Tokens {
+fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bool) -> TokenStream {
     let span  = Span::call_site();
     let variants: Vec<_> = data.variants.iter().map(|v| v.ident.clone()).collect();
     let variants_ref = &variants;
@@ -101,7 +100,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
     );
     let ty = extract_repr(&item.attrs).unwrap_or(Ident::new("usize", span));
     let max_flag_value = flag_values.iter().max().unwrap();
-    let max_allowed_value = max_value_of(ty.as_ref()).expect(&format!("{} is not supported", ty));
+    let max_allowed_value = max_value_of(&ty.to_string()).expect(&format!("{} is not supported", ty));
     assert!(
         *max_flag_value as usize <= max_allowed_value,
         format!(
@@ -149,7 +148,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
     let std_path = Ident::new("std", span);
     #[cfg(feature = "nostd")]
     let std_path = Ident::new("core", span);
-    let std: quote::Tokens = if gen_std {
+    let std: TokenStream = if gen_std {
         quote_spanned! {
             span =>
             impl #ident{
@@ -169,7 +168,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
         quote!{}
     };
     let scope_ident = Ident::new(&format!("__scope_enumderive_{}",
-                                          item.ident.as_ref().to_lowercase()), span);
+                                          item.ident.to_string().to_lowercase()), span);
     quote_spanned!{
         span =>
         mod #scope_ident {

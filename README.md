@@ -1,14 +1,9 @@
-# Unmaintained 
-
-If anyone wants to maintain it, open an issue.
-
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE-MIT)
 [![LICENSE](https://img.shields.io/badge/license-apache-blue.svg)](LICENSE-APACHE)
 [![Documentation](https://docs.rs/enumflags/badge.svg)](https://docs.rs/enumflags)
 [![Crates.io Version](https://img.shields.io/crates/v/enumflags.svg)](https://crates.io/crates/enumflags)
 
-
-# Bitflags
+# Enumflags
 
 ## Usage
 
