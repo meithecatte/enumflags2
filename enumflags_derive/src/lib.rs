@@ -81,18 +81,15 @@ fn extract_repr(attrs: &[syn::Attribute]) -> Option<syn::Ident> {
 }
 fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bool) -> TokenStream {
     let span  = Span::call_site();
-    let variants: Vec<_> = data.variants.iter().map(|v| v.ident.clone()).collect();
-    let variants_ref = &variants;
-    let flag_values: Vec<_> = data.variants.iter()
+    let variants: &Vec<_> = &data.variants.iter().map(|v| v.ident.clone()).collect();
+    let flag_values: &Vec<_> = &data.variants.iter()
         .map(|v| v.discriminant.as_ref().map(|d| fold_expr(&d.1)).expect("No discriminant")).collect();
     assert!(flag_values.iter().find(|&&v| v == 0).is_none(), "Null flag is not allowed");
-    let flag_values_ref1 = &flag_values;
     let flag_value_names: &Vec<_> = &flag_values
         .iter()
-        .map(|val| syn::Index::from(*val as usize))
+        .map(|&val| syn::LitInt::new(val, syn::IntSuffix::None, span))
         .collect();
-    let names: Vec<_> = flag_values.iter().map(|_| ident.clone()).collect();
-    let names_ref = &names;
+    let names: &Vec<_> = &flag_values.iter().map(|_| ident.clone()).collect();
     assert!(
         variants.len() == flag_values.len(),
         "At least one variant was not initialized explicity with a value."
@@ -131,7 +128,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
             format!(
                 "{name}::{variant} = 0b{value:b}",
                 name = ident,
-                variant = variants_ref[index],
+                variant = variants[index],
                 value = flag_values[index]
             )
         })
@@ -153,10 +150,10 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
             impl #ident{
                 #[allow(dead_code)]
                 pub fn from_bitflag(bitflag: ::enumflags::BitFlags<#ident>) -> Vec<#ident> {
-                    [#(#flag_values_ref1,)*].iter().filter_map(|val|{
+                    [#(#flag_values,)*].iter().filter_map(|val|{
                         let val = *val as #ty & bitflag.bits();
                         match val {
-                            #(#flag_value_names => Some(#names_ref :: #variants_ref),)*
+                            #(#flag_value_names => Some(#names :: #variants),)*
                             _ => None
                         }
                     }).collect()
@@ -210,12 +207,12 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
                        -> #std_path::fmt::Result {
                     use ::enumflags::RawBitFlags;
                     let v:Vec<&str> =
-                        [#((#names_ref :: #variants_ref).bits(),)*]
+                        [#((#names :: #variants).bits(),)*]
                         .iter()
                         .filter_map(|val|{
                             let val: #ty = *val as #ty & flags.bits();
                             match val {
-                                #(#flag_value_names => Some(stringify!(#variants_ref)),)*
+                                #(#flag_value_names => Some(stringify!(#variants)),)*
                                 _ => None
                             }
                         })
@@ -231,7 +228,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
                 type Type = #ty;
 
                 fn all() -> Self::Type {
-                    (#(#flag_values_ref1)|*) as #ty
+                    (#(#flag_values)|*) as #ty
                 }
 
                 fn bits(self) -> Self::Type {

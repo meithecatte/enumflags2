@@ -2,7 +2,7 @@ extern crate enumflags;
 #[macro_use]
 extern crate enumflags_derive;
 
-#[derive(EnumFlags, Copy, Clone, Debug)]
+#[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
 #[repr(u8)]
 enum Test {
     A = 1 << 0,
@@ -12,12 +12,13 @@ enum Test {
 }
 
 #[derive(EnumFlags, Copy, Clone, Debug)]
-#[repr(u8)]
+#[repr(u64)]
 enum Test1 {
     A = 1 << 0,
     B = 1 << 1,
     C = 1 << 2,
     D = 1 << 3,
+    E = 1 << 34,
 }
 
 #[test]
@@ -74,6 +75,10 @@ fn test_foo() {
         assert_eq!(b, Test::A | Test::C);
     }
     assert_eq!((Test::A ^ Test::B), Test::A | Test::B);
+
+    assert_eq!(Test::from_bitflag(BitFlags::<Test>::empty()), []);
+    assert_eq!(Test::from_bitflag(Test::A.into()), [Test::A]);
+    assert_eq!(Test::from_bitflag(Test::A | Test::B), [Test::A, Test::B]);
 }
 
 #[test]
