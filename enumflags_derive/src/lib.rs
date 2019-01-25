@@ -17,11 +17,10 @@ pub fn derive_enum_flags(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     let gen_std = true;
     #[cfg(feature = "nostd")]
     let gen_std = false;
-    let quote_tokens = match ast.data {
-        Data::Enum(ref data) => gen_enumflags(&ast.ident, &ast, data, gen_std),
+    match ast.data {
+        Data::Enum(ref data) => gen_enumflags(&ast.ident, &ast, data, gen_std).into(),
         _ => panic!("`derive(EnumFlags)` may only be applied to enums"),
-    };
-    quote_tokens.into()
+    }
 }
 
 fn max_value_of(ty: &str) -> Option<usize> {
@@ -173,6 +172,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
         span =>
         mod #scope_ident {
             extern crate #std_path;
+            use super::#ident;
             impl #std_path::ops::Not for #ident{
                 type Output = ::enumflags::BitFlags<#ident>;
                 fn not(self) -> Self::Output {
