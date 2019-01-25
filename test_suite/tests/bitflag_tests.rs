@@ -10,6 +10,7 @@ enum Test {
     C = 1 << 2,
     D = 1 << 3,
 }
+
 #[derive(EnumFlags, Copy, Clone, Debug)]
 #[repr(u8)]
 enum Test1 {
