@@ -23,14 +23,13 @@ extern crate enumflags_derive;
 
 ## Features
 
-- [x] Uses enums to represent individual flags.
+- [x] Uses enums to represent individual flags&mdash;a set of flags is a separate type from a single flag.
 - [x] Detects incorrect BitFlags at compile time.
   - Non-unique bits.
   - Missing values.
   - Flags larger than the chosen `repr`.
 - [x] Has a similar API compared to the popular [bitflags](https://crates.io/crates/bitflags) crate.
 - [x] Does not expose the generated types explicity. The user interacts exclusively with `struct BitFlags<Enum>;`.
-- [x] A set of flags is a separate type from a single flag.
 - [x] The debug formatter prints the binary flag value as well as the flag enums: `BitFlags { 0b1111, Flags::[A, B, C, D] }`.
 
 ### Example
