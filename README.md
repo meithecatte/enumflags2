@@ -7,13 +7,14 @@
 
 ## Usage
 
-Cargo.toml
+In your `Cargo.toml`:
 ```Toml
 [dependencies]
-enumflags = "*"
-enumflags_derive = "*"
+enumflags = "^0.4"
+enumflags_derive = "^0.4"
 ```
 
+If using the 2015 Rust edition, add this to your crate root:
 ```Rust
 extern crate enumflags;
 #[macro_use]
@@ -22,160 +23,53 @@ extern crate enumflags_derive;
 
 ## Features
 
-- [x] Uses enums to represent BitFlags.
+- [x] Uses enums to represent individual flags.
 - [x] Detects incorrect BitFlags at compile time.
+  - Non-unique bits.
+  - Missing values.
+  - Flags larger than the chosen `repr`.
 - [x] Has a similar API compared to the popular [bitflags](https://crates.io/crates/bitflags) crate.
-- [x] Does not expose the generated types explicity. The user interacts exclusivly with `struct BitFields<Enum>;`.
-- [x] Prints the binary flag value as well as the flag enums `BitFlags { 0b1111, Flags::[A, B, C, D] }`.
+- [x] Does not expose the generated types explicity. The user interacts exclusively with `struct BitFlags<Enum>;`.
+- [x] A set of flags is a separate type from a single flag.
+- [x] The debug formatter prints the binary flag value as well as the flag enums: `BitFlags { 0b1111, Flags::[A, B, C, D] }`.
 
-#### Detects incorrect flags values
+### Example
 
-```Rust
-#[derive(EnumFlags, Copy, Clone, Debug)]
-#[repr(u8)]
-pub enum Test {
-    A = 0b0001,
-    B = 0b0010,
-    C = 0b0101,
-    D = 0b1000,
-}
-```
-
-Error:
-```Rust
-error: custom derive attribute panicked
- --> src/main.rs:6:10
-  |
-6 | #[derive(EnumFlags, Copy, Clone, Debug)]
-  |          ^^^^^^^^^
-  |
-  = help: message: The following flags are not unique: ["Test::A = 0b1", "Test::C = 0b101"]
-```
-
-
-#### Detects flags that are too big
-```Rust
-#[derive(EnumFlags, Copy, Clone, Debug)]
-#[repr(u8)]
-pub enum Test {
-    A = 0b0001,
-    B = 0b0010,
-    C = 0b0100,
-    D = 0b100000000,
-}
-```
-
-Error:
-```Rust
-error: custom derive attribute panicked
- --> src/main.rs:6:10
-  |
-6 | #[derive(EnumFlags, Copy, Clone, Debug)]
-  |          ^^^^^^^^^
-  |
-  = help: message: Value '0b100000000' is too big for an u8
-```
-
-#### Detects missing flags
-
-```Rust
-#[derive(EnumFlags, Copy, Clone, Debug)]
-#[repr(u8)]
-pub enum Test {
-    A = 0b0001,
-    B = 0b0010,
-    C,
-    D = 0b1000,
-}
-```
-
-Error:
-```Rust
-error: custom derive attribute panicked
- --> src/main.rs:6:10
-  |
-6 | #[derive(EnumFlags, Copy, Clone, Debug)]
-  |          ^^^^^^^^^
-  |
-  = help: message: At least one variant was not initialized explicity with a value.
-```
-
-
-```Rust
+```rust
 extern crate enumflags;
 #[macro_use]
 extern crate enumflags_derive;
-use enumflags::*;
 
-#[derive(EnumFlags, Copy, Clone, Debug)]
+use enumflags::BitFlags;
+
+#[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
 #[repr(u8)]
-pub enum Test {
+enum Test {
     A = 0b0001,
     B = 0b0010,
     C = 0b0100,
     D = 0b1000,
 }
 
-fn print_test<B: Into<BitFlags<Test>>>(bitflag: B) {
-    println!("{:?}", bitflag.into());
-}
-
 fn main() {
-    // BitFlags { 0b1111, Flags::[A, B, C, D] }
-    print_test(BitFlags::<Test>::all());
+    let a_b = Test::A | Test::B; // BitFlags<Test>
+    let a_c = Test::A | Test::C;
+    let b_c_d = Test::C | Test::B | Test::D;
 
-    // BitFlags { 0b1111, Flags::[A, B, C, D] }
-    print_test(BitFlags::all());
+    // BitFlags<Test>(0b11, [A, B])
+    println!("{:?}", a_b);
 
-    // BitFlags { 0b0, Flags::[] }
-    print_test(BitFlags::empty());
+    // BitFlags<Test>(0b1, [A])
+    println!("{:?}", a_b & a_c);
 
-    // BitFlags { 0b101, Flags::[A, C] }
-    print_test(BitFlags::from_bits_truncate(5));
+    // Iterate over the flags like a normal set!
+    assert_eq!(a_b.iter().collect::<Vec<_>>(), &[Test::A, Test::B]);
 
-    // BitFlags { 0b100, Flags::[C] }
-    print_test(BitFlags::from_bits_truncate(4));
+    assert!(a_b.contains(Test::A));
+    assert!(b_c_d.contains(Test::B | Test::C));
+    assert!(!(b_c_d.contains(a_b)));
 
-    // BitFlags { 0b0, Flags::[] }
-    print_test(BitFlags::from_bits(16).unwrap_or(BitFlags::empty()));
-
-    // BitFlags { 0b100, Flags::[C] }
-    print_test(BitFlags::from_bits(4).unwrap());
-
-    // BitFlags { 0b11111110, Flags::[B, C, D] }
-    print_test(!Test::A);
-
-    // BitFlags { 0b11, Flags::[A, B] }
-    let flag1 = Test::A | Test::B;
-    print_test(flag1);
-
-    // BitFlags { 0b1100, Flags::[C, D] }
-    let flag2 = Test::C | Test::D;
-    print_test(flag2);
-
-    // BitFlags { 0b1001, Flags::[A, D] }
-    let flag3 = Test::A | Test::D;
-    print_test(flag3);
-
-    // BitFlags { 0b0, Flags::[] }
-    print_test(flag1 & flag2);
-
-    // BitFlags { 0b1111, Flags::[A, B, C, D] }
-    print_test(flag1 | flag2);
-
-    // false
-    println!("{}", flag1.intersects(flag2));
-
-    // true
-    println!("{}", flag1.intersects(flag3));
-
-    // true
-    println!("{}", flag1.contains(Test::A | Test::B));
-
-    // false
-    println!("{}", flag1.contains(Test::A | Test::B | Test::C));
-
-    // true
-    println!("{}", flag1.contains(Test::A));
+    assert!(a_b.intersects(a_c));
+    assert!(!(a_b.intersects(Test::C | Test::D)));
 }
 ```

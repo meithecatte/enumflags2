@@ -1,45 +1,109 @@
+//! # Enum Flags
+//! `enumflags` defines a `BitFlags<T>` type for representing a set of named boolean values
+//! efficiently, where `T` is an enum with explicitly defined values. Semantically similar to a
+//! `HashSet<EnumWithoutAssociatedData>`, but much more efficient.
+//!
+//! ## Example
+//! ```
+//! extern crate enumflags;
+//! #[macro_use]
+//! extern crate enumflags_derive;
+//!
+//! use enumflags::BitFlags;
+//!
+//! #[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
+//! #[repr(u8)]
+//! enum Test {
+//!     A = 0b0001,
+//!     B = 0b0010,
+//!     C = 0b0100,
+//!     D = 0b1000,
+//! }
+//!
+//! fn main() {
+//!     let a_b = Test::A | Test::B; // BitFlags<Test>
+//!     let a_c = Test::A | Test::C;
+//!     let b_c_d = Test::C | Test::B | Test::D;
+//!
+//!     // BitFlags<Test>(0b11, [A, B])
+//!     println!("{:?}", a_b);
+//!
+//!     // BitFlags<Test>(0b1, [A])
+//!     println!("{:?}", a_b & a_c);
+//!
+//!     // Iterate over the flags like a normal set!
+//!     assert_eq!(a_b.iter().collect::<Vec<_>>(), &[Test::A, Test::B]);
+//!
+//!     assert!(a_b.contains(Test::A));
+//!     assert!(b_c_d.contains(Test::B | Test::C));
+//!     assert!(!(b_c_d.contains(a_b)));
+//!
+//!     assert!(a_b.intersects(a_c));
+//!     assert!(!(a_b.intersects(Test::C | Test::D)));
+//! }
+//! ```
+#![warn(missing_docs)]
 #![no_std]
 #[cfg(not(feature = "nostd"))]
 extern crate std;
 #[cfg(feature = "nostd")]
 extern crate core as std;
 
-use std::ops::{BitAnd, BitOr, BitXor, Not};
-use std::cmp::PartialOrd;
 use std::fmt::{self, Formatter};
 use std::iter::FromIterator;
 
-pub trait BitFlagNum
-    : Default
-    + BitOr<Self, Output = Self>
-    + BitAnd<Self, Output = Self>
-    + BitXor<Self, Output = Self>
-    + Not<Output = Self>
-    + PartialOrd<Self>
-    + Copy
-    + Clone {
+/// Sealed trait
+mod details {
+    use std::ops::{BitAnd, BitOr, BitXor, Not};
+    use std::cmp::PartialOrd;
+
+    pub trait BitFlagNum
+        : Default
+        + BitOr<Self, Output = Self>
+        + BitAnd<Self, Output = Self>
+        + BitXor<Self, Output = Self>
+        + Not<Output = Self>
+        + PartialOrd<Self>
+        + Copy
+        + Clone {
+    }
+
+    impl BitFlagNum for u8 {}
+    impl BitFlagNum for u16 {}
+    impl BitFlagNum for u32 {}
+    impl BitFlagNum for u64 {}
+    impl BitFlagNum for usize {}
 }
 
-impl BitFlagNum for u8 {}
-impl BitFlagNum for u16 {}
-impl BitFlagNum for u32 {}
-impl BitFlagNum for u64 {}
-impl BitFlagNum for usize {}
+use details::BitFlagNum;
 
+/// A trait automatically implemented by `derive(EnumFlags)` on `T` to enable debug printing of
+/// `BitFlags<T>`. This is necessary because the names of the variants are needed.
 pub trait BitFlagsFmt
 where
     Self: RawBitFlags,
 {
+    /// The implementation of Debug redirects here.
     fn fmt(flags: BitFlags<Self>, f: &mut Formatter) -> fmt::Result;
 }
 
+/// A trait automatically implemented by `derive(EnumFlags)` to make the enum a valid type parameter
+/// for BitFlags.
 pub trait RawBitFlags: Copy + Clone {
+    /// The underlying integer type.
     type Type: BitFlagNum;
+
+    /// Return a value with all flag bits set.
     fn all() -> Self::Type;
+
+    /// Return the bits as a number type.
     fn bits(self) -> Self::Type;
+
+    /// Return a slice that contains each variant exactly one.
     fn flag_list() -> &'static [Self];
 }
 
+/// Represents a set of flags of some type `T`.
 #[derive(Copy, Clone)]
 pub struct BitFlags<T: RawBitFlags> {
     val: T::Type,

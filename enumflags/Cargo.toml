@@ -12,3 +12,6 @@ documentation = "https://docs.rs/enumflags"
 [features]
 default = []
 nostd = []
+
+[dev-dependencies]
+enumflags_derive = { path = "../enumflags_derive" }
