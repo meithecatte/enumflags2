@@ -13,12 +13,8 @@ use std::convert::From;
 pub fn derive_enum_flags(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
 
-    #[cfg(not(feature = "nostd"))]
-    let gen_std = true;
-    #[cfg(feature = "nostd")]
-    let gen_std = false;
     match ast.data {
-        Data::Enum(ref data) => gen_enumflags(&ast.ident, &ast, data, gen_std).into(),
+        Data::Enum(ref data) => gen_enumflags(&ast.ident, &ast, data).into(),
         _ => panic!("`derive(EnumFlags)` may only be applied to enums"),
     }
 }
@@ -79,7 +75,7 @@ fn extract_repr(attrs: &[syn::Attribute]) -> Option<syn::Ident> {
         })
         .nth(0)
 }
-fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bool) -> TokenStream {
+fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStream {
     let span  = Span::call_site();
     let variants: &Vec<_> = &data.variants.iter().map(|v| v.ident.clone()).collect();
     let flag_values: &Vec<_> = &data.variants.iter()
@@ -144,20 +140,6 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
     let std_path = Ident::new("std", span);
     #[cfg(feature = "nostd")]
     let std_path = Ident::new("core", span);
-    let std: TokenStream = if gen_std {
-        quote_spanned! {
-            span =>
-            impl #ident{
-                #[allow(dead_code)]
-                #[deprecated(since="0.4.2", note="use iter on BitFlags instead")]
-                pub fn from_bitflag(bitflag: ::enumflags::BitFlags<#ident>) -> Vec<#ident> {
-                    bitflag.iter().collect()
-                }
-            }
-        }
-    } else {
-        quote!{}
-    };
     let scope_ident = Ident::new(&format!("__scope_enumderive_{}",
                                           item.ident.to_string().to_lowercase()), span);
     quote_spanned!{
@@ -166,41 +148,41 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
             extern crate #std_path;
             use super::#ident;
             impl #std_path::ops::Not for #ident {
-                type Output = ::enumflags::BitFlags<#ident>;
+                type Output = ::enumflags2::BitFlags<#ident>;
                 fn not(self) -> Self::Output {
-                    use ::enumflags::{BitFlags, RawBitFlags};
+                    use ::enumflags2::{BitFlags, RawBitFlags};
                     unsafe { BitFlags::new(self.bits()).not() }
                 }
             }
 
             impl #std_path::ops::BitOr for #ident {
-                type Output = ::enumflags::BitFlags<#ident>;
+                type Output = ::enumflags2::BitFlags<#ident>;
                 fn bitor(self, other: Self) -> Self::Output {
-                    use ::enumflags::{BitFlags, RawBitFlags};
+                    use ::enumflags2::{BitFlags, RawBitFlags};
                     unsafe { BitFlags::new(self.bits() | other.bits())}
                 }
             }
 
             impl #std_path::ops::BitAnd for #ident {
-                type Output = ::enumflags::BitFlags<#ident>;
+                type Output = ::enumflags2::BitFlags<#ident>;
                 fn bitand(self, other: Self) -> Self::Output {
-                    use ::enumflags::{BitFlags, RawBitFlags};
+                    use ::enumflags2::{BitFlags, RawBitFlags};
                     unsafe { BitFlags::new(self.bits() & other.bits())}
                 }
             }
 
             impl #std_path::ops::BitXor for #ident {
-                type Output = ::enumflags::BitFlags<#ident>;
+                type Output = ::enumflags2::BitFlags<#ident>;
                 fn bitxor(self, other: Self) -> Self::Output {
                     Into::<Self::Output>::into(self) ^ Into::<Self::Output>::into(other)
                 }
             }
 
-            impl ::enumflags::BitFlagsFmt for #ident {
-                fn fmt(flags: ::enumflags::BitFlags<#ident>,
+            impl ::enumflags2::BitFlagsFmt for #ident {
+                fn fmt(flags: ::enumflags2::BitFlags<#ident>,
                        fmt: &mut #std_path::fmt::Formatter)
                        -> #std_path::fmt::Result {
-                    use ::enumflags::RawBitFlags;
+                    use ::enumflags2::RawBitFlags;
                     let v:Vec<&str> =
                         [#((#names :: #variants).bits(),)*]
                         .iter()
@@ -219,7 +201,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
                 }
             }
 
-            impl ::enumflags::RawBitFlags for #ident {
+            impl ::enumflags2::RawBitFlags for #ident {
                 type Type = #ty;
 
                 fn all() -> Self::Type {
@@ -234,8 +216,6 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum, gen_std: bo
                     &[#(#names::#variants,)*]
                 }
             }
-
-            #std
         }
     }
 }

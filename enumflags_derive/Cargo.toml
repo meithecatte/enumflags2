@@ -1,10 +1,10 @@
 [package]
-name = "enumflags_derive"
-version = "0.4.2"
-authors = ["maik klein <maikklein@googlemail.com>"]
-description = "Bitflags"
+name = "enumflags2_derive"
+version = "0.5.0"
+authors = ["maik klein <maikklein@googlemail.com>", "Jakub \"NieDżejkob\" Kądziołka <kuba@kadziolka.net"]
+description = "Enum-based bitflags - the macros"
 license = "MIT"
-repository = "https://github.com/MaikKlein/enumflags"
+repository = "https://github.com/NieDzejkob/enumflags2"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
 
 [dependencies]

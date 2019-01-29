@@ -5,11 +5,11 @@
 //!
 //! ## Example
 //! ```
-//! extern crate enumflags;
+//! extern crate enumflags2;
 //! #[macro_use]
-//! extern crate enumflags_derive;
+//! extern crate enumflags2_derive;
 //!
-//! use enumflags::BitFlags;
+//! use enumflags2::BitFlags;
 //!
 //! #[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
 //! #[repr(u8)]

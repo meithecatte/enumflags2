@@ -5,5 +5,5 @@ publish = false
 
 [dev-dependencies]
 
-enumflags = {path = "../enumflags"}
-enumflags_derive = {path = "../enumflags_derive"}
+enumflags2 = {path = "../enumflags"}
+enumflags2_derive = {path = "../enumflags_derive"}

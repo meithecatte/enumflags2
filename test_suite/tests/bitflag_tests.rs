@@ -1,6 +1,6 @@
-extern crate enumflags;
+extern crate enumflags2;
 #[macro_use]
-extern crate enumflags_derive;
+extern crate enumflags2_derive;
 
 #[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
 #[repr(u8)]
@@ -37,7 +37,7 @@ fn module() {
 
 #[test]
 fn test_foo() {
-    use enumflags::BitFlags;
+    use enumflags2::BitFlags;
     assert_eq!(
         BitFlags::<Test>::all(),
         Test::A | Test::B | Test::C | Test::D
@@ -80,7 +80,7 @@ fn test_foo() {
 
 #[test]
 fn iterator() {
-    use enumflags::BitFlags;
+    use enumflags2::BitFlags;
 
     // it's a separate statement because type ascription is nightly
     let tests: &[(BitFlags<Test>, &[Test])] = &[
@@ -91,9 +91,6 @@ fn iterator() {
 
     for &(bitflag, expected) in tests {
         assert!(bitflag.iter().zip(expected.iter().cloned()).all(|(a, b)| a == b));
-        #[allow(deprecated)] {
-            assert_eq!(Test::from_bitflag(bitflag), expected);
-        }
     }
 }
 

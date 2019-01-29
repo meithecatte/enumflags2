@@ -10,15 +10,15 @@
 In your `Cargo.toml`:
 ```Toml
 [dependencies]
-enumflags = "^0.4"
-enumflags_derive = "^0.4"
+enumflags2 = "^0.5"
+enumflags2_derive = "^0.5"
 ```
 
 If using the 2015 Rust edition, add this to your crate root:
 ```Rust
-extern crate enumflags;
+extern crate enumflags2;
 #[macro_use]
-extern crate enumflags_derive;
+extern crate enumflags2_derive;
 ```
 
 ## Features
@@ -35,11 +35,11 @@ extern crate enumflags_derive;
 ### Example
 
 ```rust
-extern crate enumflags;
+extern crate enumflags2;
 #[macro_use]
-extern crate enumflags_derive;
+extern crate enumflags2_derive;
 
-use enumflags::BitFlags;
+use enumflags2::BitFlags;
 
 #[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
 #[repr(u8)]

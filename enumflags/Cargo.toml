@@ -1,17 +1,17 @@
 [package]
-name = "enumflags"
-version = "0.4.2"
-authors = ["maik klein <maikklein@googlemail.com>"]
-description = "Bitflags"
+name = "enumflags2"
+version = "0.5.0"
+authors = ["maik klein <maikklein@googlemail.com>", "Jakub \"NieDżejkob\" Kądziołka <kuba@kadziolka.net"]
+description = "Enum-based bit flags"
 license = "MIT"
-repository = "https://github.com/MaikKlein/enumflags"
+repository = "https://github.com/NieDzejkob/enumflags2"
 readme = "../README.md"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
-documentation = "https://docs.rs/enumflags"
+documentation = "https://docs.rs/enumflags2"
 
 [features]
 default = []
 nostd = []
 
 [dev-dependencies]
-enumflags_derive = { path = "../enumflags_derive" }
+enumflags2_derive = { path = "../enumflags_derive" }
