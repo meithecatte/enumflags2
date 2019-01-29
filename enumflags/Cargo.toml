@@ -14,4 +14,4 @@ default = []
 nostd = []
 
 [dev-dependencies]
-enumflags2_derive = { path = "../enumflags_derive" }
+enumflags2_derive = { version = "0.5.0", path = "../enumflags_derive" }
