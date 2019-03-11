@@ -105,6 +105,7 @@ pub trait RawBitFlags: Copy + Clone {
 
 /// Represents a set of flags of some type `T`.
 #[derive(Copy, Clone)]
+#[repr(transparent)]
 pub struct BitFlags<T: RawBitFlags> {
     val: T::Type,
 }
