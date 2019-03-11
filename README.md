@@ -1,7 +1,7 @@
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE-MIT)
 [![LICENSE](https://img.shields.io/badge/license-apache-blue.svg)](LICENSE-APACHE)
-[![Documentation](https://docs.rs/enumflags/badge.svg)](https://docs.rs/enumflags)
-[![Crates.io Version](https://img.shields.io/crates/v/enumflags.svg)](https://crates.io/crates/enumflags)
+[![Documentation](https://docs.rs/enumflags2/badge.svg)](https://docs.rs/enumflags2)
+[![Crates.io Version](https://img.shields.io/crates/v/enumflags2.svg)](https://crates.io/crates/enumflags2)
 
 # Enumflags
 
