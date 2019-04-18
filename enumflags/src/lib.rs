@@ -119,6 +119,15 @@ where
     }
 }
 
+impl<T> Default for BitFlags<T>
+where
+    T: RawBitFlags,
+{
+    fn default() -> Self {
+        Self::empty()
+    }
+}
+
 impl<T> BitFlags<T>
 where
     T: RawBitFlags,
