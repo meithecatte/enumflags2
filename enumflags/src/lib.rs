@@ -119,6 +119,7 @@ where
     }
 }
 
+/// The default value returned is one with all flags unset, i. e. [`empty`][Self::empty].
 impl<T> Default for BitFlags<T>
 where
     T: RawBitFlags,
