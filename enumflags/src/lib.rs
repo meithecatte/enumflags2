@@ -89,7 +89,7 @@ where
 
 /// A trait automatically implemented by `derive(EnumFlags)` to make the enum a valid type parameter
 /// for BitFlags.
-pub trait RawBitFlags: Copy + Clone {
+pub trait RawBitFlags: Copy + Clone + 'static {
     /// The underlying integer type.
     type Type: BitFlagNum;
 
