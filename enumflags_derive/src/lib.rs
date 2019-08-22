@@ -78,14 +78,12 @@ fn extract_repr(attrs: &[syn::Attribute]) -> Option<syn::Ident> {
 }
 fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStream {
     let span  = Span::call_site();
-    let variants: &Vec<_> = &data.variants.iter().map(|v| v.ident.clone()).collect();
+    let variants: &Vec<_> = &data.variants.iter().map(|v| &v.ident).collect();
+    let variants_names = variants.iter().map(ToString::to_string);
+    let variants_len = variants.len();
     let flag_values: &Vec<_> = &data.variants.iter()
         .map(|v| v.discriminant.as_ref().map(|d| fold_expr(&d.1)).expect("No discriminant")).collect();
     assert!(flag_values.iter().find(|&&v| v == 0).is_none(), "Null flag is not allowed");
-    let flag_value_names: &Vec<_> = &flag_values
-        .iter()
-        .map(|&val| syn::LitInt::new(&val.to_string(), span))
-        .collect();
     let names: &Vec<_> = &flag_values.iter().map(|_| ident.clone()).collect();
     assert!(
         variants.len() == flag_values.len(),
@@ -145,6 +143,9 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
         mod #scope_ident {
             extern crate core;
             use super::#ident;
+
+            const VARIANTS: [#ident; #variants_len] = [#(#names :: #variants, )*];
+
             impl #std_path::ops::Not for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn not(self) -> Self::Output {
@@ -181,21 +182,21 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                        fmt: &mut #std_path::fmt::Formatter)
                        -> #std_path::fmt::Result {
                     use ::enumflags2::RawBitFlags;
-                    let v:Vec<&str> =
-                        [#((#names :: #variants).bits(),)*]
-                        .iter()
-                        .filter_map(|val|{
-                            let val: #ty = *val as #ty & flags.bits();
-                            match val {
-                                #(#flag_value_names => Some(stringify!(#variants)),)*
-                                _ => None
-                            }
-                        })
-                        .collect();
-                    write!(fmt, "BitFlags<{}>(0b{:b}, [{}]) ",
+                    use #std_path::iter::Iterator;
+                    const VARIANT_NAMES: [&'static str; #variants_len] = [#(#variants_names, )*];
+                    let vals =
+                        VARIANTS.iter().zip(VARIANT_NAMES.iter())
+                        .filter(|&(&val, _)| val as #ty & flags.bits() != 0)
+                        .map(|(_, name)| name);
+                    write!(fmt, "BitFlags<{}>(0b{:b}, [",
                            stringify!(#ident),
-                           flags.bits(),
-                           v.join(", "))
+                           flags.bits())?;
+                    for (i, val) in vals.enumerate() {
+                        write!(fmt, "{}{}",
+                               if i == 0 { "" } else { ", " },
+                               val)?;
+                    }
+                    write!(fmt, "]) ")
                 }
             }
 
@@ -211,7 +212,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                 }
 
                 fn flag_list() -> &'static [Self] {
-                    &[#(#names::#variants,)*]
+                    &VARIANTS
                 }
             }
         }
