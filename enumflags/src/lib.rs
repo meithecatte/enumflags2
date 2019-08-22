@@ -44,18 +44,14 @@
 //! ```
 #![warn(missing_docs)]
 #![no_std]
-#[cfg(not(feature = "nostd"))]
-extern crate std;
-#[cfg(feature = "nostd")]
-extern crate core as std;
 
-use std::fmt::{self, Formatter};
-use std::iter::FromIterator;
+use core::fmt::{self, Formatter};
+use core::iter::FromIterator;
 
 /// Sealed trait
 mod details {
-    use std::ops::{BitAnd, BitOr, BitXor, Not};
-    use std::cmp::PartialOrd;
+    use core::ops::{BitAnd, BitOr, BitXor, Not};
+    use core::cmp::PartialOrd;
 
     pub trait BitFlagNum
         : Default
@@ -110,11 +106,11 @@ pub struct BitFlags<T: RawBitFlags> {
     val: T::Type,
 }
 
-impl<T> ::std::fmt::Debug for BitFlags<T>
+impl<T> core::fmt::Debug for BitFlags<T>
 where
     T: RawBitFlags + BitFlagsFmt,
 {
-    fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::fmt::Result {
         T::fmt(self.clone(), fmt)
     }
 }
@@ -225,7 +221,7 @@ where
     }
 }
 
-impl<T, B> std::cmp::PartialEq<B> for BitFlags<T>
+impl<T, B> core::cmp::PartialEq<B> for BitFlags<T>
 where
     T: RawBitFlags,
     B: Into<BitFlags<T>> + Copy,
@@ -235,7 +231,7 @@ where
     }
 }
 
-impl<T, B> std::ops::BitOr<B> for BitFlags<T>
+impl<T, B> core::ops::BitOr<B> for BitFlags<T>
 where
     T: RawBitFlags,
     B: Into<BitFlags<T>>,
@@ -246,7 +242,7 @@ where
     }
 }
 
-impl<T, B> std::ops::BitAnd<B> for BitFlags<T>
+impl<T, B> core::ops::BitAnd<B> for BitFlags<T>
 where
     T: RawBitFlags,
     B: Into<BitFlags<T>>,
@@ -257,7 +253,7 @@ where
     }
 }
 
-impl<T, B> std::ops::BitXor<B> for BitFlags<T>
+impl<T, B> core::ops::BitXor<B> for BitFlags<T>
 where
     T: RawBitFlags,
     B: Into<BitFlags<T>>,
@@ -268,7 +264,7 @@ where
     }
 }
 
-impl<T, B> std::ops::BitOrAssign<B> for BitFlags<T>
+impl<T, B> core::ops::BitOrAssign<B> for BitFlags<T>
 where
     T: RawBitFlags,
     B: Into<BitFlags<T>>,
@@ -278,7 +274,7 @@ where
     }
 }
 
-impl<T, B> std::ops::BitAndAssign<B> for BitFlags<T>
+impl<T, B> core::ops::BitAndAssign<B> for BitFlags<T>
 where
     T: RawBitFlags,
     B: Into<BitFlags<T>>,
@@ -287,7 +283,7 @@ where
         *self = *self & other;
     }
 }
-impl<T, B> std::ops::BitXorAssign<B> for BitFlags<T>
+impl<T, B> core::ops::BitXorAssign<B> for BitFlags<T>
 where
     T: RawBitFlags,
     B: Into<BitFlags<T>>,
@@ -297,7 +293,7 @@ where
     }
 }
 
-impl<T> std::ops::Not for BitFlags<T>
+impl<T> core::ops::Not for BitFlags<T>
 where
     T: RawBitFlags,
 {

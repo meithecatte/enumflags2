@@ -7,7 +7,6 @@ extern crate proc_macro2;
 use syn::{Data, Ident, DeriveInput, DataEnum};
 use proc_macro2::TokenStream;
 use proc_macro2::Span;
-use std::convert::From;
 
 #[proc_macro_derive(EnumFlags, attributes(EnumFlags))]
 pub fn derive_enum_flags(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -136,18 +135,14 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
             data = wrong_flag_values
         )
     );
-    #[cfg(not(feature = "nostd"))]
-    let std_path = Ident::new("std", span);
-    #[cfg(feature = "nostd")]
-    let std_path = Ident::new("core", span);
     let scope_ident = Ident::new(&format!("__scope_enumderive_{}",
                                           item.ident.to_string().to_lowercase()), span);
     quote_spanned!{
         span =>
         mod #scope_ident {
-            extern crate #std_path;
+            extern crate core;
             use super::#ident;
-            impl #std_path::ops::Not for #ident {
+            impl core::ops::Not for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn not(self) -> Self::Output {
                     use ::enumflags2::{BitFlags, RawBitFlags};
@@ -155,7 +150,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                 }
             }
 
-            impl #std_path::ops::BitOr for #ident {
+            impl core::ops::BitOr for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn bitor(self, other: Self) -> Self::Output {
                     use ::enumflags2::{BitFlags, RawBitFlags};
@@ -163,7 +158,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                 }
             }
 
-            impl #std_path::ops::BitAnd for #ident {
+            impl core::ops::BitAnd for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn bitand(self, other: Self) -> Self::Output {
                     use ::enumflags2::{BitFlags, RawBitFlags};
@@ -171,7 +166,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                 }
             }
 
-            impl #std_path::ops::BitXor for #ident {
+            impl core::ops::BitXor for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn bitxor(self, other: Self) -> Self::Output {
                     Into::<Self::Output>::into(self) ^ Into::<Self::Output>::into(other)
@@ -180,8 +175,8 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
 
             impl ::enumflags2::BitFlagsFmt for #ident {
                 fn fmt(flags: ::enumflags2::BitFlags<#ident>,
-                       fmt: &mut #std_path::fmt::Formatter)
-                       -> #std_path::fmt::Result {
+                       fmt: &mut core::fmt::Formatter)
+                       -> core::fmt::Result {
                     use ::enumflags2::RawBitFlags;
                     let v:Vec<&str> =
                         [#((#names :: #variants).bits(),)*]
