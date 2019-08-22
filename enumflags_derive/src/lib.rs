@@ -78,17 +78,13 @@ fn extract_repr(attrs: &[syn::Attribute]) -> Option<syn::Ident> {
 }
 fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStream {
     let span  = Span::call_site();
-    let variants: &Vec<_> = &data.variants.iter().map(|v| &v.ident).collect();
-    let variants_names = variants.iter().map(ToString::to_string);
-    let variants_len = variants.len();
-    let flag_values: &Vec<_> = &data.variants.iter()
+    let variants = data.variants.iter().map(|v| &v.ident);
+    let variants_names = variants.clone().map(ToString::to_string);
+    let flag_values: Vec<_> = data.variants.iter()
         .map(|v| v.discriminant.as_ref().map(|d| fold_expr(&d.1)).expect("No discriminant")).collect();
+    let variants_len = flag_values.len();
     assert!(flag_values.iter().find(|&&v| v == 0).is_none(), "Null flag is not allowed");
-    let names: &Vec<_> = &flag_values.iter().map(|_| ident.clone()).collect();
-    assert!(
-        variants.len() == flag_values.len(),
-        "At least one variant was not initialized explicity with a value."
-    );
+    let names = flag_values.iter().map(|_| &ident);
     let ty = extract_repr(&item.attrs).unwrap_or(Ident::new("usize", span));
     let max_flag_value = flag_values.iter().max().unwrap();
     let max_allowed_value = max_value_of(&ty.to_string()).expect(&format!("{} is not supported", ty));
@@ -102,29 +98,14 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
     );
     let wrong_flag_values: &Vec<_> = &flag_values
         .iter()
-        .enumerate()
-        .map(|(i, &val)| {
-            (
-                i,
-                flag_values
-                    .iter()
-                    .enumerate()
-                    .fold(0u32, |acc, (other_i, &other_val)| {
-                        if other_i == i || other_val > 0 && other_val & val == 0 {
-                            acc
-                        } else {
-                            acc + 1
-                        }
-                    }),
-            )
-        })
-        .filter(|&(_, count)| count > 0)
-        .map(|(index, _)| {
+        .zip(variants.clone())
+        .filter(|&(&val, _)| flag_values.iter().filter(|&&v| v & val != 0).count() > 1)
+        .map(|(value, variant)| {
             format!(
                 "{name}::{variant} = 0b{value:b}",
                 name = ident,
-                variant = variants[index],
-                value = flag_values[index]
+                variant = variant,
+                value = value
             )
         })
         .collect();
