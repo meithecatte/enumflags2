@@ -137,16 +137,13 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
             data = wrong_flag_values
         )
     );
-    #[cfg(not(feature = "nostd"))]
-    let std_path = Ident::new("std", span);
-    #[cfg(feature = "nostd")]
-    let std_path = Ident::new("core", span);
+    let std_path = quote_spanned!(span=> self::core);
     let scope_ident = Ident::new(&format!("__scope_enumderive_{}",
                                           item.ident.to_string().to_lowercase()), span);
     quote_spanned!{
         span =>
         mod #scope_ident {
-            extern crate #std_path;
+            extern crate core;
             use super::#ident;
             impl #std_path::ops::Not for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
@@ -175,7 +172,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
             impl #std_path::ops::BitXor for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn bitxor(self, other: Self) -> Self::Output {
-                    Into::<Self::Output>::into(self) ^ Into::<Self::Output>::into(other)
+                    #std_path::convert::Into::<Self::Output>::into(self) ^ #std_path::convert::Into::<Self::Output>::into(other)
                 }
             }
 
