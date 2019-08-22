@@ -7,6 +7,7 @@ extern crate proc_macro2;
 use syn::{Data, Ident, DeriveInput, DataEnum};
 use proc_macro2::TokenStream;
 use proc_macro2::Span;
+use quote::ToTokens;
 use std::convert::From;
 
 #[proc_macro_derive(EnumFlags, attributes(EnumFlags))]
@@ -42,9 +43,9 @@ fn fold_expr(expr: &syn::Expr) -> u64 {
         &Expr::Binary(ref expr_binary) => {
             let l = fold_expr(&expr_binary.left);
             let r = fold_expr(&expr_binary.right);
-            match expr_binary.op {
+            match &expr_binary.op {
                 syn::BinOp::Shl(_) => l << r,
-                op => panic!("{:?} not supported", op)
+                op => panic!("{} not supported", op.to_token_stream())
             }
 
         }
