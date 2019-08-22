@@ -35,7 +35,7 @@ fn fold_expr(expr: &syn::Expr) -> u64 {
     match expr{
         &Expr::Lit(ref expr_lit) => {
             match expr_lit.lit {
-                syn::Lit::Int(ref lit_int) => lit_int.value(),
+                syn::Lit::Int(ref lit_int) => lit_int.base10_parse().expect("Int literal out of range"),
                 _ => panic!("Only Int literals are supported")
             }
         },
@@ -57,14 +57,14 @@ fn extract_repr(attrs: &[syn::Attribute]) -> Option<syn::Ident> {
         .iter()
         .filter_map(|a| {
             if let syn::Meta::List(ref meta) = a.parse_meta().expect("Metalist") {
-                if meta.ident.to_string() == "repr" {
+                if meta.path.is_ident("repr") {
                     return meta.nested
                         .iter()
                         .filter_map(|mi| {
-                            if let &syn::NestedMeta::Meta(syn::Meta::Word(ref ident)) =
+                            if let syn::NestedMeta::Meta(syn::Meta::Path(path)) =
                                 mi
                             {
-                                return Some(ident.clone());
+                                return path.get_ident().cloned();
                             }
                             None
                         })
@@ -83,7 +83,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
     assert!(flag_values.iter().find(|&&v| v == 0).is_none(), "Null flag is not allowed");
     let flag_value_names: &Vec<_> = &flag_values
         .iter()
-        .map(|&val| syn::LitInt::new(val, syn::IntSuffix::None, span))
+        .map(|&val| syn::LitInt::new(&val.to_string(), span))
         .collect();
     let names: &Vec<_> = &flag_values.iter().map(|_| ident.clone()).collect();
     assert!(
