@@ -7,3 +7,33 @@ publish = false
 
 enumflags2 = {path = "../enumflags"}
 enumflags2_derive = {path = "../enumflags_derive"}
+
+[[test]]
+name = "bitflags-test"
+path = "tests/bitflag_tests.rs"
+edition = "2015"
+
+[[test]]
+name = "bitflags-test-no-std"
+path = "tests/no_std.rs"
+edition = "2015"
+
+[[test]]
+name = "bitflags-test-no-implicit-prelude"
+path = "tests/no_implicit_prelude.rs"
+edition = "2015"
+
+[[test]]
+name = "bitflags-test-2018"
+path = "tests/bitflag_tests_2018.rs"
+edition = "2018"
+
+[[test]]
+name = "bitflags-test-no-std-2018"
+path = "tests/no_std_2018.rs"
+edition = "2018"
+
+[[test]]
+name = "bitflags-test-no-implicit-prelude-2018"
+path = "tests/no_implicit_prelude_2018.rs"
+edition = "2018"
