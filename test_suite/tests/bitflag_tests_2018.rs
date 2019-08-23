@@ -1,13 +1,11 @@
-extern crate enumflags2;
-#[macro_use]
-extern crate enumflags2_derive;
+use enumflags2_derive::EnumFlags;
 
 include!("../common.rs");
 
 #[test]
 fn module() {
     mod some_modules {
-        #[derive(EnumFlags, Copy, Clone, Debug)]
+        #[derive(enumflags2_derive::EnumFlags, Copy, Clone, Debug)]
         #[repr(u8)]
         enum Test2 {
             A = 1 << 0,
