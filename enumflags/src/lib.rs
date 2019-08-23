@@ -48,6 +48,14 @@
 use core::{fmt, cmp, ops};
 use core::iter::FromIterator;
 
+// Re-export libcore so the macro doesn't inject "extern crate" downstream.
+#[doc(hidden)]
+pub mod _internal {
+    pub mod core {
+        pub use core::{convert, fmt, iter, option, ops};
+    }
+}
+
 /// Sealed trait
 mod details {
     use core::ops::{BitAnd, BitOr, BitXor, Not};

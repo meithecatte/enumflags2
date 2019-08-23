@@ -116,13 +116,12 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
             data = wrong_flag_values
         )
     );
-    let std_path = quote_spanned!(span=> self::core);
+    let std_path = quote_spanned!(span=> ::enumflags2::_internal::core);
     let scope_ident = Ident::new(&format!("__scope_enumderive_{}",
                                           item.ident.to_string().to_lowercase()), span);
     quote_spanned!{
         span =>
         mod #scope_ident {
-            extern crate core;
             use super::#ident;
 
             const VARIANTS: [#ident; #variants_len] = [#(#names :: #variants, )*];
