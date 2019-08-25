@@ -79,6 +79,7 @@ use details::BitFlagNum;
 
 /// A trait automatically implemented by `derive(EnumFlags)` on `T` to enable debug printing of
 /// `BitFlags<T>`. This is necessary because the names of the variants are needed.
+#[doc(hidden)]
 pub trait BitFlagsFmt
 where
     Self: RawBitFlags,
@@ -89,6 +90,7 @@ where
 
 /// A trait automatically implemented by `derive(EnumFlags)` to make the enum a valid type parameter
 /// for BitFlags.
+#[doc(hidden)]
 pub trait RawBitFlags: Copy + Clone + 'static {
     /// The underlying integer type.
     type Type: BitFlagNum;
@@ -104,6 +106,7 @@ pub trait RawBitFlags: Copy + Clone + 'static {
 }
 
 /// Represents a set of flags of some type `T`.
+/// The type must have the `#[derive(EnumFlags)]` attribute applied.
 #[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct BitFlags<T: RawBitFlags> {
