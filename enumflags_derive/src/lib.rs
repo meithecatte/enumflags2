@@ -79,7 +79,6 @@ fn extract_repr(attrs: &[syn::Attribute]) -> Option<syn::Ident> {
 fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStream {
     let span  = Span::call_site();
     let variants = data.variants.iter().map(|v| &v.ident);
-    let variants_names = variants.clone().map(ToString::to_string);
     let flag_values: Vec<_> = data.variants.iter()
         .map(|v| v.discriminant.as_ref().map(|d| fold_expr(&d.1)).expect("No discriminant")).collect();
     let variants_len = flag_values.len();
@@ -157,30 +156,6 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                 }
             }
 
-            impl ::enumflags2::BitFlagsFmt for #ident {
-                fn fmt(flags: ::enumflags2::BitFlags<#ident>,
-                       fmt: &mut #std_path::fmt::Formatter)
-                       -> #std_path::fmt::Result {
-                    use ::enumflags2::RawBitFlags;
-                    use #std_path::iter::Iterator;
-                    const VARIANT_NAMES: [&'static str; #variants_len] = [#(#variants_names, )*];
-                    let mut vals =
-                        VARIANTS.iter().zip(VARIANT_NAMES.iter())
-                        .filter(|&(&val, _)| val as #ty & flags.bits() != 0)
-                        .map(|(_, name)| name);
-                    write!(fmt, "BitFlags<{}>(0b{:b}",
-                           stringify!(#ident),
-                           flags.bits())?;
-                    if let #std_path::option::Option::Some(val) = vals.next() {
-                        write!(fmt, ", {}", val)?;
-                        for val in vals {
-                            write!(fmt, " | {}", val)?;
-                        }
-                    }
-                    write!(fmt, ")")
-                }
-            }
-
             impl ::enumflags2::RawBitFlags for #ident {
                 type Type = #ty;
 
@@ -194,6 +169,10 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
 
                 fn flag_list() -> &'static [Self] {
                     &VARIANTS
+                }
+
+                fn bitflags_type_name() -> &'static str {
+                    concat!("BitFlags<", stringify!(#ident), ">")
                 }
             }
         }
