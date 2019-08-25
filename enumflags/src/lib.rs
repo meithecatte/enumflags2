@@ -153,6 +153,46 @@ where
     }
 }
 
+impl<T> fmt::Binary for BitFlags<T>
+where
+    T: RawBitFlags,
+    T::Type: fmt::Binary,
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Binary::fmt(&self.bits(), fmt)
+    }
+}
+
+impl<T> fmt::Octal for BitFlags<T>
+where
+    T: RawBitFlags,
+    T::Type: fmt::Octal,
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Octal::fmt(&self.bits(), fmt)
+    }
+}
+
+impl<T> fmt::LowerHex for BitFlags<T>
+where
+    T: RawBitFlags,
+    T::Type: fmt::LowerHex,
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt::LowerHex::fmt(&self.bits(), fmt)
+    }
+}
+
+impl<T> fmt::UpperHex for BitFlags<T>
+where
+    T: RawBitFlags,
+    T::Type: fmt::UpperHex,
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt::UpperHex::fmt(&self.bits(), fmt)
+    }
+}
+
 /// The default value returned is one with all flags unset, i. e. [`empty`][Self::empty].
 impl<T> Default for BitFlags<T>
 where
