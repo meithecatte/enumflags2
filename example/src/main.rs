@@ -2,7 +2,7 @@ extern crate enumflags2;
 #[macro_use]
 extern crate enumflags2_derive;
 use enumflags2::*;
-#[derive(EnumFlags, Copy, Clone)]
+#[derive(EnumFlags, Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum Test {
     A = 0b0001,

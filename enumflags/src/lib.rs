@@ -43,8 +43,10 @@
 //! }
 //! ```
 #![warn(missing_docs)]
-#![no_std]
+#![cfg_attr(not(test), no_std)]
 
+#[cfg(test)]
+extern crate core;
 use core::{fmt, cmp, ops};
 use core::iter::FromIterator;
 
@@ -52,9 +54,12 @@ use core::iter::FromIterator;
 #[doc(hidden)]
 pub mod _internal {
     pub mod core {
-        pub use core::{convert, fmt, iter, option, ops};
+        pub use core::{convert, option, ops};
     }
 }
+
+// Internal debug formatting implementations
+mod formatting;
 
 /// Sealed trait
 mod details {
@@ -81,17 +86,6 @@ mod details {
 
 use details::BitFlagNum;
 
-/// A trait automatically implemented by `derive(EnumFlags)` on `T` to enable debug printing of
-/// `BitFlags<T>`. This is necessary because the names of the variants are needed.
-#[doc(hidden)]
-pub trait BitFlagsFmt
-where
-    Self: RawBitFlags,
-{
-    /// The implementation of Debug redirects here.
-    fn fmt(flags: BitFlags<Self>, f: &mut fmt::Formatter) -> fmt::Result;
-}
-
 /// A trait automatically implemented by `derive(EnumFlags)` to make the enum a valid type parameter
 /// for BitFlags.
 #[doc(hidden)]
@@ -107,6 +101,13 @@ pub trait RawBitFlags: Copy + Clone + 'static {
 
     /// Return a slice that contains each variant exactly one.
     fn flag_list() -> &'static [Self];
+
+    /// Return the name of the type for debug formatting purposes.
+    ///
+    /// This is typically `BitFlags<EnumName>`
+    fn bitflags_type_name() -> &'static str {
+        "BitFlags"
+    }
 }
 
 /// Represents a set of flags of some type `T`.
@@ -119,10 +120,36 @@ pub struct BitFlags<T: RawBitFlags> {
 
 impl<T> fmt::Debug for BitFlags<T>
 where
-    T: RawBitFlags + BitFlagsFmt,
+    T: RawBitFlags + fmt::Debug,
+    T::Type: fmt::Binary + fmt::Debug,
 {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        T::fmt(self.clone(), fmt)
+        let name = T::bitflags_type_name();
+        let bits = formatting::DebugBinaryFormatter(&self.val);
+        let iter = if !self.is_empty() {
+            let iter = T::flag_list().iter().filter(|&&flag| self.contains(flag));
+            Some(formatting::FlagFormatter(iter))
+        } else {
+            None
+        };
+
+        if !fmt.alternate() {
+            // Concise tuple formatting is a better default
+            let mut debug = fmt.debug_tuple(name);
+            debug.field(&bits);
+            if let Some(iter) = iter {
+                debug.field(&iter);
+            }
+            debug.finish()
+        } else {
+            // Pretty-printed tuples are ugly and hard to read, so use struct format
+            let mut debug = fmt.debug_struct(name);
+            debug.field("bits", &bits);
+            if let Some(iter) = iter {
+                debug.field("flags", &iter);
+            }
+            debug.finish()
+        }
     }
 }
 
