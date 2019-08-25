@@ -165,19 +165,20 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                     use ::enumflags2::RawBitFlags;
                     use #std_path::iter::Iterator;
                     const VARIANT_NAMES: [&'static str; #variants_len] = [#(#variants_names, )*];
-                    let vals =
+                    let mut vals =
                         VARIANTS.iter().zip(VARIANT_NAMES.iter())
                         .filter(|&(&val, _)| val as #ty & flags.bits() != 0)
                         .map(|(_, name)| name);
-                    write!(fmt, "BitFlags<{}>(0b{:b}, [",
+                    write!(fmt, "BitFlags<{}>(0b{:b}",
                            stringify!(#ident),
                            flags.bits())?;
-                    for (i, val) in vals.enumerate() {
-                        write!(fmt, "{}{}",
-                               if i == 0 { "" } else { ", " },
-                               val)?;
+                    if let #std_path::option::Option::Some(val) = vals.next() {
+                        write!(fmt, ", {}", val)?;
+                        for val in vals {
+                            write!(fmt, " | {}", val)?;
+                        }
                     }
-                    write!(fmt, "]) ")
+                    write!(fmt, ")")
                 }
             }
 
