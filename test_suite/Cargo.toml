@@ -37,3 +37,8 @@ edition = "2018"
 name = "bitflags-test-no-implicit-prelude-2018"
 path = "tests/no_implicit_prelude_2018.rs"
 edition = "2018"
+
+[[test]]
+name = "bitflags-formatting"
+path = "tests/formatting.rs"
+edition = "2018"
