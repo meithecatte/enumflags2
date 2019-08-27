@@ -90,3 +90,12 @@ fn assign_ops() {
     x ^= Test::B | Test::C;
     assert_eq!(x, Test::A | Test::C);
 }
+
+#[test]
+fn fn_derive() {
+    #[derive(EnumFlags, Copy, Clone, Debug)]
+    #[repr(u8)]
+    enum TestFn {
+        A = 1 << 0,
+    }
+}
