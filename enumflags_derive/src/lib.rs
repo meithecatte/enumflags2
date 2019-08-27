@@ -128,7 +128,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
             impl #std_path::ops::Not for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn not(self) -> Self::Output {
-                    use ::enumflags2::{BitFlags, RawBitFlags};
+                    use ::enumflags2::{BitFlags, _internal::RawBitFlags};
                     unsafe { BitFlags::new(self.bits()).not() }
                 }
             }
@@ -136,7 +136,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
             impl #std_path::ops::BitOr for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn bitor(self, other: Self) -> Self::Output {
-                    use ::enumflags2::{BitFlags, RawBitFlags};
+                    use ::enumflags2::{BitFlags, _internal::RawBitFlags};
                     unsafe { BitFlags::new(self.bits() | other.bits())}
                 }
             }
@@ -144,7 +144,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
             impl #std_path::ops::BitAnd for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn bitand(self, other: Self) -> Self::Output {
-                    use ::enumflags2::{BitFlags, RawBitFlags};
+                    use ::enumflags2::{BitFlags, _internal::RawBitFlags};
                     unsafe { BitFlags::new(self.bits() & other.bits())}
                 }
             }
@@ -156,7 +156,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                 }
             }
 
-            impl ::enumflags2::RawBitFlags for #ident {
+            impl ::enumflags2::_internal::RawBitFlags for #ident {
                 type Type = #ty;
 
                 fn all() -> Self::Type {

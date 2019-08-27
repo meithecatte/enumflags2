@@ -50,26 +50,34 @@ extern crate core;
 use core::{fmt, cmp, ops};
 use core::iter::FromIterator;
 
-// Re-export libcore so the macro doesn't inject "extern crate" downstream.
+/// While the module is public, this is only the case because it needs to be
+/// accessed by the derive macro. Do not use this directly. Stability guarantees
+/// don't apply.
 #[doc(hidden)]
 pub mod _internal {
-    pub mod core {
-        pub use core::{convert, option, ops};
+    /// A trait automatically implemented by `derive(EnumFlags)` to make the enum
+    /// a valid type parameter for `BitFlags<T>`.
+    pub trait RawBitFlags: Copy + Clone + 'static {
+        /// The underlying integer type.
+        type Type: BitFlagNum;
+
+        /// Return a value with all flag bits set.
+        fn all() -> Self::Type;
+
+        /// Return the bits as a number type.
+        fn bits(self) -> Self::Type;
+
+        /// Return a slice that contains each variant exactly one.
+        fn flag_list() -> &'static [Self];
+
+        /// Return the name of the type for debug formatting purposes.
+        ///
+        /// This is typically `BitFlags<EnumName>`
+        fn bitflags_type_name() -> &'static str {
+            "BitFlags"
+        }
     }
-}
 
-// Internal debug formatting implementations
-mod formatting;
-
-/// The BitFlagNum needs to be public because it's a part of the public API
-/// (as defined by rustc, which enforces this - in reality it's mostly seen
-/// by the derive macro). However, implementing this for types other than
-/// the unsigned integers below doesn't really make sense, and is a
-/// compatibility liability.
-///
-/// What you see below is a hack - the module is private, but the trait itself
-/// is technically public. This allows creating a "sealed trait".
-mod details {
     use core::ops::{BitAnd, BitOr, BitXor, Not};
     use core::cmp::PartialOrd;
 
@@ -89,33 +97,17 @@ mod details {
     impl BitFlagNum for u32 {}
     impl BitFlagNum for u64 {}
     impl BitFlagNum for usize {}
-}
 
-use details::BitFlagNum;
-
-/// A trait automatically implemented by `derive(EnumFlags)` to make the enum a valid type parameter
-/// for BitFlags.
-#[doc(hidden)]
-pub trait RawBitFlags: Copy + Clone + 'static {
-    /// The underlying integer type.
-    type Type: BitFlagNum;
-
-    /// Return a value with all flag bits set.
-    fn all() -> Self::Type;
-
-    /// Return the bits as a number type.
-    fn bits(self) -> Self::Type;
-
-    /// Return a slice that contains each variant exactly one.
-    fn flag_list() -> &'static [Self];
-
-    /// Return the name of the type for debug formatting purposes.
-    ///
-    /// This is typically `BitFlags<EnumName>`
-    fn bitflags_type_name() -> &'static str {
-        "BitFlags"
+    // Re-export libcore so the macro doesn't inject "extern crate" downstream.
+    pub mod core {
+        pub use core::{convert, option, ops};
     }
 }
+
+// Internal debug formatting implementations
+mod formatting;
+
+use _internal::RawBitFlags;
 
 /// Represents a set of flags of some type `T`.
 /// The type must have the `#[derive(EnumFlags)]` attribute applied.
