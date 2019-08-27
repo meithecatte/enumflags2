@@ -188,11 +188,6 @@ where
         (self.bits() & other.bits()) == other.bits()
     }
 
-    /// Flips all flags
-    pub fn not(self) -> Self {
-        unsafe { BitFlags::new(!self.bits() & T::all()) }
-    }
-
     /// Returns a BitFlags iff the bits value does not contain any illegal flags.
     pub fn from_bits(bits: T::Type) -> Option<Self> {
         if bits & !Self::all().bits() == Self::empty().bits() {
@@ -306,7 +301,7 @@ where
 {
     type Output = BitFlags<T>;
     fn not(self) -> BitFlags<T> {
-        self.not()
+        unsafe { BitFlags::new(!self.bits() & T::all()) }
     }
 }
 
