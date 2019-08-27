@@ -116,15 +116,8 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
         )
     );
     let std_path = quote_spanned!(span=> ::enumflags2::_internal::core);
-    let scope_ident = Ident::new(&format!("__scope_enumderive_{}",
-                                          item.ident.to_string().to_lowercase()), span);
     quote_spanned!{
         span =>
-        mod #scope_ident {
-            use super::#ident;
-
-            const VARIANTS: [#ident; #variants_len] = [#(#names :: #variants, )*];
-
             impl #std_path::ops::Not for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn not(self) -> Self::Output {
@@ -168,6 +161,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                 }
 
                 fn flag_list() -> &'static [Self] {
+                    const VARIANTS: [#ident; #variants_len] = [#(#names :: #variants, )*];
                     &VARIANTS
                 }
 
@@ -175,6 +169,5 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                     concat!("BitFlags<", stringify!(#ident), ">")
                 }
             }
-        }
     }
 }
