@@ -1,4 +1,4 @@
-use enumflags2_derive::EnumFlags;
+use enumflags2::EnumFlags;
 
 include!("../common.rs");
 

@@ -1,7 +1,6 @@
 extern crate enumflags2;
-#[macro_use]
-extern crate enumflags2_derive;
-use enumflags2::*;
+use enumflags2::{BitFlags, EnumFlags};
+
 #[derive(EnumFlags, Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum Test {
