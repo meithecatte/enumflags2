@@ -1,7 +1,83 @@
 use core::fmt::{self, Debug, Binary};
+use crate::{BitFlags, _internal::RawBitFlags};
+
+impl<T> fmt::Debug for BitFlags<T>
+where
+    T: RawBitFlags + fmt::Debug,
+    T::Type: fmt::Binary + fmt::Debug,
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let name = T::bitflags_type_name();
+        let bits = DebugBinaryFormatter(&self.val);
+        let iter = if !self.is_empty() {
+            let iter = T::flag_list().iter().filter(|&&flag| self.contains(flag));
+            Some(FlagFormatter(iter))
+        } else {
+            None
+        };
+
+        if !fmt.alternate() {
+            // Concise tuple formatting is a better default
+            let mut debug = fmt.debug_tuple(name);
+            debug.field(&bits);
+            if let Some(iter) = iter {
+                debug.field(&iter);
+            }
+            debug.finish()
+        } else {
+            // Pretty-printed tuples are ugly and hard to read, so use struct format
+            let mut debug = fmt.debug_struct(name);
+            debug.field("bits", &bits);
+            if let Some(iter) = iter {
+                debug.field("flags", &iter);
+            }
+            debug.finish()
+        }
+    }
+}
+
+impl<T> fmt::Binary for BitFlags<T>
+where
+    T: RawBitFlags,
+    T::Type: fmt::Binary,
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Binary::fmt(&self.bits(), fmt)
+    }
+}
+
+impl<T> fmt::Octal for BitFlags<T>
+where
+    T: RawBitFlags,
+    T::Type: fmt::Octal,
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Octal::fmt(&self.bits(), fmt)
+    }
+}
+
+impl<T> fmt::LowerHex for BitFlags<T>
+where
+    T: RawBitFlags,
+    T::Type: fmt::LowerHex,
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt::LowerHex::fmt(&self.bits(), fmt)
+    }
+}
+
+impl<T> fmt::UpperHex for BitFlags<T>
+where
+    T: RawBitFlags,
+    T::Type: fmt::UpperHex,
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt::UpperHex::fmt(&self.bits(), fmt)
+    }
+}
 
 // Format an iterator of flags into "A | B | etc"
-pub struct FlagFormatter<I>(pub I);
+struct FlagFormatter<I>(I);
 
 impl<T: Debug, I: Clone + Iterator<Item=T>> Debug for FlagFormatter<I> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
@@ -23,7 +99,7 @@ impl<T: Debug, I: Clone + Iterator<Item=T>> Debug for FlagFormatter<I> {
 
 // A formatter that obeys format arguments but falls back to binary when
 // no explicit format is requested. Supports {:08?}, {:08x?}, etc.
-pub struct DebugBinaryFormatter<'a, F>(pub &'a F);
+struct DebugBinaryFormatter<'a, F>(&'a F);
 
 impl<'a, F: Debug + Binary + 'a> Debug for DebugBinaryFormatter<'a, F> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {

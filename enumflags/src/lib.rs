@@ -47,7 +47,7 @@
 
 #[cfg(test)]
 extern crate core;
-use core::{fmt, cmp, ops};
+use core::{cmp, ops};
 use core::iter::FromIterator;
 
 /// While the module is public, this is only the case because it needs to be
@@ -115,81 +115,6 @@ use _internal::RawBitFlags;
 #[repr(transparent)]
 pub struct BitFlags<T: RawBitFlags> {
     val: T::Type,
-}
-
-impl<T> fmt::Debug for BitFlags<T>
-where
-    T: RawBitFlags + fmt::Debug,
-    T::Type: fmt::Binary + fmt::Debug,
-{
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let name = T::bitflags_type_name();
-        let bits = formatting::DebugBinaryFormatter(&self.val);
-        let iter = if !self.is_empty() {
-            let iter = T::flag_list().iter().filter(|&&flag| self.contains(flag));
-            Some(formatting::FlagFormatter(iter))
-        } else {
-            None
-        };
-
-        if !fmt.alternate() {
-            // Concise tuple formatting is a better default
-            let mut debug = fmt.debug_tuple(name);
-            debug.field(&bits);
-            if let Some(iter) = iter {
-                debug.field(&iter);
-            }
-            debug.finish()
-        } else {
-            // Pretty-printed tuples are ugly and hard to read, so use struct format
-            let mut debug = fmt.debug_struct(name);
-            debug.field("bits", &bits);
-            if let Some(iter) = iter {
-                debug.field("flags", &iter);
-            }
-            debug.finish()
-        }
-    }
-}
-
-impl<T> fmt::Binary for BitFlags<T>
-where
-    T: RawBitFlags,
-    T::Type: fmt::Binary,
-{
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Binary::fmt(&self.bits(), fmt)
-    }
-}
-
-impl<T> fmt::Octal for BitFlags<T>
-where
-    T: RawBitFlags,
-    T::Type: fmt::Octal,
-{
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Octal::fmt(&self.bits(), fmt)
-    }
-}
-
-impl<T> fmt::LowerHex for BitFlags<T>
-where
-    T: RawBitFlags,
-    T::Type: fmt::LowerHex,
-{
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt::LowerHex::fmt(&self.bits(), fmt)
-    }
-}
-
-impl<T> fmt::UpperHex for BitFlags<T>
-where
-    T: RawBitFlags,
-    T::Type: fmt::UpperHex,
-{
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt::UpperHex::fmt(&self.bits(), fmt)
-    }
 }
 
 /// The default value returned is one with all flags unset, i. e. [`empty`][Self::empty].
