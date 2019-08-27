@@ -6,10 +6,8 @@
 //! ## Example
 //! ```
 //! extern crate enumflags2;
-//! #[macro_use]
-//! extern crate enumflags2_derive;
 //!
-//! use enumflags2::BitFlags;
+//! use enumflags2::{BitFlags, EnumFlags};
 //!
 //! #[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
 //! #[repr(u8)]
@@ -49,6 +47,13 @@
 extern crate core;
 use core::{cmp, ops};
 use core::iter::FromIterator;
+
+#[allow(unused_imports)]
+#[macro_use]
+extern crate enumflags2_derive;
+
+#[doc(hidden)]
+pub use enumflags2_derive::EnumFlags_internal as EnumFlags;
 
 /// While the module is public, this is only the case because it needs to be
 /// accessed by the derive macro. Do not use this directly. Stability guarantees

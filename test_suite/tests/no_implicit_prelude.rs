@@ -1,8 +1,7 @@
 #![no_implicit_prelude]
 
 extern crate enumflags2;
-#[macro_use]
-extern crate enumflags2_derive;
+use enumflags2::EnumFlags;
 
 #[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
 #[repr(u8)]

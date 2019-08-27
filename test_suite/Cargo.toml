@@ -6,7 +6,6 @@ publish = false
 [dev-dependencies]
 
 enumflags2 = {path = "../enumflags"}
-enumflags2_derive = {path = "../enumflags_derive"}
 
 [[test]]
 name = "bitflags-test"
