@@ -33,21 +33,20 @@ fn max_value_of(ty: &str) -> Option<usize> {
 
 fn fold_expr(expr: &syn::Expr) -> u64 {
     use syn::Expr;
-    match expr{
-        &Expr::Lit(ref expr_lit) => {
+    match expr {
+        Expr::Lit(ref expr_lit) => {
             match expr_lit.lit {
                 syn::Lit::Int(ref lit_int) => lit_int.base10_parse().expect("Int literal out of range"),
                 _ => panic!("Only Int literals are supported")
             }
         },
-        &Expr::Binary(ref expr_binary) => {
+        Expr::Binary(ref expr_binary) => {
             let l = fold_expr(&expr_binary.left);
             let r = fold_expr(&expr_binary.right);
             match &expr_binary.op {
                 syn::BinOp::Shl(_) => l << r,
                 op => panic!("{} not supported", op.to_token_stream())
             }
-
         }
         _ => panic!("Only literals are supported")
     }
@@ -76,13 +75,17 @@ fn extract_repr(attrs: &[syn::Attribute]) -> Option<syn::Ident> {
         })
         .nth(0)
 }
+
 fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStream {
     let span  = Span::call_site();
     let variants = data.variants.iter().map(|v| &v.ident);
-    let flag_values: Vec<_> = data.variants.iter()
-        .map(|v| v.discriminant.as_ref().map(|d| fold_expr(&d.1)).expect("No discriminant")).collect();
+    let flag_values: Vec<_> =
+        data.variants.iter()
+        .map(|v| v.discriminant.as_ref()
+                 .map(|d| fold_expr(&d.1)).expect("No discriminant"))
+        .collect();
     let variants_len = flag_values.len();
-    assert!(flag_values.iter().find(|&&v| v == 0).is_none(), "Null flag is not allowed");
+    assert!(flag_values.iter().all(|&v| v != 0), "Null flag is not allowed");
     let names = flag_values.iter().map(|_| &ident);
     let ty = extract_repr(&item.attrs).unwrap_or(Ident::new("usize", span));
     let max_flag_value = flag_values.iter().max().unwrap();
@@ -109,7 +112,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
         })
         .collect();
     assert!(
-        wrong_flag_values.len() == 0,
+        wrong_flag_values.is_empty(),
         format!(
             "The following flags are not unique: {data:?}",
             data = wrong_flag_values
