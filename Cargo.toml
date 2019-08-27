@@ -2,6 +2,5 @@
 members = [
     "enumflags",
     "enumflags_derive",
-    "example",
     "test_suite",
 ]
