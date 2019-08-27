@@ -61,7 +61,14 @@ pub mod _internal {
 // Internal debug formatting implementations
 mod formatting;
 
-/// Sealed trait
+/// The BitFlagNum needs to be public because it's a part of the public API
+/// (as defined by rustc, which enforces this - in reality it's mostly seen
+/// by the derive macro). However, implementing this for types other than
+/// the unsigned integers below doesn't really make sense, and is a
+/// compatibility liability.
+///
+/// What you see below is a hack - the module is private, but the trait itself
+/// is technically public. This allows creating a "sealed trait".
 mod details {
     use core::ops::{BitAnd, BitOr, BitXor, Not};
     use core::cmp::PartialOrd;
