@@ -321,3 +321,36 @@ where
         flags
     }
 }
+
+#[cfg(feature = "serde")]
+mod impl_serde {
+    extern crate serde;
+    use self::serde::{Serialize, Deserialize};
+    use self::serde::de::{Error, Unexpected};
+    use super::{BitFlags, _internal::RawBitFlags};
+
+    impl<'a, T> Deserialize<'a> for BitFlags<T>
+    where
+        T: RawBitFlags,
+        T::Type: Deserialize<'a> + Into<u64>,
+    {
+        fn deserialize<D: serde::Deserializer<'a>>(d: D) -> Result<Self, D::Error> {
+            let val = T::Type::deserialize(d)?;
+            Self::from_bits(val)
+                .ok_or_else(|| D::Error::invalid_value(
+                    Unexpected::Unsigned(val.into()),
+                    &"valid bit representation"
+                ))
+        }
+    }
+
+    impl<T> Serialize for BitFlags<T>
+    where
+        T: RawBitFlags,
+        T::Type: Serialize,
+    {
+        fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+            T::Type::serialize(&self.val, s)
+        }
+    }
+}
