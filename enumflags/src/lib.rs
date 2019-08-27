@@ -44,10 +44,11 @@
 //! ## Optional Feature Flags
 //!
 //! - [`serde`](https://serde.rs/) implements `Serialize` and `Deserialize` for `BitFlags<T>`.
+//! - `std` implements `std::error::Error` for `FromBitsError`.
 #![warn(missing_docs)]
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(all(not(test), not(feature = "std")), no_std)]
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "std")))]
 extern crate core;
 use core::{cmp, ops};
 use core::iter::FromIterator;
@@ -119,6 +120,9 @@ pub mod _internal {
 // Internal debug formatting implementations
 mod formatting;
 
+// impl TryFrom<T::Type> for BitFlags<T>
+mod fallible;
+
 use _internal::RawBitFlags;
 
 /// Represents a set of flags of some type `T`.
@@ -151,7 +155,7 @@ where
 
 impl<T: RawBitFlags> From<T> for BitFlags<T> {
     fn from(t: T) -> BitFlags<T> {
-        BitFlags { val: t.bits() }
+        Self::from_flag(t)
     }
 }
 
@@ -201,6 +205,22 @@ where
             unsafe { Some(BitFlags::new(bits)) }
         } else {
             None
+        }
+    }
+
+    pub fn from_flag(t: T) -> Self {
+        BitFlags { val: t.bits() }
+    }
+
+    pub fn try_from_bits(bits: T::Type) -> Result<Self, FromBitsError<T>> {
+        let flags = Self::from_bits_truncate(bits);
+        if flags.bits() == bits {
+            Ok(flags)
+        } else {
+            Err(FromBitsError {
+                flags,
+                invalid: bits & !flags.bits(),
+            })
         }
     }
 
@@ -359,5 +379,28 @@ mod impl_serde {
         fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
             T::Type::serialize(&self.val, s)
         }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct FromBitsError<T: RawBitFlags> {
+    flags: BitFlags<T>,
+    invalid: T::Type,
+}
+
+impl<T: RawBitFlags> FromBitsError<T> {
+    pub fn truncate(self) -> BitFlags<T> {
+        self.flags
+    }
+
+    pub fn invalid_bits(self) -> T::Type {
+        self.invalid
+    }
+}
+
+#[cfg(feature = "std")]
+impl<T: RawBitFlags> std::error::Error for FromBitsError<T> {
+    fn description(&self) -> &str {
+        "invalid bit representation"
     }
 }
