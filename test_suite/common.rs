@@ -50,7 +50,7 @@ fn test_foo() {
     assert!(!(Test::A | Test::B | Test::C).contains(Test::A | Test::D));
     assert_eq!(!(Test::A | Test::B), Test::C | Test::D);
     assert_eq!((Test::A | Test::B).bits(), 3);
-    assert_eq!((Test::A | Test::B).not().bits(), 12);
+    assert_eq!((!(Test::A | Test::B)).bits(), 12);
     assert_eq!(BitFlags::<Test>::all().bits(), 15);
     {
         let mut b = Test::A | Test::B | Test::C;
