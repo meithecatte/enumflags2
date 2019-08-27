@@ -1,8 +1,8 @@
 [package]
 name = "enumflags2_derive"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["maik klein <maikklein@googlemail.com>", "Jakub \"NieDżejkob\" Kądziołka <kuba@kadziolka.net>"]
-description = "Enum-based bitflags - the macros"
+description = "Enum-based bitflags - the macro. Do not use directly, use the reexport in the `enumflags2` crate. This allows for better compatibility across versions."
 license = "MIT"
 repository = "https://github.com/NieDzejkob/enumflags2"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
