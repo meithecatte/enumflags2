@@ -1,6 +1,6 @@
 #![no_implicit_prelude]
 
-#[derive(::enumflags2_derive::EnumFlags, Copy, Clone, Debug, PartialEq)]
+#[derive(::enumflags2::EnumFlags, Copy, Clone, Debug, PartialEq)]
 #[repr(u8)]
 pub enum Test {
     A = 1 << 0,

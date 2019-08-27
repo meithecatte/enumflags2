@@ -10,7 +10,7 @@ use proc_macro2::Span;
 use quote::ToTokens;
 use std::convert::From;
 
-#[proc_macro_derive(EnumFlags, attributes(EnumFlags))]
+#[proc_macro_derive(EnumFlags_internal)]
 pub fn derive_enum_flags(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
 
