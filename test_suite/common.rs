@@ -90,3 +90,32 @@ fn assign_ops() {
     x ^= Test::B | Test::C;
     assert_eq!(x, Test::A | Test::C);
 }
+
+#[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
+#[repr(u8)]
+enum TestM {
+    A = 0b001,
+    B = 0b110,
+}
+
+#[test]
+fn multibit_from() {
+    use enumflags2::BitFlags;
+    assert_eq!(
+        BitFlags::<TestM>::all(),
+        TestM::A | TestM::B
+    );
+    assert_eq!(
+        BitFlags::<TestM>::from_bits_truncate(0b011),
+        TestM::A
+    );
+}
+
+#[test]
+fn multibit_truncate() {
+    use enumflags2::BitFlags;
+    assert_eq!(
+        BitFlags::<TestM>::from_bits(0b011),
+        None
+    );
+}
