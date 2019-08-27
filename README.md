@@ -28,6 +28,7 @@ extern crate enumflags2;
 - [x] Has a similar API compared to the popular [bitflags](https://crates.io/crates/bitflags) crate.
 - [x] Does not expose the generated types explicity. The user interacts exclusively with `struct BitFlags<Enum>;`.
 - [x] The debug formatter prints the binary flag value as well as the flag enums: `BitFlags(0b1111, [A, B, C, D])`.
+- [x] Optional support for serialization with the [`serde`](https://serde.rs/) feature flag.
 
 ### Example
 
