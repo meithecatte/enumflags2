@@ -20,13 +20,13 @@ pub fn derive_enum_flags(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     }
 }
 
-fn max_value_of(ty: &str) -> Option<usize> {
+fn max_value_of(ty: &str) -> Option<u64> {
     match ty {
-        "u8" => Some(u8::max_value() as usize),
-        "u16" => Some(u16::max_value() as usize),
-        "u32" => Some(u32::max_value() as usize),
-        "u64" => Some(u64::max_value() as usize),
-        "usize" => Some(usize::max_value()),
+        "u8" => Some(u8::max_value() as u64),
+        "u16" => Some(u16::max_value() as u64),
+        "u32" => Some(u32::max_value() as u64),
+        "u64" => Some(u64::max_value() as u64),
+        "usize" => Some(usize::max_value() as u64),
         _ => None,
     }
 }
@@ -85,39 +85,36 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                  .map(|d| fold_expr(&d.1)).expect("No discriminant"))
         .collect();
     let variants_len = flag_values.len();
-    assert!(flag_values.iter().all(|&v| v != 0), "Null flag is not allowed");
     let names = flag_values.iter().map(|_| &ident);
     let ty = extract_repr(&item.attrs).unwrap_or(Ident::new("usize", span));
-    let max_flag_value = flag_values.iter().max().unwrap();
     let max_allowed_value = max_value_of(&ty.to_string()).expect(&format!("{} is not supported", ty));
-    assert!(
-        *max_flag_value as usize <= max_allowed_value,
-        format!(
-            "Value '0b{val:b}' is too big for an {ty}",
-            val = max_flag_value,
-            ty = ty
-        )
-    );
-    let wrong_flag_values: &Vec<_> = &flag_values
-        .iter()
-        .zip(variants.clone())
-        .filter(|&(&val, _)| flag_values.iter().filter(|&&v| v & val != 0).count() > 1)
-        .map(|(value, variant)| {
-            format!(
-                "{name}::{variant} = 0b{value:b}",
-                name = ident,
-                variant = variant,
-                value = value
-            )
-        })
-        .collect();
-    assert!(
-        wrong_flag_values.is_empty(),
-        format!(
-            "The following flags are not unique: {data:?}",
-            data = wrong_flag_values
-        )
-    );
+
+    let mut flags_seen = 0;
+    for (&flag, variant) in flag_values.iter().zip(variants.clone()) {
+        if flag > max_allowed_value {
+            panic!("Value {:#b} is too big for an {}",
+                   flag, ty
+            );
+        } else if flag == 0 || !flag.is_power_of_two() {
+            panic!("Each flag must have exactly one bit set, and {ident}::{variant} = {flag:#b} doesn't",
+                   ident = ident,
+                   variant = variant,
+                   flag = flag
+            );
+        } else if flags_seen & flag != 0 {
+            panic!("Flag {} collides with {}",
+                   variant,
+                   flag_values.iter()
+                       .zip(variants.clone())
+                       .find(|(&other_flag, _)| flag == other_flag)
+                       .unwrap()
+                       .1
+            );
+        }
+
+        flags_seen |= flag;
+    }
+
     let std_path = quote_spanned!(span=> ::enumflags2::_internal::core);
     quote_spanned!{
         span =>
