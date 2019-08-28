@@ -4,7 +4,6 @@ use crate::{BitFlags, _internal::RawBitFlags};
 impl<T> fmt::Debug for BitFlags<T>
 where
     T: RawBitFlags + fmt::Debug,
-    T::Type: fmt::Binary + fmt::Debug,
 {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let name = T::bitflags_type_name();

@@ -89,6 +89,7 @@ pub mod _internal {
 
     use core::ops::{BitAnd, BitOr, BitXor, Not};
     use core::cmp::PartialOrd;
+    use core::fmt;
 
     pub trait BitFlagNum
         : Default
@@ -97,6 +98,8 @@ pub mod _internal {
         + BitXor<Self, Output = Self>
         + Not<Output = Self>
         + PartialOrd<Self>
+        + fmt::Debug
+        + fmt::Binary
         + Copy
         + Clone {
     }

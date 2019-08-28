@@ -72,3 +72,13 @@ fn format() {
         "0x0F"
     );
 }
+
+#[test]
+fn debug_generic() {
+    use enumflags2::{BitFlags, _internal::RawBitFlags};
+
+    #[derive(Debug)]
+    struct Debug<T: RawBitFlags>(BitFlags<T>);
+
+    let _ = format!("{:?}", Debug(BitFlags::<Test>::all()));
+}
