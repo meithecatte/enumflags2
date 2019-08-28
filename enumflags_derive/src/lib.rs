@@ -119,52 +119,68 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
     quote_spanned!{
         span =>
             impl #std_path::ops::Not for #ident {
-                type Output = ::enumflags2::BitFlags<#ident>;
+                type Output = <Self as ::enumflags2::BitFlag>::Flags;
                 fn not(self) -> Self::Output {
-                    use ::enumflags2::{BitFlags, _internal::RawBitFlags};
+                    use ::enumflags2::{BitFlag, EnumFlags};
                     unsafe { BitFlags::new(self.bits()).not() }
                 }
             }
 
             impl #std_path::ops::BitOr for #ident {
-                type Output = ::enumflags2::BitFlags<#ident>;
+                type Output = <Self as ::enumflags2::BitFlag>::Flags;
                 fn bitor(self, other: Self) -> Self::Output {
-                    use ::enumflags2::{BitFlags, _internal::RawBitFlags};
+                    use ::enumflags2::{BitFlag, EnumFlags};
                     unsafe { BitFlags::new(self.bits() | other.bits())}
                 }
             }
 
             impl #std_path::ops::BitAnd for #ident {
-                type Output = ::enumflags2::BitFlags<#ident>;
+                type Output = <Self as ::enumflags2::BitFlag>::Flags;
                 fn bitand(self, other: Self) -> Self::Output {
-                    use ::enumflags2::{BitFlags, _internal::RawBitFlags};
+                    use ::enumflags2::{BitFlag, EnumFlags};
                     unsafe { BitFlags::new(self.bits() & other.bits())}
                 }
             }
 
             impl #std_path::ops::BitXor for #ident {
-                type Output = ::enumflags2::BitFlags<#ident>;
+                type Output = <Self as ::enumflags2::BitFlag>::Flags;
                 fn bitxor(self, other: Self) -> Self::Output {
-                    #std_path::convert::Into::<Self::Output>::into(self) ^ #std_path::convert::Into::<Self::Output>::into(other)
+                    use ::enumflags2::{BitFlags, EnumFlags};
+                    BitFlags::from_flag(self) ^ BitFlags::from_flag(other)
                 }
             }
 
-            impl ::enumflags2::_internal::RawBitFlags for #ident {
+            impl ::enumflags2::BitFlag for #ident {
                 type Type = #ty;
+                type Flags = ::enumflags2::BitFlags<Self>;
 
+                #[inline]
                 fn all() -> Self::Type {
+                    /*fn _assert_blanket<T: ::enumflags2::BitFlagBlanket>() {
+                        // check that we implement all the required traits for a BitFlag
+                        _assert_blanket::<#ident>()
+                    }*/
+
                     (#(#flag_values)|*) as #ty
                 }
 
+                #[inline]
                 fn bits(self) -> Self::Type {
                     self as #ty
                 }
 
+                #[inline]
+                fn into_flags(self) -> Self::Flags {
+                    ::enumflags2::BitFlags::from_flag(self)
+                }
+
+                #[inline]
                 fn flag_list() -> &'static [Self] {
                     const VARIANTS: [#ident; #variants_len] = [#(#names :: #variants, )*];
                     &VARIANTS
                 }
 
+                #[inline]
                 fn bitflags_type_name() -> &'static str {
                     concat!("BitFlags<", stringify!(#ident), ">")
                 }
