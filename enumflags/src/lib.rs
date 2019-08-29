@@ -50,8 +50,12 @@
 #[cfg(test)]
 extern crate core;
 use core::iter::FromIterator;
-use core::ops::{self, BitAnd, BitOr, BitXor, Not};
+use core::ops::{Not,
+    BitAnd, BitOr, BitXor,
+    BitAndAssign, BitOrAssign, BitXorAssign,
+};
 use core::cmp;
+use repr::{BitFlagRepr, BitFlagNum};
 
 #[allow(unused_imports)]
 #[macro_use]
@@ -60,6 +64,8 @@ extern crate enumflags2_derive;
 #[doc(hidden)]
 pub use enumflags2_derive::EnumFlags_internal as EnumFlags;
 
+pub mod repr;
+
 /// While the module is public, this is only the case because it needs to be
 /// accessed by the derive macro. Do not use this directly. Stability guarantees
 /// don't apply.
@@ -67,58 +73,42 @@ pub use enumflags2_derive::EnumFlags_internal as EnumFlags;
 pub mod _internal {
     // Re-export libcore so the macro doesn't inject "extern crate" downstream.
     pub mod core {
-        pub use core::{convert, option, ops};
+        pub use core::{convert, mem, option, ops, result};
     }
 }
 
 // Internal debug formatting implementations
 mod formatting;
 
-pub trait BitFlagNum
-    : Default
-    + BitOr<Self, Output = Self>
-    + BitAnd<Self, Output = Self>
-    + BitXor<Self, Output = Self>
-    + Not<Output = Self>
-    + cmp::PartialOrd<Self>
-    + Copy
-    + Clone {
-}
+mod ext;
+pub use ext::*;
 
-impl BitFlagNum for u8 {}
-impl BitFlagNum for u16 {}
-impl BitFlagNum for u32 {}
-impl BitFlagNum for u64 {}
-impl BitFlagNum for usize {}
-
-/// A trait automatically implemented by `derive(EnumFlags)` to make the enum
+/// A single flag in a type-safe set of flags.
+///
+/// Automatically implemented by `derive(EnumFlags)` to make the enum
 /// a valid type parameter for `BitFlags<T>`.
 pub trait BitFlag
     : Copy + Clone
+    + BitFlagRepr<Self>
     + BitOr<Self, Output = <Self as BitFlag>::Flags>
     + BitAnd<Self, Output = <Self as BitFlag>::Flags>
     + BitXor<Self, Output = <Self as BitFlag>::Flags>
     + Not<Output = <Self as BitFlag>::Flags>
-    //+ Into<<Self as BitFlag>::Flags>
     + 'static
 {
     /// The underlying integer type.
     type Type: BitFlagNum;
 
-    /// A type-safe representation of multiple flags.
-    type Flags: EnumFlags;
+    /// A type-safe set of flags.
+    type Flags: EnumFlags<Flag=Self> + BitFlagRepr<Self>;
 
     /// Return a value with all flag bits set.
-    fn all() -> Self::Type;
-
-    /// Return the bits as a number type.
-    fn bits(self) -> Self::Type;
+    const ALL_BITS: Self::Type;
 
     /// Return a slice that contains each variant exactly one.
     fn flag_list() -> &'static [Self];
 
-    fn into_flags(self) -> Self::Flags;
-
+    #[inline]
     /// Return the name of the type for debug formatting purposes.
     ///
     /// This is typically `BitFlags<EnumName>`
@@ -127,127 +117,160 @@ pub trait BitFlag
     }
 }
 
-/*
-/// Constraints that apply to all types using `derive(EnumFlags)`
-pub trait BitFlagBlanket
-    : BitFlag
-    + BitOr<Self, Output = <Self as BitFlag>::Flags>
-    + BitAnd<Self, Output = <Self as BitFlag>::Flags>
-    + BitXor<Self, Output = <Self as BitFlag>::Flags>
-    + Not<Output = <Self as BitFlag>::Flags>
-{ }
-
-impl<T> BitFlagBlanket for T
-where T:
-    BitFlag
-    + BitOr<Self, Output = Self::Flags>
-    + BitAnd<Self, Output = Self::Flags>
-    + BitXor<Self, Output = Self::Flags>
-    + Not<Output = Self::Flags>
-{ }*/
-
-/*impl<T: BitFlag> BitFlag for BitFlags<T>
-{
-    type Type = T::Type;
-    type Flags = Self;
-
-    fn all() -> Self::Type { Self::Type::all() }
-    fn bits(self) -> Self::Type { self.val }
-    fn flag_list() -> &'static [Self] { Self::Type::flag_list() }
-    fn into_flags(self) -> Self::Flags { self }
-    fn bitflags_type_name() -> &'static str { Self::Type::bitflags_type_name() }
-}*/
-
-pub trait EnumFlags
+/// A set of bit flags.
+///
+/// This trait is unsafe to impl because it assumes that the underlying `BitFlagRepr` is
+/// capable of representing a set of flags (and any combination rather than a single enum flag).
+pub unsafe trait EnumFlags
     : Sized
+    + BitFlagRepr<<Self as EnumFlags>::Flag>
 {
     type Flag: BitFlag;
 
+    #[inline]
     /// Create a new BitFlags unsafely. Consider using `from_bits` or `from_bits_truncate`.
-    unsafe fn new(val: <Self::Flag as BitFlag>::Type) -> Self;
+    unsafe fn new(val: <Self::Flag as BitFlag>::Type) -> Self {
+        <Self as BitFlagRepr<Self::Flag>>::from_repr_unchecked(val)
+    }
 
     #[inline]
     /// Create an empty BitFlags. Empty means `0`.
     fn empty() -> Self {
-        unsafe { Self::new(Default::default()) }
+        unsafe { Self::new(<Self::Flag as BitFlag>::Type::EMPTY) }
     }
 
     #[inline]
     /// Create a BitFlags with all flags set.
     fn all() -> Self {
-        unsafe { Self::new(Self::Flag::all()) }
+        unsafe { Self::new(Self::Flag::ALL_BITS) }
     }
 
     #[inline]
     /// Returns true if all flags are set
     fn is_all(self) -> bool {
-        self.bits() == <Self::Flag as BitFlag>::all()
+        self.bits() == <Self::Flag as BitFlag>::ALL_BITS
     }
 
     #[inline]
     /// Returns true if no flag is set
     fn is_empty(self) -> bool {
-        self.bits() == Self::empty().bits()
+        self.bits() == <Self::Flag as BitFlag>::Type::EMPTY
     }
 
+    #[inline]
     /// Returns the underlying type value
-    fn bits(self) -> <Self::Flag as BitFlag>::Type;
+    fn bits(self) -> <Self::Flag as BitFlag>::Type {
+        self.into_repr()
+    }
 
+    #[inline]
     /// Returns a BitFlags iff the bits value does not contain any illegal flags.
     fn from_bits(bits: <Self::Flag as BitFlag>::Type) -> Option<Self> {
-        if bits & !Self::all().bits() == Self::empty().bits() {
-            unsafe { Some(Self::new(bits)) }
-        } else {
-            None
-        }
+        Self::from_repr(bits).ok()
     }
 
     #[inline]
     /// Truncates flags that are illegal
     fn from_bits_truncate(bits: <Self::Flag as BitFlag>::Type) -> Self {
-        unsafe { Self::new(bits & Self::Flag::all()) }
+        unsafe { Self::new(bits & Self::Flag::ALL_BITS) }
     }
 
     #[inline]
     fn from_flag(flag: Self::Flag) -> Self {
-        unsafe { Self::new(flag.bits()) }
+        unsafe { Self::new(flag.into_bits()) }
     }
 
-    /*
+    #[inline]
+    fn from_flags<B: BitFlagRepr<Self::Flag>>(flags: B) -> Self {
+        unsafe { Self::new(flags.into_repr()) }
+    }
+
     /// Returns true if at least one flag is shared.
-    fn intersects<B: Into<Self>>(self, other: B) -> bool {
-        (self.bits() & other.into().bits()) != Self::empty().bits()
+    fn intersects<B: BitFlagRepr<Self::Flag>>(self, other: B) -> bool {
+        (self.bits() & other.into_repr()) != <Self::Flag as BitFlag>::Type::EMPTY
     }
 
+    #[inline]
     /// Returns true iff all flags are contained.
-    fn contains<B: Into<Self>>(self, other: B) -> bool {
-        let other = other.into();
-        (self.bits() & other.bits()) == other.bits()
+    fn contains<B: BitFlagRepr<Self::Flag>>(self, other: B) -> bool {
+        self.contains_repr(other.into_repr())
     }
 
+    #[inline]
+    fn bits_or<B: BitFlagRepr<Self::Flag>>(self, other: B) -> Self {
+        unsafe {
+            Self::from_repr_unchecked(self.into_repr() | other.into_repr())
+        }
+    }
+
+    #[inline]
+    fn bits_and<B: BitFlagRepr<Self::Flag>>(self, other: B) -> Self {
+        unsafe {
+            Self::from_repr_unchecked(self.into_repr() & other.into_repr())
+        }
+    }
+
+    #[inline]
+    fn bits_xor<B: BitFlagRepr<Self::Flag>>(self, other: B) -> Self {
+        unsafe {
+            Self::from_repr_unchecked(self.into_repr() ^ other.into_repr())
+        }
+    }
+
+    #[inline]
+    fn bits_not(self) -> Self {
+        unsafe {
+            Self::from_repr_unchecked((!self.into_repr()) & Self::Flag::ALL_BITS)
+        }
+    }
+
+    #[inline]
     /// Toggles the matching bits
-    fn toggle<B: Into<Self>>(&mut self, other: B) {
-        *self ^= other.into();
+    fn toggle<B: BitFlagRepr<Self::Flag>>(&mut self, other: B) {
+        unsafe {
+            self.set_repr_unchecked(self.get_repr() ^ other.into_repr())
+        }
     }
 
+    #[inline]
     /// Inserts the flags into the BitFlag
-    fn insert<B: Into<Self>>(&mut self, other: B) {
-        *self |= other.into();
+    fn insert<B: BitFlagRepr<Self::Flag>>(&mut self, other: B) {
+        unsafe {
+            self.set_repr_unchecked(self.get_repr() | other.into_repr())
+        }
     }
 
+    #[inline]
+    fn mask<B: BitFlagRepr<Self::Flag>>(&mut self, other: B) {
+        unsafe {
+            self.set_repr_unchecked(self.get_repr() & other.into_repr())
+        }
+    }
+
+    #[inline]
     /// Removes the matching flags
-    fn remove<B: Into<Self>>(&mut self, other: B) {
-        *self &= !other.into();
+    fn remove<B: BitFlagRepr<Self::Flag>>(&mut self, other: B) {
+        unsafe {
+            self.set_repr_unchecked(self.get_repr() & !other.into_repr())
+        }
     }
-    */
 
+    #[inline]
     /// Returns an iterator that yields each set flag
-    fn iter(self) -> <Self as IntoIterator>::IntoIter
+    fn iter(self) -> Self::IntoIter
     where
-        Self: IntoIterator,
+        Self: IntoIterator<Item=<Self as EnumFlags>::Flag>,
     {
         self.into_iter()
     }
+}
+
+pub trait EnumFlagsConst
+    : EnumFlags
+{
+    const ALL: Self;
+
+    const EMPTY: Self;
 }
 
 /// Represents a set of flags of some type `T`.
@@ -258,13 +281,48 @@ pub struct BitFlags<T: BitFlag> {
     val: T::Type,
 }
 
+impl<T: BitFlag> EnumFlagsConst for BitFlags<T> {
+    const ALL: Self = Self { val: T::ALL_BITS };
+    const EMPTY: Self = Self { val: T::Type::EMPTY };
+}
+
+unsafe impl<T: BitFlag> BitFlagRepr<T> for BitFlags<T> {
+    #[inline]
+    fn into_repr(self) -> T::Type {
+        self.val
+    }
+
+    #[inline]
+    fn get_repr(&self) -> T::Type {
+        self.val
+    }
+
+    #[inline]
+    unsafe fn from_repr_unchecked(val: T::Type) -> Self {
+        Self { val }
+    }
+
+    unsafe fn set_repr_unchecked(&mut self, val: T::Type) {
+        self.val = val;
+    }
+
+    fn from_repr(repr: T::Type) -> Result<Self, T::Type> {
+        let left = repr & !T::ALL_BITS;
+        if left == T::Type::EMPTY {
+            unsafe { Ok(Self::from_repr_unchecked(repr)) }
+        } else {
+            Err(left)
+        }
+    }
+}
+
 /// The default value returned is one with all flags unset, i. e. [`empty`][Self::empty].
 impl<T> Default for BitFlags<T>
 where
     T: BitFlag,
 {
     fn default() -> Self {
-        Self::empty()
+        Self::EMPTY
     }
 }
 
@@ -275,21 +333,11 @@ impl<T: BitFlag> From<T> for BitFlags<T> {
     }
 }
 
-impl<T> EnumFlags for BitFlags<T>
+unsafe impl<T> EnumFlags for BitFlags<T>
 where
     T: BitFlag,
 {
     type Flag = T;
-
-    #[inline]
-    unsafe fn new(val: <Self::Flag as BitFlag>::Type) -> Self {
-        Self { val }
-    }
-
-    #[inline]
-    fn bits(self) -> <Self::Flag as BitFlag>::Type {
-        self.val
-    }
 }
 
 pub struct BitFlagsIter<T: BitFlag> {
@@ -329,106 +377,85 @@ where
     }
 }
 
-impl<T> BitFlags<T>
-where
-    T: BitFlag,
-{
-    /// Returns true if at least one flag is shared.
-    pub fn intersects<B: Into<BitFlags<T>>>(self, other: B) -> bool {
-        (self.bits() & other.into().bits()) != Self::empty().bits()
-    }
-
-    /// Returns true iff all flags are contained.
-    pub fn contains<B: Into<BitFlags<T>>>(self, other: B) -> bool {
-        let other = other.into();
-        (self.bits() & other.bits()) == other.bits()
-    }
-
-    /// Toggles the matching bits
-    pub fn toggle<B: Into<BitFlags<T>>>(&mut self, other: B) {
-        *self ^= other.into();
-    }
-
-    /// Inserts the flags into the BitFlag
-    pub fn insert<B: Into<BitFlags<T>>>(&mut self, other: B) {
-        *self |= other.into();
-    }
-
-    /// Removes the matching flags
-    pub fn remove<B: Into<BitFlags<T>>>(&mut self, other: B) {
-        *self &= !other.into();
-    }
-}
-
 impl<T, B> cmp::PartialEq<B> for BitFlags<T>
 where
     T: BitFlag,
-    B: Into<BitFlags<T>> + Copy,
+    B: BitFlagRepr<T>,
 {
+    #[inline]
     fn eq(&self, other: &B) -> bool {
-        self.bits() == Into::<Self>::into(*other).bits()
+        self.get_repr() == other.get_repr()
     }
 }
 
 impl<T, B> BitOr<B> for BitFlags<T>
 where
     T: BitFlag,
-    B: Into<BitFlags<T>>,
+    B: BitFlagRepr<T>,
 {
     type Output = BitFlags<T>;
+
+    #[inline]
     fn bitor(self, other: B) -> BitFlags<T> {
-        unsafe { BitFlags::new(self.bits() | other.into().bits()) }
+        self.bits_or(other)
     }
 }
 
 impl<T, B> BitAnd<B> for BitFlags<T>
 where
     T: BitFlag,
-    B: Into<BitFlags<T>>,
+    B: BitFlagRepr<T>,
 {
     type Output = BitFlags<T>;
+
+    #[inline]
     fn bitand(self, other: B) -> BitFlags<T> {
-        unsafe { BitFlags::new(self.bits() & other.into().bits()) }
+        self.bits_and(other)
     }
 }
 
 impl<T, B> BitXor<B> for BitFlags<T>
 where
     T: BitFlag,
-    B: Into<BitFlags<T>>,
+    B: BitFlagRepr<T>,
 {
     type Output = BitFlags<T>;
+
+    #[inline]
     fn bitxor(self, other: B) -> BitFlags<T> {
-        unsafe { BitFlags::new((self.bits() ^ other.into().bits()) & T::all()) }
+        self.bits_xor(other)
     }
 }
 
-impl<T, B> ops::BitOrAssign<B> for BitFlags<T>
+impl<T, B> BitOrAssign<B> for BitFlags<T>
 where
     T: BitFlag,
-    B: Into<BitFlags<T>>,
+    B: BitFlagRepr<T>,
 {
+    #[inline]
     fn bitor_assign(&mut self, other: B) {
-        *self = *self | other;
+        self.insert(other)
     }
 }
 
-impl<T, B> ops::BitAndAssign<B> for BitFlags<T>
+impl<T, B> BitAndAssign<B> for BitFlags<T>
 where
     T: BitFlag,
-    B: Into<BitFlags<T>>,
+    B: BitFlagRepr<T>,
 {
+    #[inline]
     fn bitand_assign(&mut self, other: B) {
-        *self = *self & other;
+        self.mask(other)
     }
 }
-impl<T, B> ops::BitXorAssign<B> for BitFlags<T>
+impl<T, B> BitXorAssign<B> for BitFlags<T>
 where
     T: BitFlag,
-    B: Into<BitFlags<T>>,
+    B: BitFlagRepr<T>,
 {
+    #[inline]
     fn bitxor_assign(&mut self, other: B) {
-        *self = *self ^ other;
+        self.toggle(other)
     }
 }
 
@@ -437,23 +464,25 @@ where
     T: BitFlag,
 {
     type Output = BitFlags<T>;
+
+    #[inline]
     fn not(self) -> BitFlags<T> {
-        unsafe { BitFlags::new(!self.bits() & T::all()) }
+        self.bits_not()
     }
 }
 
 impl<T, B> FromIterator<B> for BitFlags<T>
 where
     T: BitFlag,
-    B: Into<BitFlags<T>>
+    B: BitFlagRepr<T>
 {
     fn from_iter<I>(it: I) -> BitFlags<T>
     where 
         I: IntoIterator<Item = B>
     {
-        let mut flags = BitFlags::empty();
+        let mut flags = BitFlags::EMPTY;
         for flag in it {
-            flags |= flag.into();
+            flags |= flag;
         }
         flags
     }

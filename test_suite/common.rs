@@ -19,25 +19,25 @@ enum Test1 {
 
 #[test]
 fn test_foo() {
-    use enumflags2::BitFlags;
+    use enumflags2::*;
     assert_eq!(
-        BitFlags::<Test>::all(),
+        Test::ALL,
         Test::A | Test::B | Test::C | Test::D
     );
-    assert_eq!(BitFlags::<Test>::all() & Test::A, Test::A);
+    assert_eq!(Test::ALL & Test::A, Test::A);
     assert_eq!(!Test::A, Test::B | Test::C | Test::D);
     assert_eq!((Test::A | Test::C) ^ (Test::C | Test::B), Test::A | Test::B);
-    assert_eq!(BitFlags::<Test>::from_bits_truncate(4), Test::C);
-    assert_eq!(BitFlags::<Test>::from_bits_truncate(5), Test::A | Test::C);
+    assert_eq!(Test::from_bits_truncate(4), Test::C);
+    assert_eq!(Test::from_bits_truncate(5), Test::A | Test::C);
     assert_eq!(
-        BitFlags::<Test>::from_bits_truncate(16),
-        BitFlags::<Test>::empty()
+        Test::from_bits_truncate(16),
+        Test::EMPTY
     );
-    assert_eq!(BitFlags::<Test>::from_bits_truncate(17), Test::A);
-    assert_eq!(BitFlags::<Test>::from_bits(17), None);
+    assert_eq!(Test::from_bits_truncate(17), Test::A);
+    assert_eq!(Test::from_bits(17), None);
     assert_eq!(
-        BitFlags::<Test>::from_bits(15),
-        Some(BitFlags::<Test>::all())
+        Test::from_bits(15),
+        Some(Test::ALL)
     );
     {
         let mut b = Test::A | Test::B;
@@ -51,7 +51,7 @@ fn test_foo() {
     assert_eq!(!(Test::A | Test::B), Test::C | Test::D);
     assert_eq!((Test::A | Test::B).bits(), 3);
     assert_eq!((!(Test::A | Test::B)).bits(), 12);
-    assert_eq!(BitFlags::<Test>::all().bits(), 15);
+    assert_eq!(Test::ALL.bits(), 15);
     {
         let mut b = Test::A | Test::B | Test::C;
         b.remove(Test::B);
@@ -62,16 +62,13 @@ fn test_foo() {
 
 #[test]
 fn iterator() {
-    use enumflags2::BitFlags;
+    use enumflags2::*;
 
-    // it's a separate statement because type ascription is nightly
-    let tests: &[(BitFlags<Test>, &[Test])] = &[
-        (BitFlags::empty(), &[]),
+    for &(bitflag, expected) in &[
+        (Test::EMPTY, &[][..]),
         (Test::A.into(), &[Test::A]),
         (Test::A | Test::B, &[Test::A, Test::B]),
-    ];
-
-    for &(bitflag, expected) in tests {
+    ] {
         assert!(bitflag.iter().zip(expected.iter().cloned()).all(|(a, b)| a == b));
     }
 }
