@@ -3,30 +3,27 @@ use super::BitFlags;
 use super::_internal::RawBitFlags;
 
 macro_rules! impl_try_from {
-    () => { };
-    ($ty:ty, $($tt:tt)*) => {
-        impl_try_from! { $ty }
-        impl_try_from! { $($tt)* }
-    };
-    ($ty:ty) => {
-        impl<T> TryFrom<$ty> for BitFlags<T>
-        where
-            T: RawBitFlags<Type=$ty>,
-        {
-            type Error = FromBitsError<T>;
+    ($($ty:ty),*) => {
+        $(
+            impl<T> TryFrom<$ty> for BitFlags<T>
+            where
+                T: RawBitFlags<Type=$ty>,
+            {
+                type Error = FromBitsError<T>;
 
-            fn try_from(bits: T::Type) -> Result<Self, Self::Error> {
-                let flags = Self::from_bits_truncate(bits);
-                if flags.bits() == bits {
-                    Ok(flags)
-                } else {
-                    Err(FromBitsError {
-                        flags,
-                        invalid: bits & !flags.bits(),
-                    })
+                fn try_from(bits: T::Type) -> Result<Self, Self::Error> {
+                    let flags = Self::from_bits_truncate(bits);
+                    if flags.bits() == bits {
+                        Ok(flags)
+                    } else {
+                        Err(FromBitsError {
+                            flags,
+                            invalid: bits & !flags.bits(),
+                        })
+                    }
                 }
             }
-        }
+        )*
     };
 }
 
