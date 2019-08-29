@@ -48,7 +48,7 @@
 #![warn(missing_docs)]
 #![cfg_attr(all(not(test), not(feature = "std")), no_std)]
 
-#[cfg(all(test, not(feature = "std")))]
+#[cfg(any(test, feature = "std"))]
 extern crate core;
 use core::{cmp, ops};
 use core::iter::FromIterator;

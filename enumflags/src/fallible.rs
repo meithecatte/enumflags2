@@ -1,4 +1,5 @@
 use core::convert::TryFrom;
+use core::fmt;
 use super::BitFlags;
 use super::_internal::RawBitFlags;
 
@@ -47,9 +48,15 @@ impl<T: RawBitFlags> FromBitsError<T> {
     }
 }
 
+impl<T: RawBitFlags + fmt::Debug> fmt::Display for FromBitsError<T> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "Invalid bits for {:?}: {:#b}", self.flags, self.invalid)
+    }
+}
+
 #[cfg(feature = "std")]
-impl<T: RawBitFlags> std::error::Error for FromBitsError<T> {
+impl<T: RawBitFlags + fmt::Debug> std::error::Error for FromBitsError<T> {
     fn description(&self) -> &str {
-        "invalid bit representation"
+        "invalid bitflags representation"
     }
 }
