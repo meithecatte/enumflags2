@@ -44,7 +44,7 @@
 //! ## Optional Feature Flags
 //!
 //! - [`serde`](https://serde.rs/) implements `Serialize` and `Deserialize` for `BitFlags<T>`.
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 #![cfg_attr(not(test), no_std)]
 
 #[cfg(test)]
