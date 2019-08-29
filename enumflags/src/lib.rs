@@ -122,6 +122,7 @@ mod formatting;
 
 // impl TryFrom<T::Type> for BitFlags<T>
 mod fallible;
+pub use fallible::FromBitsError;
 
 use _internal::RawBitFlags;
 
@@ -210,18 +211,6 @@ where
 
     pub fn from_flag(t: T) -> Self {
         BitFlags { val: t.bits() }
-    }
-
-    pub fn try_from_bits(bits: T::Type) -> Result<Self, FromBitsError<T>> {
-        let flags = Self::from_bits_truncate(bits);
-        if flags.bits() == bits {
-            Ok(flags)
-        } else {
-            Err(FromBitsError {
-                flags,
-                invalid: bits & !flags.bits(),
-            })
-        }
     }
 
     /// Truncates flags that are illegal
@@ -379,28 +368,5 @@ mod impl_serde {
         fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
             T::Type::serialize(&self.val, s)
         }
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub struct FromBitsError<T: RawBitFlags> {
-    flags: BitFlags<T>,
-    invalid: T::Type,
-}
-
-impl<T: RawBitFlags> FromBitsError<T> {
-    pub fn truncate(self) -> BitFlags<T> {
-        self.flags
-    }
-
-    pub fn invalid_bits(self) -> T::Type {
-        self.invalid
-    }
-}
-
-#[cfg(feature = "std")]
-impl<T: RawBitFlags> std::error::Error for FromBitsError<T> {
-    fn description(&self) -> &str {
-        "invalid bit representation"
     }
 }
