@@ -15,15 +15,7 @@ macro_rules! impl_try_from {
                 type Error = FromBitsError<T>;
 
                 fn try_from(bits: T::Type) -> Result<Self, Self::Error> {
-                    let flags = Self::from_bits_truncate(bits);
-                    if flags.bits() == bits {
-                        Ok(flags)
-                    } else {
-                        Err(FromBitsError {
-                            flags,
-                            invalid: bits & !flags.bits(),
-                        })
-                    }
+                    Self::from_bits(bits)
                 }
             }
         )*
@@ -34,8 +26,9 @@ impl_try_from! {
     u8, u16, u32, u64, usize
 }
 
-/// The error struct used by `impl TryFrom<u??> for BitFlags<T>` for invalid
-/// values.
+/// The error struct used by [`BitFlags::from_bits`]
+/// and the [`TryFrom`] implementation`
+/// for invalid values.
 ///
 /// ```
 /// # use std::convert::TryInto;
@@ -57,8 +50,8 @@ impl_try_from! {
 /// ```
 #[derive(Debug, Copy, Clone)]
 pub struct FromBitsError<T: RawBitFlags> {
-    flags: BitFlags<T>,
-    invalid: T::Type,
+    pub(crate) flags: BitFlags<T>,
+    pub(crate) invalid: T::Type,
 }
 
 impl<T: RawBitFlags> FromBitsError<T> {

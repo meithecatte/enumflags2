@@ -34,10 +34,10 @@ fn test_foo() {
         BitFlags::<Test>::empty()
     );
     assert_eq!(BitFlags::<Test>::from_bits_truncate(17), Test::A);
-    assert_eq!(BitFlags::<Test>::from_bits(17), None);
+    assert!(BitFlags::<Test>::from_bits(17).is_err());
     assert_eq!(
-        BitFlags::<Test>::from_bits(15),
-        Some(BitFlags::<Test>::all())
+        BitFlags::<Test>::from_bits(15).unwrap(),
+        BitFlags::<Test>::all()
     );
     {
         let mut b = Test::A | Test::B;

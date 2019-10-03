@@ -197,11 +197,15 @@ where
 
     /// Returns a `BitFlags<T>` if the raw value provided does not contain
     /// any illegal flags.
-    pub fn from_bits(bits: T::Type) -> Option<Self> {
-        if bits & !Self::all().bits() == Self::empty().bits() {
-            unsafe { Some(BitFlags::new(bits)) }
+    pub fn from_bits(bits: T::Type) -> Result<Self, FromBitsError<T>> {
+        let flags = Self::from_bits_truncate(bits);
+        if flags.bits() == bits {
+            Ok(flags)
         } else {
-            None
+            Err(FromBitsError {
+                flags,
+                invalid: bits & !flags.bits(),
+            })
         }
     }
 
