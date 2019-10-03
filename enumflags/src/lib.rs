@@ -144,16 +144,6 @@ where
     }
 }
 
-impl<T> BitFlags<T>
-where
-    T: RawBitFlags,
-{
-    /// Create a new BitFlags unsafely. Consider using `from_bits` or `from_bits_truncate`.
-    pub unsafe fn new(val: T::Type) -> Self {
-        BitFlags { val }
-    }
-}
-
 impl<T: RawBitFlags> From<T> for BitFlags<T> {
     fn from(t: T) -> BitFlags<T> {
         Self::from_flag(t)
@@ -164,6 +154,11 @@ impl<T> BitFlags<T>
 where
     T: RawBitFlags,
 {
+    /// Create a new BitFlags unsafely. Consider using `from_bits` or `from_bits_truncate`.
+    pub unsafe fn new(val: T::Type) -> Self {
+        BitFlags { val }
+    }
+
     /// Create an empty BitFlags. Empty means `0`.
     pub fn empty() -> Self {
         unsafe { BitFlags::new(T::Type::default()) }
@@ -209,8 +204,9 @@ where
         }
     }
 
-    pub fn from_flag(t: T) -> Self {
-        BitFlags { val: t.bits() }
+    /// Turn a `T` into a `BitFlags<T>`. Also available as `flag.into()`.
+    pub fn from_flag(flag: T) -> Self {
+        BitFlags { val: flag.bits() }
     }
 
     /// Truncates flags that are illegal
