@@ -1,7 +1,6 @@
 //! # Enum Flags
-//! `enumflags2` defines a `BitFlags<T>` type for representing a set of named boolean values
-//! efficiently, where `T` is an enum with explicitly defined values. Semantically similar to a
-//! `HashSet<EnumWithoutAssociatedData>`, but much more efficient.
+//! `enumflags2` defines a `BitFlags<T>` type, which is a `Set<T>`
+//! for enums without associated data.
 //!
 //! ## Example
 //! ```

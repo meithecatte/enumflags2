@@ -5,17 +5,15 @@
 
 # Enumflags
 
+`enumflags2` defines a `BitFlags<T>` type, which is a `Set<T>`
+for enums without associated data.
+
 ## Usage
 
 In your `Cargo.toml`:
 ```Toml
 [dependencies]
-enumflags2 = "^0.5"
-```
-
-If using the 2015 Rust edition, add this to your crate root:
-```Rust
-extern crate enumflags2;
+enumflags2 = "^0.6"
 ```
 
 ## Features
