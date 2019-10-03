@@ -189,13 +189,14 @@ where
         (self.bits() & other.into().bits()) > Self::empty().bits()
     }
 
-    /// Returns true iff all flags are contained.
+    /// Returns true if all flags are contained.
     pub fn contains<B: Into<BitFlags<T>>>(self, other: B) -> bool {
         let other = other.into();
         (self.bits() & other.bits()) == other.bits()
     }
 
-    /// Returns a BitFlags iff the bits value does not contain any illegal flags.
+    /// Returns a `BitFlags<T>` if the raw value provided does not contain
+    /// any illegal flags.
     pub fn from_bits(bits: T::Type) -> Option<Self> {
         if bits & !Self::all().bits() == Self::empty().bits() {
             unsafe { Some(BitFlags::new(bits)) }
