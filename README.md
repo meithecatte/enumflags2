@@ -66,3 +66,8 @@ fn main() {
     assert!(!(a_b.intersects(Test::C | Test::D)));
 }
 ```
+
+### Note
+
+By default, the `BitFlags` are `usize`-sized. If you want them to be smaller,
+specify a `repr` on your enum as in the example above.

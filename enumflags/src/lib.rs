@@ -40,6 +40,11 @@
 //! }
 //! ```
 //!
+//! ## Note
+//!
+//! By default, the `BitFlags` are `usize`-sized. If you want them to be smaller,
+//! specify a `repr` on your enum as in the example above.
+//!
 //! ## Optional Feature Flags
 //!
 //! - [`serde`](https://serde.rs/) implements `Serialize` and `Deserialize` for `BitFlags<T>`.
