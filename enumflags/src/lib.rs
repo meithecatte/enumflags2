@@ -4,11 +4,9 @@
 //!
 //! ## Example
 //! ```
-//! extern crate enumflags2;
+//! use enumflags2::BitFlags;
 //!
-//! use enumflags2::{BitFlags, EnumFlags};
-//!
-//! #[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
+//! #[derive(BitFlags, Copy, Clone, Debug, PartialEq)]
 //! #[repr(u8)]
 //! enum Test {
 //!     A = 0b0001,
@@ -62,14 +60,14 @@ use core::iter::FromIterator;
 extern crate enumflags2_derive;
 
 #[doc(hidden)]
-pub use enumflags2_derive::EnumFlags_internal as EnumFlags;
+pub use enumflags2_derive::BitFlags_internal as BitFlags;
 
 /// While the module is public, this is only the case because it needs to be
 /// accessed by the derive macro. Do not use this directly. Stability guarantees
 /// don't apply.
 #[doc(hidden)]
 pub mod _internal {
-    /// A trait automatically implemented by `derive(EnumFlags)` to make the enum
+    /// A trait automatically implemented by `derive(BitFlags)` to make the enum
     /// a valid type parameter for `BitFlags<T>`.
     pub trait RawBitFlags: Copy + Clone + 'static {
         /// The underlying integer type.
@@ -131,7 +129,7 @@ pub use fallible::FromBitsError;
 use _internal::RawBitFlags;
 
 /// Represents a set of flags of some type `T`.
-/// The type must have the `#[derive(EnumFlags)]` attribute applied.
+/// The type must have the `#[derive(BitFlags)]` attribute applied.
 #[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct BitFlags<T: RawBitFlags> {

@@ -31,11 +31,9 @@ enumflags2 = "^0.6"
 ### Example
 
 ```rust
-extern crate enumflags2;
+use enumflags2::BitFlags;
 
-use enumflags2::{BitFlags, EnumFlags};
-
-#[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
+#[derive(BitFlags, Copy, Clone, Debug, PartialEq)]
 #[repr(u8)]
 enum Test {
     A = 0b0001,

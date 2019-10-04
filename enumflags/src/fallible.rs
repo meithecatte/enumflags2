@@ -32,8 +32,8 @@ impl_try_from! {
 ///
 /// ```
 /// # use std::convert::TryInto;
-/// # use enumflags2::{BitFlags, EnumFlags};
-/// #[derive(Clone, Copy, Debug, EnumFlags)]
+/// # use enumflags2::BitFlags;
+/// #[derive(Clone, Copy, Debug, BitFlags)]
 /// #[repr(u8)]
 /// enum MyFlags {
 ///     A = 0b0001,

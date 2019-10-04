@@ -1,4 +1,4 @@
-#[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
+#[derive(BitFlags, Copy, Clone, Debug, PartialEq)]
 #[repr(u8)]
 enum Test {
     A = 1 << 0,
@@ -7,7 +7,7 @@ enum Test {
     D = 1 << 3,
 }
 
-#[derive(EnumFlags, Copy, Clone, Debug)]
+#[derive(BitFlags, Copy, Clone, Debug)]
 #[repr(u64)]
 enum Test1 {
     A = 1 << 0,
@@ -93,7 +93,7 @@ fn assign_ops() {
 
 #[test]
 fn fn_derive() {
-    #[derive(EnumFlags, Copy, Clone, Debug)]
+    #[derive(BitFlags, Copy, Clone, Debug)]
     #[repr(u8)]
     enum TestFn {
         A = 1 << 0,

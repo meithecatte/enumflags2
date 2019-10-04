@@ -1,12 +1,12 @@
 extern crate enumflags2;
-use enumflags2::EnumFlags;
+use enumflags2::BitFlags;
 
 include!("../common.rs");
 
 #[test]
 fn module() {
     mod some_modules {
-        #[derive(enumflags2::EnumFlags, Copy, Clone, Debug)]
+        #[derive(enumflags2::BitFlags, Copy, Clone, Debug)]
         #[repr(u8)]
         enum Test2 {
             A = 1 << 0,

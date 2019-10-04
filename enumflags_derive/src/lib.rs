@@ -10,13 +10,13 @@ use proc_macro2::Span;
 use quote::ToTokens;
 use std::convert::From;
 
-#[proc_macro_derive(EnumFlags_internal)]
+#[proc_macro_derive(BitFlags_internal)]
 pub fn derive_enum_flags(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
 
     match ast.data {
         Data::Enum(ref data) => gen_enumflags(&ast.ident, &ast, data).into(),
-        _ => panic!("`derive(EnumFlags)` may only be applied to enums"),
+        _ => panic!("`derive(BitFlags)` may only be applied to enums"),
     }
 }
 

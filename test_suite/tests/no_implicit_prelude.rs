@@ -1,9 +1,9 @@
 #![no_implicit_prelude]
 
 extern crate enumflags2;
-use enumflags2::EnumFlags;
+use enumflags2::BitFlags;
 
-#[derive(EnumFlags, Copy, Clone, Debug, PartialEq)]
+#[derive(BitFlags, Copy, Clone, Debug, PartialEq)]
 #[repr(u8)]
 pub enum Test {
     A = 1 << 0,
@@ -15,6 +15,5 @@ pub enum Test {
 #[test]
 fn test_foo() {
     // assert!() doesn't even work in no_implicit_prelude!
-    use enumflags2::BitFlags;
     let _ = BitFlags::<Test>::all();
 }
