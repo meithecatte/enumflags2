@@ -69,3 +69,33 @@ fn main() {
 
 By default, the `BitFlags` are `usize`-sized. If you want them to be smaller,
 specify a `repr` on your enum as in the example above.
+
+### Migrating from 0.5
+
+The minimum rustc version has been bumped to 1.34.0, because of `syn 1.0`. The
+version policy from now on will be "what's available on Debian stable", [because
+Debian is famously slow with new software versions][debian-snailpace].
+
+You should no longer depend on `enumflags2_derive` directly.
+Use the reexport from the `enumflags2` crate.
+semver guarantees will be violated if you depend on the derive crate directly.
+
+The derive macro has been renamed to `BitFlags`, to make it clearer what the
+derive does.
+
+The `nostd` feature flag has been removed. The crate now only depends on `libcore`
+by default. Enable the `std` flag to get an implementation of `std::error::Error`
+on error types.
+
+Flags more than one bit set have been found to have inconsistent semantics.
+They are now rejected at compile-time. The same applies to flags without any
+bit set. If you were relying on this in your code, please [open an issue][issue]
+and explain your usecase.
+
+`BitFlags::from_bits` returns a `Result` instead of an `Option`. This might
+necessitate some minor changes in your code.
+
+`BitFlags::not` has been removed. Use the `!` operator instead.
+
+[debian-snailpace]: https://www.jwz.org/blog/2016/04/i-would-like-debian-to-stop-shipping-xscreensaver/
+[issue]: https://github.com/NieDzejkob/enumflags2/issues/new
