@@ -5,7 +5,7 @@ include!("../common.rs");
 
 #[test]
 fn serde_compile() {
-    #[derive(enumflags2::BitFlags, Copy, Clone, Debug, Serialize, Deserialze)]
+    #[derive(enumflags2::BitFlags, Copy, Clone, Debug, Serialize, Deserialize)]
     #[repr(u8)]
     enum Test {
         A = 1 << 0,
@@ -16,7 +16,7 @@ fn serde_compile() {
 
     type TestBitFlags = BitFlags<Test>;
 
-    #[derive(Clone, Debug, Serialize, Deserialze)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     struct TestStructContainsFlags{
         flags: TestBitFlags,
     }
