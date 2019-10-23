@@ -17,7 +17,7 @@ fn serde_compile() {
     type TestBitFlags = BitFlags<Test>;
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
-    struct TestStructContainsFlags{
+    struct TestStructContainsFlags {
         flags: TestBitFlags,
     }
 }
