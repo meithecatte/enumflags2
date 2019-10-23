@@ -386,10 +386,10 @@ mod impl_serde {
         fn deserialize<D: serde::Deserializer<'a>>(d: D) -> Result<Self, D::Error> {
             let val = T::Type::deserialize(d)?;
             Self::from_bits(val)
-                .ok_or_else(|| D::Error::invalid_value(
+                .or_else(|_| Err(D::Error::invalid_value(
                     Unexpected::Unsigned(val.into()),
                     &"valid bit representation"
-                ))
+                )))
         }
     }
 

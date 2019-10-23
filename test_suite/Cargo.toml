@@ -5,7 +5,8 @@ publish = false
 
 [dev-dependencies]
 
-enumflags2 = {path = "../enumflags"}
+enumflags2 = {path = "../enumflags", features = ["serde"]}
+serde = {version = "1", features = ["derive"] }
 
 [[test]]
 name = "bitflags-test"
@@ -40,4 +41,9 @@ edition = "2018"
 [[test]]
 name = "bitflags-formatting"
 path = "tests/formatting.rs"
+edition = "2018"
+
+[[test]]
+name = "serde"
+path = "tests/serde.rs"
 edition = "2018"
