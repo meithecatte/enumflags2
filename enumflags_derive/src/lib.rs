@@ -20,17 +20,6 @@ pub fn derive_enum_flags(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     }
 }
 
-fn max_value_of(ty: &str) -> Option<u64> {
-    match ty {
-        "u8" => Some(u8::max_value() as u64),
-        "u16" => Some(u16::max_value() as u64),
-        "u32" => Some(u32::max_value() as u64),
-        "u64" => Some(u64::max_value() as u64),
-        "usize" => Some(usize::max_value() as u64),
-        _ => None,
-    }
-}
-
 fn fold_expr(expr: &syn::Expr) -> u64 {
     use syn::Expr;
     match expr {
@@ -86,16 +75,12 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
         .collect();
     let variants_len = flag_values.len();
     let names = flag_values.iter().map(|_| &ident);
-    let ty = extract_repr(&item.attrs).unwrap_or(Ident::new("usize", span));
-    let max_allowed_value = max_value_of(&ty.to_string()).expect(&format!("{} is not supported", ty));
+    let ty = extract_repr(&item.attrs)
+        .unwrap_or_else(|| Ident::new("usize", span));
 
     let mut flags_seen = 0;
     for (&flag, variant) in flag_values.iter().zip(variants.clone()) {
-        if flag > max_allowed_value {
-            panic!("Value {:#b} is too big for an {}",
-                   flag, ty
-            );
-        } else if flag == 0 || !flag.is_power_of_two() {
+        if flag == 0 || !flag.is_power_of_two() {
             panic!("Each flag must have exactly one bit set, and {ident}::{variant} = {flag:#b} doesn't",
                    ident = ident,
                    variant = variant,
