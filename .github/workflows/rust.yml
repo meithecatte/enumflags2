@@ -22,4 +22,5 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
     - name: Run clippy
+      if: matrix.rust == 'nightly'
       run: cargo clippy -- -D warnings
