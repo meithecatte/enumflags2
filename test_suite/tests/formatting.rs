@@ -27,10 +27,20 @@ fn debug_format() {
         format!("{:04X?}", BitFlags::<Test>::all()),
         "BitFlags<Test>(0x0F, A | B | C | D)"
     );
+}
 
-    // Also check alternate struct formatting
+#[test]
+fn debug_format_alternate() {
+    /// Handle the slight difference in alternate debug output on rustc 1.34.2.
+    fn compare(mut actual: String, expected: &str) {
+        if actual.ends_with("\n}") && !actual.ends_with(",\n}") {
+            actual.replace_range(actual.len()-2.., ",\n}");
+        }
 
-    assert_eq!(
+        assert_eq!(actual, expected);
+    }
+
+    compare(
         format!("{:#010?}", BitFlags::<Test>::all()),
 "BitFlags<Test> {
     bits: 0b00001111,
@@ -38,7 +48,7 @@ fn debug_format() {
 }"
     );
 
-    assert_eq!(
+    compare(
         format!("{:#?}", BitFlags::<Test>::empty()),
 "BitFlags<Test> {
     bits: 0b0,
