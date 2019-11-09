@@ -1,8 +1,6 @@
 use enumflags2::BitFlags;
 use serde::{Serialize, Deserialize};
 
-include!("../common.rs");
-
 #[test]
 fn serde_compile() {
     #[derive(enumflags2::BitFlags, Copy, Clone, Debug, Serialize, Deserialize)]
