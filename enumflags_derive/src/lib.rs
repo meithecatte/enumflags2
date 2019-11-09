@@ -12,15 +12,11 @@ use std::convert::From;
 /// Shorthand for a quoted `compile_error!`.
 macro_rules! error {
     ($span:expr => $($x:tt)*) => {
-        quote_spanned!($span =>
-           ::enumflags2::_internal::core::compile_error!($($x)*);
-        )
+        quote_spanned!($span => compile_error!($($x)*);)
     };
     ($($x:tt)*) => {
-        quote!(
-           ::enumflags2::_internal::core::compile_error!($($x)*);
-        )
-    }
+        quote!(compile_error!($($x)*);)
+    };
 }
 
 #[proc_macro_derive(BitFlags_internal)]

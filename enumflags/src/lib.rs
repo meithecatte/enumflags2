@@ -152,7 +152,7 @@ pub mod _internal {
 
     // Re-export libcore so the macro doesn't inject "extern crate" downstream.
     pub mod core {
-        pub use core::{convert, option, ops, compile_error};
+        pub use core::{convert, option, ops};
     }
 }
 
