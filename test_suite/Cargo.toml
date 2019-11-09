@@ -3,10 +3,13 @@ name = "bitflags-test-suite"
 version = "0.0.0"
 publish = false
 
-[dev-dependencies]
+[dependencies.enumflags2]
+path = "../enumflags"
+features = ["serde", "not_literal"]
 
-enumflags2 = {path = "../enumflags", features = ["serde"]}
-serde = {version = "1", features = ["derive"] }
+[dependencies.serde]
+version = "1"
+features = ["derive"]
 
 [[test]]
 name = "bitflags-test"
@@ -46,4 +49,14 @@ edition = "2018"
 [[test]]
 name = "serde"
 path = "tests/serde.rs"
+edition = "2018"
+
+[[test]]
+name = "not_literal"
+path = "tests/not_literal.rs"
+edition = "2018"
+
+[lib]
+name = "compile_fail"
+path = "compile_fail.rs"
 edition = "2018"

@@ -4,105 +4,189 @@ extern crate proc_macro;
 extern crate quote;
 extern crate syn;
 extern crate proc_macro2;
-use syn::{Data, Ident, DeriveInput, DataEnum};
+use syn::{Data, Ident, DeriveInput, DataEnum, spanned::Spanned};
 use proc_macro2::TokenStream;
 use proc_macro2::Span;
-use quote::ToTokens;
 use std::convert::From;
 
+/// Shorthand for a quoted `compile_error!`.
+macro_rules! error {
+    ($span:expr => $($x:tt)*) => {
+        quote_spanned!($span =>
+           ::enumflags2::_internal::core::compile_error!($($x)*);
+        )
+    };
+    ($($x:tt)*) => {
+        quote!(
+           ::enumflags2::_internal::core::compile_error!($($x)*);
+        )
+    }
+}
+
 #[proc_macro_derive(BitFlags_internal)]
-pub fn derive_enum_flags(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn derive_enum_flags(input: proc_macro::TokenStream)
+    -> proc_macro::TokenStream
+{
     let ast: DeriveInput = syn::parse(input).unwrap();
 
     match ast.data {
-        Data::Enum(ref data) => gen_enumflags(&ast.ident, &ast, data).into(),
-        _ => panic!("`derive(BitFlags)` may only be applied to enums"),
+        Data::Enum(ref data) => {
+            gen_enumflags(&ast.ident, &ast, data)
+                .unwrap_or_else(|err| err)
+                .into()
+        }
+        _ => error!("BitFlags can only be derived on enums").into(),
     }
 }
 
-fn fold_expr(expr: &syn::Expr) -> u64 {
+#[derive(Debug)]
+enum EvaluationError {
+    LiteralOutOfRange(Span),
+    UnsupportedOperation(Span),
+}
+
+impl From<EvaluationError> for TokenStream {
+    fn from(why: EvaluationError) -> TokenStream {
+        use EvaluationError::*;
+
+        match why {
+            LiteralOutOfRange(span) => {
+                error!(span => "Integer literal out of range")
+            }
+            UnsupportedOperation(span) => {
+                error!(span => "This kind of discriminant expression is \
+                        not supported.\n\
+                        hint: Enable the \"not_literal\" feature to \
+                        use a workaround.\n\
+                        note: This is not enabled by default due to the \
+                        high potential for confusing error messages \
+                        (see documentation).")
+            }
+        }
+    }
+}
+
+/// Try to evaluate the expression given.
+fn fold_expr(expr: &syn::Expr) -> Result<u64, EvaluationError> {
     use syn::Expr;
+    use EvaluationError::*;
     match expr {
         Expr::Lit(ref expr_lit) => {
             match expr_lit.lit {
-                syn::Lit::Int(ref lit_int) => lit_int.base10_parse().expect("Int literal out of range"),
-                _ => panic!("Only Int literals are supported")
+                syn::Lit::Int(ref lit_int) => {
+                    lit_int.base10_parse()
+                        .or_else(|_| Err(LiteralOutOfRange(expr.span())))
+                }
+                _ => Err(UnsupportedOperation(expr.span()))
             }
         },
         Expr::Binary(ref expr_binary) => {
-            let l = fold_expr(&expr_binary.left);
-            let r = fold_expr(&expr_binary.right);
+            let l = fold_expr(&expr_binary.left)?;
+            let r = fold_expr(&expr_binary.right)?;
             match &expr_binary.op {
-                syn::BinOp::Shl(_) => l << r,
-                op => panic!("{} not supported", op.to_token_stream())
+                syn::BinOp::Shl(_) => Ok(l << r),
+                _ => Err(UnsupportedOperation(expr_binary.span()))
             }
         }
-        _ => panic!("Only literals are supported")
+        _ => Err(UnsupportedOperation(expr.span()))
     }
 }
 
-fn extract_repr(attrs: &[syn::Attribute]) -> Option<syn::Ident> {
-    attrs
-        .iter()
-        .filter_map(|a| {
-            if let syn::Meta::List(ref meta) = a.parse_meta().expect("Metalist") {
-                if meta.path.is_ident("repr") {
-                    return meta.nested
-                        .iter()
-                        .filter_map(|mi| {
-                            if let syn::NestedMeta::Meta(syn::Meta::Path(path)) =
-                                mi
-                            {
-                                return path.get_ident().cloned();
+/// Given a list of attributes, find the `repr`, if any, and return the integer
+/// type specified.
+fn extract_repr(attrs: &[syn::Attribute])
+    -> Result<Option<syn::Ident>, TokenStream>
+{
+    use syn::{Meta, NestedMeta};
+    attrs.iter()
+        .find_map(|attr| {
+            match attr.parse_meta() {
+                Err(why) => {
+                    let error = format!("Couldn't parse attribute: {}", why);
+                    Some(Err(error!(attr.span() => #error)))
+                }
+                Ok(Meta::List(ref meta)) if meta.path.is_ident("repr") => {
+                    meta.nested.iter()
+                        .find_map(|mi| match mi {
+                            NestedMeta::Meta(Meta::Path(path)) => {
+                                path.get_ident().cloned()
+                                    .map(Ok)
                             }
-                            None
+                            _ => None
                         })
-                        .nth(0);
+                }
+                Ok(_) => None
+            }
+        })
+        .transpose()
+}
+
+/// Returns Ok with deferred checks (not_literal), or Err with error!
+fn verify_flag_values<'a>(
+    // starts with underscore to silence warnings when not_literal
+    // are disabled
+    _type_name: &Ident,
+    variants: impl Iterator<Item=&'a syn::Variant>
+) -> Result<TokenStream, TokenStream> {
+    #[cfg_attr(not(feature = "not_literal"), allow(unused_mut))]
+    let mut deferred_checks: Vec<TokenStream> = vec![];
+    for variant in variants {
+        let discr = variant.discriminant.as_ref()
+           .ok_or_else(|| error!(variant.span() =>
+                         "Please add an explicit discriminant"))?;
+        match fold_expr(&discr.1) {
+            Ok(flag) => {
+                if !flag.is_power_of_two() {
+                    return Err(error!(variant.discriminant.as_ref()
+                                      .unwrap().1.span() =>
+                        "Flags must have exactly one set bit."));
                 }
             }
-            None
-        })
-        .nth(0)
-}
-
-fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStream {
-    let span  = Span::call_site();
-    let variants = data.variants.iter().map(|v| &v.ident);
-    let flag_values: Vec<_> =
-        data.variants.iter()
-        .map(|v| v.discriminant.as_ref()
-                 .map(|d| fold_expr(&d.1)).expect("No discriminant"))
-        .collect();
-    let variants_len = flag_values.len();
-    let names = flag_values.iter().map(|_| &ident);
-    let ty = extract_repr(&item.attrs)
-        .unwrap_or_else(|| Ident::new("usize", span));
-
-    let mut flags_seen = 0;
-    for (&flag, variant) in flag_values.iter().zip(variants.clone()) {
-        if flag == 0 || !flag.is_power_of_two() {
-            panic!("Each flag must have exactly one bit set, and {ident}::{variant} = {flag:#b} doesn't",
-                   ident = ident,
-                   variant = variant,
-                   flag = flag
-            );
-        } else if flags_seen & flag != 0 {
-            panic!("Flag {} collides with {}",
-                   variant,
-                   flag_values.iter()
-                       .zip(variants.clone())
-                       .find(|(&other_flag, _)| flag == other_flag)
-                       .unwrap()
-                       .1
-            );
+            #[cfg(feature = "not_literal")]
+            Err(EvaluationError::UnsupportedOperation(_)) => {
+                let variant_name = &variant.ident;
+                // adapted from static-assertions-rs by nvzqz (MIT/Apache-2.0)
+                deferred_checks.push(quote_spanned!(variant.span() =>
+                    #[allow(unknown_lints, eq_op)]
+                    const _: [(); 0 - !(
+                        (#_type_name::#variant_name as u64).wrapping_sub(1) &
+                        (#_type_name::#variant_name as u64) == 0 &&
+                        (#_type_name::#variant_name as u64) != 0
+                    ) as usize] = [];
+                ));
+            }
+            Err(why) => Err(why)?,
         }
-
-        flags_seen |= flag;
     }
 
-    let std_path = quote_spanned!(span=> ::enumflags2::_internal::core);
-    quote_spanned!{
-        span =>
+    Ok(quote!(
+        #(#deferred_checks)*
+    ))
+}
+
+fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
+    -> Result<TokenStream, TokenStream>
+{
+    let span = Span::call_site();
+    // for quote! interpolation
+    let variants = data.variants.iter().map(|v| &v.ident);
+    let variants_len = data.variants.len();
+    let names = std::iter::repeat(&ident);
+    let ty = extract_repr(&item.attrs)?
+        .unwrap_or_else(|| Ident::new("usize", span));
+
+    let deferred = verify_flag_values(ident, data.variants.iter())?;
+    let std_path = quote_spanned!(span => ::enumflags2::_internal::core);
+    let all = if variants_len == 0 {
+        quote!(0)
+    } else {
+        let names = names.clone();
+        let variants = variants.clone();
+        quote!(#(#names::#variants as #ty)|*)
+    };
+
+    Ok(quote_spanned! {
+        span => #deferred
             impl #std_path::ops::Not for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn not(self) -> Self::Output {
@@ -138,7 +222,9 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                 type Type = #ty;
 
                 fn all() -> Self::Type {
-                    (#(#flag_values)|*) as #ty
+                    // make sure it's evaluated at compile time
+                    const VALUE: #ty = #all as #ty;
+                    VALUE
                 }
 
                 fn bits(self) -> Self::Type {
@@ -146,7 +232,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                 }
 
                 fn flag_list() -> &'static [Self] {
-                    const VARIANTS: [#ident; #variants_len] = [#(#names :: #variants, )*];
+                    const VARIANTS: [#ident; #variants_len] = [#(#names :: #variants),*];
                     &VARIANTS
                 }
 
@@ -154,5 +240,5 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum) -> TokenStr
                     concat!("BitFlags<", stringify!(#ident), ">")
                 }
             }
-    }
+    })
 }

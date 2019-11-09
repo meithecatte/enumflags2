@@ -7,10 +7,13 @@ license = "MIT or Apache-2.0"
 repository = "https://github.com/NieDzejkob/enumflags2"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
 
+[lib]
+proc-macro = true
+
 [dependencies]
 syn = "^1.0"
 quote = "^1.0"
 proc-macro2 = "^1.0"
 
-[lib]
-proc-macro = true
+[features]
+not_literal = []

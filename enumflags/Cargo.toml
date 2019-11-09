@@ -9,9 +9,15 @@ readme = "../README.md"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
 documentation = "https://docs.rs/enumflags2"
 
-[dependencies]
-enumflags2_derive = { version = "0.6.1", path = "../enumflags_derive" }
-serde = { version = "^1.0.0", default-features = false, optional = true }
+[dependencies.enumflags2_derive]
+version = "0.6.1"
+path = "../enumflags_derive"
+
+[dependencies.serde]
+version = "^1.0.0"
+default-features = false
+optional = true
 
 [features]
 std = []
+not_literal = ["enumflags2_derive/not_literal"]
