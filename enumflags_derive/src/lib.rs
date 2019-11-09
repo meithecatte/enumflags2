@@ -155,7 +155,7 @@ fn verify_flag_values<'a>(
                     ) as usize] = [];
                 ));
             }
-            Err(why) => Err(why)?,
+            Err(why) => return Err(why.into()),
         }
     }
 
