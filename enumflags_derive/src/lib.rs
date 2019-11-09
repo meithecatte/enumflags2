@@ -141,10 +141,15 @@ fn verify_flag_values<'a>(
             #[cfg(feature = "not_literal")]
             Err(EvaluationError::UnsupportedOperation(_)) => {
                 let variant_name = &variant.ident;
+                // TODO: Remove this madness when Debian ships a new compiler.
+                let assertion_name = syn::Ident::new(
+                    &format!("__enumflags_assertion_{}_{}",
+                            _type_name, variant_name),
+                    Span::call_site()); // call_site because def_site is unstable
                 // adapted from static-assertions-rs by nvzqz (MIT/Apache-2.0)
                 deferred_checks.push(quote_spanned!(variant.span() =>
                     #[allow(unknown_lints, eq_op)]
-                    const _: [(); 0 - !(
+                    const #assertion_name: [(); 0 - !(
                         (#_type_name::#variant_name as u64).wrapping_sub(1) &
                         (#_type_name::#variant_name as u64) == 0 &&
                         (#_type_name::#variant_name as u64) != 0
