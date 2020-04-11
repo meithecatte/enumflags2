@@ -1,6 +1,6 @@
 [package]
 name = "enumflags2"
-version = "0.6.2"
+version = "0.6.3"
 authors = ["maik klein <maikklein@googlemail.com>", "Jakub \"NieDżejkob\" Kądziołka <kuba@kadziolka.net>"]
 description = "Enum-based bit flags"
 license = "MIT OR Apache-2.0"
@@ -10,7 +10,7 @@ keywords = ["enum", "bitflag", "flag", "bitflags"]
 documentation = "https://docs.rs/enumflags2"
 
 [dependencies.enumflags2_derive]
-version = "0.6.2"
+version = "0.6.3"
 path = "../enumflags_derive"
 
 [dependencies.serde]
