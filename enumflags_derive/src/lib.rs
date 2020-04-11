@@ -224,7 +224,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
 
                 fn all() -> Self::Type {
                     // make sure it's evaluated at compile time
-                    const VALUE: #ty = #all as #ty;
+                    const VALUE: #ty = #all;
                     VALUE
                 }
 
