@@ -167,7 +167,7 @@ use _internal::RawBitFlags;
 
 /// Represents a set of flags of some type `T`.
 /// The type must have the `#[derive(BitFlags)]` attribute applied.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, Hash)]
 #[repr(transparent)]
 pub struct BitFlags<T: RawBitFlags> {
     val: T::Type,
