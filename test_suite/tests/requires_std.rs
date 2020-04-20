@@ -92,3 +92,11 @@ fn debug_generic() {
 
     let _ = format!("{:?}", Debug(BitFlags::<Test>::all()));
 }
+
+#[test]
+fn works_in_hashmap() {
+    // Assert that BitFlags<T> implements Hash.
+
+    use std::collections::HashMap;
+    let _map: HashMap<BitFlags<Test>, u8> = HashMap::new();
+}

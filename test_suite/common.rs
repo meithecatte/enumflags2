@@ -1,4 +1,4 @@
-#[derive(BitFlags, Copy, Clone, Debug, PartialEq)]
+#[derive(BitFlags, Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[repr(u8)]
 enum Test {
     A = 1 << 0,
