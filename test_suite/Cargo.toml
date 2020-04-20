@@ -42,8 +42,8 @@ path = "tests/no_implicit_prelude_2018.rs"
 edition = "2018"
 
 [[test]]
-name = "bitflags-formatting"
-path = "tests/formatting.rs"
+name = "bitflags-requires-std"
+path = "tests/requires_std.rs"
 edition = "2018"
 
 [[test]]
