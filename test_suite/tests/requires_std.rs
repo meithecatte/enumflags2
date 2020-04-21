@@ -85,7 +85,7 @@ fn format() {
 
 #[test]
 fn debug_generic() {
-    use enumflags2::{BitFlags, _internal::RawBitFlags};
+    use enumflags2::{BitFlags, RawBitFlags};
 
     #[derive(Debug)]
     struct Debug<T: RawBitFlags>(BitFlags<T>);

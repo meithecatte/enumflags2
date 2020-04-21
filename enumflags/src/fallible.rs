@@ -1,7 +1,7 @@
 use core::convert::TryFrom;
 use core::fmt;
 use super::BitFlags;
-use super::_internal::RawBitFlags;
+use super::RawBitFlags;
 
 // Coherence doesn't let us use a generic type here. Work around by implementing
 // for each integer type manually.

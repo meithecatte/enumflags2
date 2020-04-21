@@ -1,5 +1,5 @@
 use core::fmt::{self, Debug, Binary};
-use crate::{BitFlags, _internal::RawBitFlags};
+use crate::{BitFlags, RawBitFlags};
 
 impl<T> fmt::Debug for BitFlags<T>
 where

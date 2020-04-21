@@ -241,5 +241,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
                     concat!("BitFlags<", stringify!(#ident), ">")
                 }
             }
+
+            impl ::enumflags2::RawBitFlags for #ident {}
     })
 }

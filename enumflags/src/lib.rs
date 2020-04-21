@@ -99,6 +99,10 @@ extern crate enumflags2_derive;
 #[doc(hidden)]
 pub use enumflags2_derive::BitFlags_internal as BitFlags;
 
+/// A trait automatically implemented by `derive(BitFlags)` to make the enum
+/// a valid type parameter for `BitFlags<T>`.
+pub trait RawBitFlags: Copy + Clone + 'static + _internal::RawBitFlags {}
+
 /// While the module is public, this is only the case because it needs to be
 /// accessed by the derive macro. Do not use this directly. Stability guarantees
 /// don't apply.
@@ -162,8 +166,6 @@ mod formatting;
 // impl TryFrom<T::Type> for BitFlags<T>
 mod fallible;
 pub use fallible::FromBitsError;
-
-use _internal::RawBitFlags;
 
 /// Represents a set of flags of some type `T`.
 /// The type must have the `#[derive(BitFlags)]` attribute applied.
@@ -391,7 +393,7 @@ mod impl_serde {
     extern crate serde;
     use self::serde::{Serialize, Deserialize};
     use self::serde::de::{Error, Unexpected};
-    use super::{BitFlags, _internal::RawBitFlags};
+    use super::{BitFlags, RawBitFlags};
 
     impl<'a, T> Deserialize<'a> for BitFlags<T>
     where
