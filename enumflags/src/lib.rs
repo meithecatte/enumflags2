@@ -378,11 +378,7 @@ where
     where 
         I: IntoIterator<Item = B>
     {
-        let mut flags = BitFlags::empty();
-        for flag in it {
-            flags |= flag.into();
-        }
-        flags
+        it.into_iter().fold(BitFlags::empty(), |acc, flag| acc | flag)
     }
 }
 
