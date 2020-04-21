@@ -375,10 +375,23 @@ where
     B: Into<BitFlags<T>>
 {
     fn from_iter<I>(it: I) -> BitFlags<T>
-    where 
+    where
         I: IntoIterator<Item = B>
     {
         it.into_iter().fold(BitFlags::empty(), |acc, flag| acc | flag)
+    }
+}
+
+impl<T, B> Extend<B> for BitFlags<T>
+where
+    T: RawBitFlags,
+    B: Into<BitFlags<T>>
+{
+    fn extend<I>(&mut self, it: I)
+    where
+        I: IntoIterator<Item = B>
+    {
+        *self = it.into_iter().fold(*self, |acc, flag| acc | flag)
     }
 }
 

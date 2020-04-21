@@ -16,7 +16,7 @@ pub enum Test {
     Flag11 = 1 << 10,
 }
 
-pub fn from_iterator(c: &mut Criterion) {
+pub fn iterators(c: &mut Criterion) {
     let v = vec![
         Test::Flag3,
         Test::Flag7,
@@ -31,17 +31,32 @@ pub fn from_iterator(c: &mut Criterion) {
         Test::Flag4,
     ];
 
-    c.bench_function("simple iterator", |b| b.iter(|| {
+    c.bench_function("simple iterator collect", |b| b.iter(|| {
         black_box(&v).iter().copied().collect::<BitFlags<_>>()
     }));
 
-    c.bench_function("chained iterator", |b| b.iter(|| {
+    c.bench_function("chained iterator collect", |b| b.iter(|| {
         black_box(&v).iter()
             .chain(black_box(&v2).iter())
             .copied()
             .collect::<BitFlags<_>>()
     }));
+
+    c.bench_function("simple iterator extend", |b| b.iter(|| {
+        let mut flags = BitFlags::empty();
+        flags.extend(black_box(&v).iter().copied());
+        flags
+    }));
+
+    c.bench_function("chained iterator extend", |b| b.iter(|| {
+        let mut flags = BitFlags::empty();
+        flags.extend(
+            black_box(&v).iter()
+            .chain(black_box(&v2).iter())
+            .copied());
+        flags
+    }));
 }
 
-criterion_group!(benches, from_iterator);
+criterion_group!(benches, iterators);
 criterion_main!(benches);
