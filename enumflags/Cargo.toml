@@ -11,7 +11,7 @@ documentation = "https://docs.rs/enumflags2"
 edition = "2018"
 
 [dependencies.enumflags2_derive]
-version = "0.6.3"
+version = "=0.6.3"
 path = "../enumflags_derive"
 
 [dependencies.serde]
