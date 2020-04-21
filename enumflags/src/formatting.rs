@@ -5,7 +5,7 @@ impl<T> fmt::Debug for BitFlags<T>
 where
     T: RawBitFlags + fmt::Debug,
 {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = T::bitflags_type_name();
         let bits = DebugBinaryFormatter(&self.val);
         let iter = if !self.is_empty() {
@@ -40,7 +40,7 @@ where
     T: RawBitFlags,
     T::Type: fmt::Binary,
 {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Binary::fmt(&self.bits(), fmt)
     }
 }
@@ -50,7 +50,7 @@ where
     T: RawBitFlags,
     T::Type: fmt::Octal,
 {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Octal::fmt(&self.bits(), fmt)
     }
 }
@@ -60,7 +60,7 @@ where
     T: RawBitFlags,
     T::Type: fmt::LowerHex,
 {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::LowerHex::fmt(&self.bits(), fmt)
     }
 }
@@ -70,7 +70,7 @@ where
     T: RawBitFlags,
     T::Type: fmt::UpperHex,
 {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::UpperHex::fmt(&self.bits(), fmt)
     }
 }
@@ -79,7 +79,7 @@ where
 struct FlagFormatter<I>(I);
 
 impl<T: Debug, I: Clone + Iterator<Item=T>> Debug for FlagFormatter<I> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut iter = self.0.clone();
         if let Some(val) = iter.next() {
             Debug::fmt(&val, fmt)?;
@@ -101,7 +101,7 @@ impl<T: Debug, I: Clone + Iterator<Item=T>> Debug for FlagFormatter<I> {
 struct DebugBinaryFormatter<'a, F>(&'a F);
 
 impl<'a, F: Debug + Binary + 'a> Debug for DebugBinaryFormatter<'a, F> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Check if {:x?} or {:X?} was used; this is determined via the
         // discriminator of core::fmt::FlagV1::{DebugLowerHex, DebugUpperHex},
         // which is not an accessible type: https://github.com/rust-lang/rust/blob/d65e272a9fe3e61aa5f229c5358e35a909435575/src/libcore/fmt/mod.rs#L306

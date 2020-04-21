@@ -8,6 +8,7 @@ repository = "https://github.com/NieDzejkob/enumflags2"
 readme = "../README.md"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
 documentation = "https://docs.rs/enumflags2"
+edition = "2018"
 
 [dependencies.enumflags2_derive]
 version = "0.6.3"

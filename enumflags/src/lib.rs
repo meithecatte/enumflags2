@@ -87,8 +87,6 @@
 #![warn(missing_docs)]
 #![cfg_attr(all(not(test), not(feature = "std")), no_std)]
 
-#[cfg(any(test, feature = "std"))]
-extern crate core;
 use core::{cmp, ops};
 use core::iter::FromIterator;
 
@@ -131,9 +129,9 @@ pub mod _internal {
         }
     }
 
-    use core::ops::{BitAnd, BitOr, BitXor, Not};
-    use core::cmp::PartialOrd;
-    use core::fmt;
+    use ::core::ops::{BitAnd, BitOr, BitXor, Not};
+    use ::core::cmp::PartialOrd;
+    use ::core::fmt;
 
     pub trait BitFlagNum
         : Default
@@ -165,7 +163,7 @@ mod formatting;
 
 // impl TryFrom<T::Type> for BitFlags<T>
 mod fallible;
-pub use fallible::FromBitsError;
+pub use crate::fallible::FromBitsError;
 
 /// Represents a set of flags of some type `T`.
 /// The type must have the `#[derive(BitFlags)]` attribute applied.
@@ -390,9 +388,8 @@ where
 
 #[cfg(feature = "serde")]
 mod impl_serde {
-    extern crate serde;
-    use self::serde::{Serialize, Deserialize};
-    use self::serde::de::{Error, Unexpected};
+    use serde::{Serialize, Deserialize};
+    use serde::de::{Error, Unexpected};
     use super::{BitFlags, RawBitFlags};
 
     impl<'a, T> Deserialize<'a> for BitFlags<T>

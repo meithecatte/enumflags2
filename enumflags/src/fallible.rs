@@ -67,7 +67,7 @@ impl<T: RawBitFlags> FromBitsError<T> {
 }
 
 impl<T: RawBitFlags + fmt::Debug> fmt::Display for FromBitsError<T> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(fmt, "Invalid bits for {:?}: {:#b}", self.flags, self.invalid)
     }
 }

@@ -2,8 +2,7 @@
 extern crate proc_macro;
 #[macro_use]
 extern crate quote;
-extern crate syn;
-extern crate proc_macro2;
+
 use syn::{Data, Ident, DeriveInput, DataEnum, spanned::Spanned};
 use proc_macro2::TokenStream;
 use proc_macro2::Span;
@@ -43,7 +42,7 @@ enum EvaluationError {
 
 impl From<EvaluationError> for TokenStream {
     fn from(why: EvaluationError) -> TokenStream {
-        use EvaluationError::*;
+        use crate::EvaluationError::*;
 
         match why {
             LiteralOutOfRange(span) => {
@@ -65,7 +64,7 @@ impl From<EvaluationError> for TokenStream {
 /// Try to evaluate the expression given.
 fn fold_expr(expr: &syn::Expr) -> Result<u64, EvaluationError> {
     use syn::Expr;
-    use EvaluationError::*;
+    use crate::EvaluationError::*;
     match expr {
         Expr::Lit(ref expr_lit) => {
             match expr_lit.lit {
