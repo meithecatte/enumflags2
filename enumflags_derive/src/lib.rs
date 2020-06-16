@@ -218,6 +218,16 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
                 }
             }
 
+            impl #ident {
+                fn empty() -> ::enumflags2::BitFlags<#ident> {
+                    ::enumflags2::BitFlags::empty()
+                }
+
+                fn all() -> ::enumflags2::BitFlags<#ident> {
+                    ::enumflags2::BitFlags::all()
+                }
+            }
+
             impl ::enumflags2::_internal::RawBitFlags for #ident {
                 type Type = #ty;
 

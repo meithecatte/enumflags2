@@ -58,6 +58,9 @@ fn test_foo() {
         assert_eq!(b, Test::A | Test::C);
     }
     assert_eq!((Test::A ^ Test::B), Test::A | Test::B);
+
+    assert_eq!(Test::empty(), BitFlags::<Test>::empty());
+    assert_eq!(Test::all(), BitFlags::<Test>::all());
 }
 
 #[test]
