@@ -70,7 +70,7 @@ fn fold_expr(expr: &syn::Expr) -> Result<u64, EvaluationError> {
             match expr_lit.lit {
                 syn::Lit::Int(ref lit_int) => {
                     lit_int.base10_parse()
-                        .or_else(|_| Err(LiteralOutOfRange(expr.span())))
+                        .map_err(|_| LiteralOutOfRange(expr.span()))
                 }
                 _ => Err(UnsupportedOperation(expr.span()))
             }
