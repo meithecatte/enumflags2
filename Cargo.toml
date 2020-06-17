@@ -1,6 +1,38 @@
+[package]
+name = "enumflags2"
+version = "0.6.4"
+authors = ["maik klein <maikklein@googlemail.com>", "Jakub \"NieDżejkob\" Kądziołka <kuba@kadziolka.net>"]
+description = "Enum-based bit flags"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/NieDzejkob/enumflags2"
+readme = "README.md"
+keywords = ["enum", "bitflag", "flag", "bitflags"]
+documentation = "https://docs.rs/enumflags2"
+edition = "2018"
+
+[dependencies.enumflags2_derive]
+version = "=0.6.4"
+path = "enumflags_derive"
+
+[dependencies.serde]
+version = "^1.0.0"
+default-features = false
+optional = true
+
+[features]
+std = []
+not_literal = ["enumflags2_derive/not_literal"]
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "from_iterator"
+harness = false
+path = "../benches/from_iterator.rs"
+
 [workspace]
 members = [
-    "enumflags",
     "enumflags_derive",
     "test_suite",
 ]
