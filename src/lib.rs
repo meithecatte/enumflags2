@@ -2,6 +2,8 @@
 //! `enumflags2` defines a `BitFlags<T>` type, which is a `Set<T>`
 //! for enums without associated data.
 //!
+//! This means that the type of a single flag is separate from a set of flags.
+//!
 //! ## Example
 //! ```
 //! use enumflags2::BitFlags;
@@ -99,7 +101,63 @@ pub use enumflags2_derive::BitFlags_internal as BitFlags;
 
 /// A trait automatically implemented by `derive(BitFlags)` to make the enum
 /// a valid type parameter for `BitFlags<T>`.
-pub trait RawBitFlags: Copy + Clone + 'static + _internal::RawBitFlags {}
+pub trait RawBitFlags: Copy + Clone + 'static + _internal::RawBitFlags {
+    /// Create a `BitFlags` with no flags set (in other words, with a value of 0).
+    ///
+    /// This is a convenience reexport of [`BitFlags::empty`]. It can be called with
+    /// `MyFlag::empty()`, thus bypassing the need for type hints in some situations.
+    ///
+    /// [`BitFlags::empty`]: struct.BitFlags.html#method.empty
+    ///
+    /// ```
+    /// # use enumflags2::BitFlags;
+    /// #[derive(Clone, Copy, PartialEq, Eq, BitFlags)]
+    /// enum MyFlag {
+    ///     One = 1 << 0,
+    ///     Two = 1 << 1,
+    ///     Three = 1 << 2,
+    /// }
+    ///
+    /// use enumflags2::RawBitFlags;
+    ///
+    /// let empty = MyFlag::empty();
+    /// assert!(empty.is_empty());
+    /// assert_eq!(empty.contains(MyFlag::One), false);
+    /// assert_eq!(empty.contains(MyFlag::Two), false);
+    /// assert_eq!(empty.contains(MyFlag::Three), false);
+    /// ```
+    fn empty() -> BitFlags<Self> {
+        BitFlags::empty()
+    }
+
+    /// Create a `BitFlags` with all flags set.
+    ///
+    /// This is a convenience reexport of [`BitFlags::all`]. It can be called with
+    /// `MyFlag::all()`, thus bypassing the need for type hints in some situations.
+    ///
+    /// [`BitFlags::all`]: struct.BitFlags.html#method.all
+    ///
+    /// ```
+    /// # use enumflags2::BitFlags;
+    /// #[derive(Clone, Copy, PartialEq, Eq, BitFlags)]
+    /// enum MyFlag {
+    ///     One = 1 << 0,
+    ///     Two = 1 << 1,
+    ///     Three = 1 << 2,
+    /// }
+    ///
+    /// use enumflags2::RawBitFlags;
+    ///
+    /// let empty = MyFlag::all();
+    /// assert!(empty.is_all());
+    /// assert_eq!(empty.contains(MyFlag::One), true);
+    /// assert_eq!(empty.contains(MyFlag::Two), true);
+    /// assert_eq!(empty.contains(MyFlag::Three), true);
+    /// ```
+    fn all() -> BitFlags<Self> {
+        BitFlags::all()
+    }
+}
 
 /// While the module is public, this is only the case because it needs to be
 /// accessed by the derive macro. Do not use this directly. Stability guarantees
@@ -206,12 +264,52 @@ where
         BitFlags { val }
     }
 
-    /// Create an empty BitFlags. Empty means `0`.
+    /// Create a `BitFlags` with no flags set (in other words, with a value of `0`).
+    ///
+    /// See also: [`RawBitFlags::empty`], a convenience reexport.
+    ///
+    /// [`RawBitFlags::empty`]: trait.RawBitFlags.html#method.empty
+    ///
+    /// ```
+    /// # use enumflags2::BitFlags;
+    /// #[derive(Clone, Copy, PartialEq, Eq, BitFlags)]
+    /// enum MyFlag {
+    ///     One = 1 << 0,
+    ///     Two = 1 << 1,
+    ///     Three = 1 << 2,
+    /// }
+    ///
+    /// let empty: BitFlags<MyFlag> = BitFlags::empty();
+    /// assert!(empty.is_empty());
+    /// assert_eq!(empty.contains(MyFlag::One), false);
+    /// assert_eq!(empty.contains(MyFlag::Two), false);
+    /// assert_eq!(empty.contains(MyFlag::Three), false);
+    /// ```
     pub fn empty() -> Self {
         unsafe { BitFlags::new(T::Type::default()) }
     }
 
-    /// Create a BitFlags with all flags set.
+    /// Create a `BitFlags` with all flags set.
+    ///
+    /// See also: [`RawBitFlags::all`], a convenience reexport.
+    ///
+    /// [`RawBitFlags::all`]: trait.RawBitFlags.html#method.all
+    ///
+    /// ```
+    /// # use enumflags2::BitFlags;
+    /// #[derive(Clone, Copy, PartialEq, Eq, BitFlags)]
+    /// enum MyFlag {
+    ///     One = 1 << 0,
+    ///     Two = 1 << 1,
+    ///     Three = 1 << 2,
+    /// }
+    ///
+    /// let empty: BitFlags<MyFlag> = BitFlags::all();
+    /// assert!(empty.is_all());
+    /// assert_eq!(empty.contains(MyFlag::One), true);
+    /// assert_eq!(empty.contains(MyFlag::Two), true);
+    /// assert_eq!(empty.contains(MyFlag::Three), true);
+    /// ```
     pub fn all() -> Self {
         unsafe { BitFlags::new(T::all_bits()) }
     }
