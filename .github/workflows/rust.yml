@@ -16,8 +16,8 @@ jobs:
         toolchain: ${{ matrix.rust }}
         profile: minimal
         default: true
-    - run: cargo build --verbose
-    - run: cargo test --verbose
+    - run: cargo build
+    - run: cargo test --all
   clippy:
     runs-on: ubuntu-latest
     steps:
