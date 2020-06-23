@@ -221,7 +221,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
             impl ::enumflags2::_internal::RawBitFlags for #ident {
                 type Type = #ty;
 
-                fn all() -> Self::Type {
+                fn all_bits() -> Self::Type {
                     // make sure it's evaluated at compile time
                     const VALUE: #ty = #all;
                     VALUE

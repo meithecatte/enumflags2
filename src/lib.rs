@@ -113,7 +113,7 @@ pub mod _internal {
         type Type: BitFlagNum;
 
         /// Return a value with all flag bits set.
-        fn all() -> Self::Type;
+        fn all_bits() -> Self::Type;
 
         /// Return the bits as a number type.
         fn bits(self) -> Self::Type;
@@ -213,12 +213,12 @@ where
 
     /// Create a BitFlags with all flags set.
     pub fn all() -> Self {
-        unsafe { BitFlags::new(T::all()) }
+        unsafe { BitFlags::new(T::all_bits()) }
     }
 
     /// Returns true if all flags are set
     pub fn is_all(self) -> bool {
-        self.val == T::all()
+        self.val == T::all_bits()
     }
 
     /// Returns true if no flag is set
@@ -263,7 +263,7 @@ where
 
     /// Truncates flags that are illegal
     pub fn from_bits_truncate(bits: T::Type) -> Self {
-        unsafe { BitFlags::new(bits & T::all()) }
+        unsafe { BitFlags::new(bits & T::all_bits()) }
     }
 
     /// Toggles the matching bits
@@ -326,7 +326,7 @@ where
 {
     type Output = BitFlags<T>;
     fn bitxor(self, other: B) -> BitFlags<T> {
-        unsafe { BitFlags::new((self.bits() ^ other.into().bits()) & T::all()) }
+        unsafe { BitFlags::new(self.bits() ^ other.into().bits()) }
     }
 }
 
@@ -365,7 +365,7 @@ where
 {
     type Output = BitFlags<T>;
     fn not(self) -> BitFlags<T> {
-        unsafe { BitFlags::new(!self.bits() & T::all()) }
+        unsafe { BitFlags::new(!self.bits() & T::all_bits()) }
     }
 }
 
