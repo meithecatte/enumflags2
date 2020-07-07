@@ -23,13 +23,13 @@ optional = true
 std = []
 not_literal = ["enumflags2_derive/not_literal"]
 
-[dev-dependencies]
-criterion = "0.3"
-
-[[bench]]
-name = "from_iterator"
-harness = false
-path = "../benches/from_iterator.rs"
+#[dev-dependencies]
+#criterion = "0.3"
+#
+#[[bench]]
+#name = "from_iterator"
+#harness = false
+#path = "benches/from_iterator.rs"
 
 [workspace]
 members = [
