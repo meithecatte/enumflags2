@@ -232,8 +232,8 @@ pub mod _internal {
         type Status = AssertionFailed;
     }
 
-    pub fn assert_exactly_one_bit_set<T: AssertionHelper>()
-        where T::Status: ExactlyOneBitSet {}
+    pub fn assert_exactly_one_bit_set<Assertion: AssertionHelper>()
+        where Assertion::Status: ExactlyOneBitSet {}
 }
 
 // Internal debug formatting implementations

@@ -1,0 +1,5 @@
+error: BitFlags can only be derived on enums
+ --> $DIR/not_enum.rs:2:1
+  |
+2 | struct Foo(u16);
+  | ^^^^^^

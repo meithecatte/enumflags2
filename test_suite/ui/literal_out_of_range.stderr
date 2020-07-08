@@ -1,0 +1,5 @@
+error: Integer literal out of range
+ --> $DIR/literal_out_of_range.rs:3:17
+  |
+3 |     BigNumber = 0xdeadbeefcafebabe1337,
+  |                 ^^^^^^^^^^^^^^^^^^^^^^

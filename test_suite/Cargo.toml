@@ -11,6 +11,14 @@ features = ["serde", "not_literal"]
 version = "1"
 features = ["derive"]
 
+[dev-dependencies]
+trybuild = "1.0"
+
+[[test]]
+name = "ui-tests"
+path = "ui_tests.rs"
+edition = "2018"
+
 [[test]]
 name = "bitflags-test"
 path = "tests/bitflag_tests.rs"
@@ -54,9 +62,4 @@ edition = "2018"
 [[test]]
 name = "not_literal"
 path = "tests/not_literal.rs"
-edition = "2018"
-
-[lib]
-name = "compile_fail"
-path = "compile_fail.rs"
 edition = "2018"

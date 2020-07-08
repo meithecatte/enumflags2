@@ -1,0 +1,10 @@
+error[E0277]: the trait bound `enumflags2::_internal::AssertionFailed: enumflags2::_internal::ExactlyOneBitSet` is not satisfied
+   --> $DIR/multiple_bits_deferred.rs:6:5
+    |
+6   |     Three = THREE,
+    |     ^^^^^ the trait `enumflags2::_internal::ExactlyOneBitSet` is not implemented for `enumflags2::_internal::AssertionFailed`
+    |
+   ::: $WORKSPACE/src/lib.rs:236:34
+    |
+236 |         where Assertion::Status: ExactlyOneBitSet {}
+    |                                  ---------------- required by this bound in `enumflags2::_internal::assert_exactly_one_bit_set`
