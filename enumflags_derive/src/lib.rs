@@ -30,7 +30,12 @@ pub fn derive_enum_flags(input: proc_macro::TokenStream)
                 .unwrap_or_else(|err| err)
                 .into()
         }
-        _ => error!("BitFlags can only be derived on enums").into(),
+        Data::Struct(ref data) => {
+            error!(data.struct_token.span => "BitFlags can only be derived on enums").into()
+        }
+        Data::Union(ref data) => {
+            error!(data.union_token.span => "BitFlags can only be derived on enums").into()
+        }
     }
 }
 
