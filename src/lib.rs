@@ -214,6 +214,26 @@ pub mod _internal {
     pub mod core {
         pub use core::{convert, option, ops};
     }
+
+    pub struct AssertionSucceeded;
+    pub struct AssertionFailed;
+    pub trait ExactlyOneBitSet {}
+    impl ExactlyOneBitSet for AssertionSucceeded {}
+
+    pub trait AssertionHelper {
+        type Status;
+    }
+
+    impl AssertionHelper for [(); 1] {
+        type Status = AssertionSucceeded;
+    }
+
+    impl AssertionHelper for [(); 0] {
+        type Status = AssertionFailed;
+    }
+
+    pub fn assert_exactly_one_bit_set<T: AssertionHelper>()
+        where T::Status: ExactlyOneBitSet {}
 }
 
 // Internal debug formatting implementations
