@@ -6,7 +6,6 @@ extern crate quote;
 use syn::{Data, Ident, DeriveInput, DataEnum, spanned::Spanned};
 use proc_macro2::TokenStream;
 use proc_macro2::Span;
-use std::convert::From;
 
 /// Shorthand for a quoted `compile_error!`.
 macro_rules! error {
@@ -27,7 +26,7 @@ pub fn derive_enum_flags(input: proc_macro::TokenStream)
     match ast.data {
         Data::Enum(ref data) => {
             gen_enumflags(&ast.ident, &ast, data)
-                .unwrap_or_else(|err| err)
+                .unwrap_or_else(|err| err.to_compile_error())
                 .into()
         }
         Data::Struct(ref data) => {
@@ -39,25 +38,8 @@ pub fn derive_enum_flags(input: proc_macro::TokenStream)
     }
 }
 
-#[derive(Debug)]
-enum EvaluationError {
-    LiteralOutOfRange(Span),
-}
-
-impl From<EvaluationError> for TokenStream {
-    fn from(why: EvaluationError) -> TokenStream {
-        use crate::EvaluationError::*;
-
-        match why {
-            LiteralOutOfRange(span) => {
-                error!(span => "Integer literal out of range")
-            }
-        }
-    }
-}
-
 /// Try to evaluate the expression given.
-fn fold_expr(expr: &syn::Expr) -> Result<Option<u64>, EvaluationError> {
+fn fold_expr(expr: &syn::Expr) -> Result<Option<u64>, syn::Error> {
     /// Recurse, but bubble-up both kinds of errors.
     /// (I miss my monad transformers)
     macro_rules! fold_expr {
@@ -70,13 +52,13 @@ fn fold_expr(expr: &syn::Expr) -> Result<Option<u64>, EvaluationError> {
     }
 
     use syn::Expr;
-    use crate::EvaluationError::*;
     match expr {
         Expr::Lit(ref expr_lit) => {
             match expr_lit.lit {
                 syn::Lit::Int(ref lit_int) => {
                     Ok(Some(lit_int.base10_parse()
-                        .map_err(|_| LiteralOutOfRange(expr.span()))?))
+                        .map_err(|_| syn::Error::new_spanned(lit_int,
+                                "Integer literal out of range"))?))
                 }
                 _ => Ok(None),
             }
@@ -96,15 +78,15 @@ fn fold_expr(expr: &syn::Expr) -> Result<Option<u64>, EvaluationError> {
 /// Given a list of attributes, find the `repr`, if any, and return the integer
 /// type specified.
 fn extract_repr(attrs: &[syn::Attribute])
-    -> Result<Option<syn::Ident>, TokenStream>
+    -> Result<Option<syn::Ident>, syn::Error>
 {
     use syn::{Meta, NestedMeta};
     attrs.iter()
         .find_map(|attr| {
             match attr.parse_meta() {
                 Err(why) => {
-                    let error = format!("Couldn't parse attribute: {}", why);
-                    Some(Err(error!(attr.span() => #error)))
+                    Some(Err(syn::Error::new_spanned(attr,
+                        format!("Couldn't parse attribute: {}", why))))
                 }
                 Ok(Meta::List(ref meta)) if meta.path.is_ident("repr") => {
                     meta.nested.iter()
@@ -126,18 +108,22 @@ fn extract_repr(attrs: &[syn::Attribute])
 fn verify_flag_values<'a>(
     type_name: &Ident,
     variants: impl Iterator<Item=&'a syn::Variant>
-) -> Result<TokenStream, TokenStream> {
+) -> Result<TokenStream, syn::Error> {
     let mut deferred_checks: Vec<TokenStream> = vec![];
     for variant in variants {
+        if !matches!(variant.fields, syn::Fields::Unit) {
+            return Err(syn::Error::new_spanned(&variant.fields,
+                "Bitflag variants cannot contain additional data"));
+        }
+
         let discr = variant.discriminant.as_ref()
-           .ok_or_else(|| error!(variant.span() =>
+           .ok_or_else(|| syn::Error::new_spanned(variant,
                          "Please add an explicit discriminant"))?;
         match fold_expr(&discr.1) {
             Ok(Some(flag)) => {
                 if !flag.is_power_of_two() {
-                    return Err(error!(variant.discriminant.as_ref()
-                                      .unwrap().1.span() =>
-                        "Flags must have exactly one set bit."));
+                    return Err(syn::Error::new_spanned(&discr.1,
+                        "Flags must have exactly one set bit"));
                 }
             }
             Ok(None) => {
@@ -168,7 +154,7 @@ fn verify_flag_values<'a>(
 }
 
 fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
-    -> Result<TokenStream, TokenStream>
+    -> Result<TokenStream, syn::Error>
 {
     let span = Span::call_site();
     // for quote! interpolation
