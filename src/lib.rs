@@ -48,14 +48,6 @@
 //! - [`serde`](https://serde.rs/) implements `Serialize` and `Deserialize`
 //!   for `BitFlags<T>`.
 //! - `std` implements `std::error::Error` for `FromBitsError`.
-//! - `not_literal` enables a workaround that allows using discriminant
-//!   expressions that can't be evaluated at macro expansion time. Notably,
-//!   this includes using pre-existing constants.
-//!
-//!   This is disabled by default because of the high potential for confusing
-//!   error messages - if a flag doesn't have exactly one bit set, the error
-//!   message will be "attempt to subtract with overflow", pointing at the
-//!   relevant flag.
 //!
 //! ### Migrating from 0.5
 //!

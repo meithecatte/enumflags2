@@ -42,7 +42,6 @@ pub fn derive_enum_flags(input: proc_macro::TokenStream)
 #[derive(Debug)]
 enum EvaluationError {
     LiteralOutOfRange(Span),
-    UnsupportedOperation(Span),
 }
 
 impl From<EvaluationError> for TokenStream {
@@ -53,42 +52,44 @@ impl From<EvaluationError> for TokenStream {
             LiteralOutOfRange(span) => {
                 error!(span => "Integer literal out of range")
             }
-            UnsupportedOperation(span) => {
-                error!(span => "This kind of discriminant expression is \
-                        not supported.\n\
-                        hint: Enable the \"not_literal\" feature to \
-                        use a workaround.\n\
-                        note: This is not enabled by default due to the \
-                        high potential for confusing error messages \
-                        (see documentation).")
-            }
         }
     }
 }
 
 /// Try to evaluate the expression given.
-fn fold_expr(expr: &syn::Expr) -> Result<u64, EvaluationError> {
+fn fold_expr(expr: &syn::Expr) -> Result<Option<u64>, EvaluationError> {
+    /// Recurse, but bubble-up both kinds of errors.
+    /// (I miss my monad transformers)
+    macro_rules! fold_expr {
+        ($($x:tt)*) => {
+            match fold_expr($($x)*)? {
+                Some(x) => x,
+                None => return Ok(None),
+            }
+        }
+    }
+
     use syn::Expr;
     use crate::EvaluationError::*;
     match expr {
         Expr::Lit(ref expr_lit) => {
             match expr_lit.lit {
                 syn::Lit::Int(ref lit_int) => {
-                    lit_int.base10_parse()
-                        .map_err(|_| LiteralOutOfRange(expr.span()))
+                    Ok(Some(lit_int.base10_parse()
+                        .map_err(|_| LiteralOutOfRange(expr.span()))?))
                 }
-                _ => Err(UnsupportedOperation(expr.span()))
+                _ => Ok(None),
             }
         },
         Expr::Binary(ref expr_binary) => {
-            let l = fold_expr(&expr_binary.left)?;
-            let r = fold_expr(&expr_binary.right)?;
+            let l = fold_expr!(&expr_binary.left);
+            let r = fold_expr!(&expr_binary.right);
             match &expr_binary.op {
-                syn::BinOp::Shl(_) => Ok(l << r),
-                _ => Err(UnsupportedOperation(expr_binary.span()))
+                syn::BinOp::Shl(_) => Ok(Some(l << r)),
+                _ => Ok(None),
             }
         }
-        _ => Err(UnsupportedOperation(expr.span()))
+        _ => Ok(None),
     }
 }
 
@@ -121,42 +122,38 @@ fn extract_repr(attrs: &[syn::Attribute])
         .transpose()
 }
 
-/// Returns Ok with deferred checks (not_literal), or Err with error!
+/// Returns deferred checks
 fn verify_flag_values<'a>(
-    // starts with underscore to silence warnings when not_literal
-    // are disabled
-    _type_name: &Ident,
+    type_name: &Ident,
     variants: impl Iterator<Item=&'a syn::Variant>
 ) -> Result<TokenStream, TokenStream> {
-    #[cfg_attr(not(feature = "not_literal"), allow(unused_mut))]
     let mut deferred_checks: Vec<TokenStream> = vec![];
     for variant in variants {
         let discr = variant.discriminant.as_ref()
            .ok_or_else(|| error!(variant.span() =>
                          "Please add an explicit discriminant"))?;
         match fold_expr(&discr.1) {
-            Ok(flag) => {
+            Ok(Some(flag)) => {
                 if !flag.is_power_of_two() {
                     return Err(error!(variant.discriminant.as_ref()
                                       .unwrap().1.span() =>
                         "Flags must have exactly one set bit."));
                 }
             }
-            #[cfg(feature = "not_literal")]
-            Err(EvaluationError::UnsupportedOperation(_)) => {
+            Ok(None) => {
                 let variant_name = &variant.ident;
                 // TODO: Remove this madness when Debian ships a new compiler.
                 let assertion_name = syn::Ident::new(
                     &format!("__enumflags_assertion_{}_{}",
-                            _type_name, variant_name),
+                            type_name, variant_name),
                     Span::call_site()); // call_site because def_site is unstable
                 // adapted from static-assertions-rs by nvzqz (MIT/Apache-2.0)
                 deferred_checks.push(quote_spanned!(variant.span() =>
                     const #assertion_name: fn() = || {
                         ::enumflags2::_internal::assert_exactly_one_bit_set::<[(); (
-                            (#_type_name::#variant_name as u64).wrapping_sub(1) &
-                            (#_type_name::#variant_name as u64) == 0 &&
-                            (#_type_name::#variant_name as u64) != 0
+                            (#type_name::#variant_name as u64).wrapping_sub(1) &
+                            (#type_name::#variant_name as u64) == 0 &&
+                            (#type_name::#variant_name as u64) != 0
                         ) as usize]>();
                     };
                 ));

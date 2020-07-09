@@ -5,7 +5,7 @@ publish = false
 
 [dependencies.enumflags2]
 path = "../"
-features = ["serde", "not_literal"]
+features = ["serde"]
 
 [dependencies.serde]
 version = "1"
