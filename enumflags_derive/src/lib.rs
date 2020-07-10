@@ -135,16 +135,16 @@ fn verify_flag_values<'a>(
                     &format!("__enumflags_assertion_{}_{}",
                             type_name, variant_name),
                     Span::call_site()); // call_site because def_site is unstable
-                // adapted from static-assertions-rs by nvzqz (MIT/Apache-2.0)
+
                 deferred_checks.push(quote_spanned!(variant.span() =>
                     #[doc(hidden)]
-                    const #assertion_name: fn() = || {
-                        ::enumflags2::_internal::assert_exactly_one_bit_set::<[(); (
+                    const #assertion_name:
+                        <<[(); (
                             (#type_name::#variant_name as u64).wrapping_sub(1) &
                             (#type_name::#variant_name as u64) == 0 &&
                             (#type_name::#variant_name as u64) != 0
-                        ) as usize]>();
-                    };
+                        ) as usize] as enumflags2::_internal::AssertionHelper>
+                            ::Status as enumflags2::_internal::ExactlyOneBitSet>::X = ();
                 ));
             }
         }
