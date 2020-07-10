@@ -135,6 +135,7 @@ fn verify_flag_values<'a>(
                     Span::call_site()); // call_site because def_site is unstable
                 // adapted from static-assertions-rs by nvzqz (MIT/Apache-2.0)
                 deferred_checks.push(quote_spanned!(variant.span() =>
+                    #[doc(hidden)]
                     const #assertion_name: fn() = || {
                         ::enumflags2::_internal::assert_exactly_one_bit_set::<[(); (
                             (#type_name::#variant_name as u64).wrapping_sub(1) &
