@@ -20,6 +20,9 @@ jobs:
         profile: minimal
         default: true
     - run: cargo build
+    - name: Prepare UI tests for nightly
+      if: matrix.rust == 'nightly'
+      run: for x in "test_suite/ui/*.nightly"; do cp "$x" "${x%.nightly}"; done
     - run: cargo test --all ${{ matrix.extra-test-opts }}
   clippy:
     runs-on: ubuntu-latest
