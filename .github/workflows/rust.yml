@@ -2,10 +2,6 @@ name: Rust
 
 on: [push, pull_request]
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   build:
     strategy:
@@ -26,7 +22,7 @@ jobs:
     - run: cargo build
     - name: Prepare UI tests for nightly
       if: matrix.rust == 'nightly'
-      run: for x in "test_suite/ui/*.nightly"; do cp "$x" "${x%.nightly}"; done
+      run: for x in test_suite/ui/*.nightly; do cp "$x" "${x%.nightly}"; done
     - run: cargo test --all ${{ matrix.extra-test-opts }}
   clippy:
     runs-on: ubuntu-latest
