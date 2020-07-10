@@ -119,14 +119,14 @@ fn verify_flag_values<'a>(
         let discr = variant.discriminant.as_ref()
            .ok_or_else(|| syn::Error::new_spanned(variant,
                          "Please add an explicit discriminant"))?;
-        match fold_expr(&discr.1) {
-            Ok(Some(flag)) => {
+        match fold_expr(&discr.1)? {
+            Some(flag) => {
                 if !flag.is_power_of_two() {
                     return Err(syn::Error::new_spanned(&discr.1,
                         "Flags must have exactly one set bit"));
                 }
             }
-            Ok(None) => {
+            None => {
                 let variant_name = &variant.ident;
                 // TODO: Remove this madness when Debian ships a new compiler.
                 let assertion_name = syn::Ident::new(
@@ -145,7 +145,6 @@ fn verify_flag_values<'a>(
                     };
                 ));
             }
-            Err(why) => return Err(why.into()),
         }
     }
 
