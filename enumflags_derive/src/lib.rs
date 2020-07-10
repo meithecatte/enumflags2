@@ -111,9 +111,11 @@ fn verify_flag_values<'a>(
 ) -> Result<TokenStream, syn::Error> {
     let mut deferred_checks: Vec<TokenStream> = vec![];
     for variant in variants {
-        if !matches!(variant.fields, syn::Fields::Unit) {
-            return Err(syn::Error::new_spanned(&variant.fields,
-                "Bitflag variants cannot contain additional data"));
+        // I'd use matches! if not for MSRV...
+        match variant.fields {
+            syn::Fields::Unit => (),
+            _ => return Err(syn::Error::new_spanned(&variant.fields,
+                "Bitflag variants cannot contain additional data")),
         }
 
         let discr = variant.discriminant.as_ref()
