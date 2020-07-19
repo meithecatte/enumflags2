@@ -1,6 +1,7 @@
 const THREE: u8 = 3;
 
-#[derive(Copy, Clone, enumflags2::BitFlags)]
+#[enumflags2::bitflags]
+#[derive(Copy, Clone)]
 #[repr(u8)]
 enum Foo {
     Three = THREE,

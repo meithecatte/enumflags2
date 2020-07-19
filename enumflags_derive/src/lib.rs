@@ -7,35 +7,31 @@ use syn::{Data, Ident, DeriveInput, DataEnum, spanned::Spanned};
 use proc_macro2::TokenStream;
 use proc_macro2::Span;
 
-/// Shorthand for a quoted `compile_error!`.
-macro_rules! error {
-    ($span:expr => $($x:tt)*) => {
-        quote_spanned!($span => compile_error!($($x)*);)
-    };
-    ($($x:tt)*) => {
-        quote!(compile_error!($($x)*);)
-    };
-}
-
-#[proc_macro_derive(BitFlags_internal)]
-pub fn derive_enum_flags(input: proc_macro::TokenStream)
-    -> proc_macro::TokenStream
-{
+#[proc_macro_attribute]
+pub fn bitflags_internal(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
 
-    match ast.data {
+    let impls = match ast.data {
         Data::Enum(ref data) => {
             gen_enumflags(&ast.ident, &ast, data)
-                .unwrap_or_else(|err| err.to_compile_error())
-                .into()
         }
         Data::Struct(ref data) => {
-            error!(data.struct_token.span => "BitFlags can only be derived on enums").into()
+            Err(syn::Error::new_spanned(data.struct_token, "#[bitflags] requires an enum"))
         }
         Data::Union(ref data) => {
-            error!(data.union_token.span => "BitFlags can only be derived on enums").into()
+            Err(syn::Error::new_spanned(data.union_token, "#[bitflags] requires an enum"))
         }
-    }
+    };
+
+    let impls = TokenStream::from(impls.unwrap_or_else(|err| err.to_compile_error()));
+    let combined = quote! {
+        #ast
+        #impls
+    };
+    combined.into()
 }
 
 /// Try to evaluate the expression given.
@@ -232,6 +228,6 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
                 }
             }
 
-            impl ::enumflags2::RawBitFlags for #ident {}
+            impl ::enumflags2::BitFlag for #ident {}
     })
 }

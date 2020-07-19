@@ -6,9 +6,10 @@
 //!
 //! ## Example
 //! ```
-//! use enumflags2::BitFlags;
+//! use enumflags2::{bitflags, BitFlags};
 //!
-//! #[derive(BitFlags, Copy, Clone, Debug, PartialEq)]
+//! #[bitflags]
+//! #[derive(Copy, Clone, Debug, PartialEq)]
 //! #[repr(u8)]
 //! enum Test {
 //!     A = 0b0001,
@@ -89,11 +90,11 @@ use core::iter::FromIterator;
 extern crate enumflags2_derive;
 
 #[doc(hidden)]
-pub use enumflags2_derive::BitFlags_internal as BitFlags;
+pub use enumflags2_derive::bitflags_internal as bitflags;
 
-/// A trait automatically implemented by `derive(BitFlags)` to make the enum
+/// A trait automatically implemented by `#[bitflags]` to make the enum
 /// a valid type parameter for `BitFlags<T>`.
-pub trait RawBitFlags: Copy + Clone + 'static + _internal::RawBitFlags {
+pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     /// Create a `BitFlags` with no flags set (in other words, with a value of 0).
     ///
     /// This is a convenience reexport of [`BitFlags::empty`]. It can be called with
@@ -102,15 +103,16 @@ pub trait RawBitFlags: Copy + Clone + 'static + _internal::RawBitFlags {
     /// [`BitFlags::empty`]: struct.BitFlags.html#method.empty
     ///
     /// ```
-    /// # use enumflags2::BitFlags;
-    /// #[derive(Clone, Copy, PartialEq, Eq, BitFlags)]
+    /// # use enumflags2::{bitflags, BitFlags};
+    /// #[bitflags]
+    /// #[derive(Clone, Copy, PartialEq, Eq)]
     /// enum MyFlag {
     ///     One = 1 << 0,
     ///     Two = 1 << 1,
     ///     Three = 1 << 2,
     /// }
     ///
-    /// use enumflags2::RawBitFlags;
+    /// use enumflags2::BitFlag;
     ///
     /// let empty = MyFlag::empty();
     /// assert!(empty.is_empty());
@@ -130,15 +132,16 @@ pub trait RawBitFlags: Copy + Clone + 'static + _internal::RawBitFlags {
     /// [`BitFlags::all`]: struct.BitFlags.html#method.all
     ///
     /// ```
-    /// # use enumflags2::BitFlags;
-    /// #[derive(Clone, Copy, PartialEq, Eq, BitFlags)]
+    /// # use enumflags2::{bitflags, BitFlags};
+    /// #[bitflags]
+    /// #[derive(Clone, Copy, PartialEq, Eq)]
     /// enum MyFlag {
     ///     One = 1 << 0,
     ///     Two = 1 << 1,
     ///     Three = 1 << 2,
     /// }
     ///
-    /// use enumflags2::RawBitFlags;
+    /// use enumflags2::BitFlag;
     ///
     /// let empty = MyFlag::all();
     /// assert!(empty.is_all());
@@ -152,11 +155,11 @@ pub trait RawBitFlags: Copy + Clone + 'static + _internal::RawBitFlags {
 }
 
 /// While the module is public, this is only the case because it needs to be
-/// accessed by the derive macro. Do not use this directly. Stability guarantees
+/// accessed by the macro. Do not use this directly. Stability guarantees
 /// don't apply.
 #[doc(hidden)]
 pub mod _internal {
-    /// A trait automatically implemented by `derive(BitFlags)` to make the enum
+    /// A trait automatically implemented by `#[bitflags]` to make the enum
     /// a valid type parameter for `BitFlags<T>`.
     pub trait RawBitFlags: Copy + Clone + 'static {
         /// The underlying integer type.
@@ -237,24 +240,24 @@ mod fallible;
 pub use crate::fallible::FromBitsError;
 
 /// Represents a set of flags of some type `T`.
-/// The type must have the `#[derive(BitFlags)]` attribute applied.
+/// `T` must have the `#[bitflags]` attribute applied.
 #[derive(Copy, Clone, Eq, Hash)]
 #[repr(transparent)]
-pub struct BitFlags<T: RawBitFlags> {
+pub struct BitFlags<T: BitFlag> {
     val: T::Type,
 }
 
 /// The default value returned is one with all flags unset, i. e. [`empty`][Self::empty].
 impl<T> Default for BitFlags<T>
 where
-    T: RawBitFlags,
+    T: BitFlag,
 {
     fn default() -> Self {
         Self::empty()
     }
 }
 
-impl<T: RawBitFlags> From<T> for BitFlags<T> {
+impl<T: BitFlag> From<T> for BitFlags<T> {
     fn from(t: T) -> BitFlags<T> {
         Self::from_flag(t)
     }
@@ -262,7 +265,7 @@ impl<T: RawBitFlags> From<T> for BitFlags<T> {
 
 impl<T> BitFlags<T>
 where
-    T: RawBitFlags,
+    T: BitFlag,
 {
     /// Create a new BitFlags unsafely, without checking if the bits form
     /// a valid bit pattern for the type.
@@ -279,13 +282,14 @@ where
 
     /// Create a `BitFlags` with no flags set (in other words, with a value of `0`).
     ///
-    /// See also: [`RawBitFlags::empty`], a convenience reexport.
+    /// See also: [`BitFlag::empty`], a convenience reexport.
     ///
-    /// [`RawBitFlags::empty`]: trait.RawBitFlags.html#method.empty
+    /// [`BitFlag::empty`]: trait.BitFlag.html#method.empty
     ///
     /// ```
-    /// # use enumflags2::BitFlags;
-    /// #[derive(Clone, Copy, PartialEq, Eq, BitFlags)]
+    /// # use enumflags2::{bitflags, BitFlags};
+    /// #[bitflags]
+    /// #[derive(Clone, Copy, PartialEq, Eq)]
     /// enum MyFlag {
     ///     One = 1 << 0,
     ///     Two = 1 << 1,
@@ -304,13 +308,14 @@ where
 
     /// Create a `BitFlags` with all flags set.
     ///
-    /// See also: [`RawBitFlags::all`], a convenience reexport.
+    /// See also: [`BitFlag::all`], a convenience reexport.
     ///
-    /// [`RawBitFlags::all`]: trait.RawBitFlags.html#method.all
+    /// [`BitFlag::all`]: trait.BitFlag.html#method.all
     ///
     /// ```
-    /// # use enumflags2::BitFlags;
-    /// #[derive(Clone, Copy, PartialEq, Eq, BitFlags)]
+    /// # use enumflags2::{bitflags, BitFlags};
+    /// #[bitflags]
+    /// #[derive(Clone, Copy, PartialEq, Eq)]
     /// enum MyFlag {
     ///     One = 1 << 0,
     ///     Two = 1 << 1,
@@ -400,7 +405,7 @@ where
 
 impl<T, B> cmp::PartialEq<B> for BitFlags<T>
 where
-    T: RawBitFlags,
+    T: BitFlag,
     B: Into<BitFlags<T>> + Copy,
 {
     fn eq(&self, other: &B) -> bool {
@@ -410,7 +415,7 @@ where
 
 impl<T, B> ops::BitOr<B> for BitFlags<T>
 where
-    T: RawBitFlags,
+    T: BitFlag,
     B: Into<BitFlags<T>>,
 {
     type Output = BitFlags<T>;
@@ -421,7 +426,7 @@ where
 
 impl<T, B> ops::BitAnd<B> for BitFlags<T>
 where
-    T: RawBitFlags,
+    T: BitFlag,
     B: Into<BitFlags<T>>,
 {
     type Output = BitFlags<T>;
@@ -432,7 +437,7 @@ where
 
 impl<T, B> ops::BitXor<B> for BitFlags<T>
 where
-    T: RawBitFlags,
+    T: BitFlag,
     B: Into<BitFlags<T>>,
 {
     type Output = BitFlags<T>;
@@ -443,7 +448,7 @@ where
 
 impl<T, B> ops::BitOrAssign<B> for BitFlags<T>
 where
-    T: RawBitFlags,
+    T: BitFlag,
     B: Into<BitFlags<T>>,
 {
     fn bitor_assign(&mut self, other: B) {
@@ -453,7 +458,7 @@ where
 
 impl<T, B> ops::BitAndAssign<B> for BitFlags<T>
 where
-    T: RawBitFlags,
+    T: BitFlag,
     B: Into<BitFlags<T>>,
 {
     fn bitand_assign(&mut self, other: B) {
@@ -462,7 +467,7 @@ where
 }
 impl<T, B> ops::BitXorAssign<B> for BitFlags<T>
 where
-    T: RawBitFlags,
+    T: BitFlag,
     B: Into<BitFlags<T>>,
 {
     fn bitxor_assign(&mut self, other: B) {
@@ -472,7 +477,7 @@ where
 
 impl<T> ops::Not for BitFlags<T>
 where
-    T: RawBitFlags,
+    T: BitFlag,
 {
     type Output = BitFlags<T>;
     fn not(self) -> BitFlags<T> {
@@ -482,7 +487,7 @@ where
 
 impl<T, B> FromIterator<B> for BitFlags<T>
 where
-    T: RawBitFlags,
+    T: BitFlag,
     B: Into<BitFlags<T>>
 {
     fn from_iter<I>(it: I) -> BitFlags<T>
@@ -495,7 +500,7 @@ where
 
 impl<T, B> Extend<B> for BitFlags<T>
 where
-    T: RawBitFlags,
+    T: BitFlag,
     B: Into<BitFlags<T>>
 {
     fn extend<I>(&mut self, it: I)
@@ -510,11 +515,11 @@ where
 mod impl_serde {
     use serde::{Serialize, Deserialize};
     use serde::de::{Error, Unexpected};
-    use super::{BitFlags, RawBitFlags};
+    use super::{BitFlags, BitFlag};
 
     impl<'a, T> Deserialize<'a> for BitFlags<T>
     where
-        T: RawBitFlags,
+        T: BitFlag,
         T::Type: Deserialize<'a> + Into<u64>,
     {
         fn deserialize<D: serde::Deserializer<'a>>(d: D) -> Result<Self, D::Error> {
@@ -529,7 +534,7 @@ mod impl_serde {
 
     impl<T> Serialize for BitFlags<T>
     where
-        T: RawBitFlags,
+        T: BitFlag,
         T::Type: Serialize,
     {
         fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {

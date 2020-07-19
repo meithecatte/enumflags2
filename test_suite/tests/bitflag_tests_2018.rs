@@ -1,3 +1,3 @@
-use enumflags2::BitFlags;
+use enumflags2::bitflags;
 
 include!("../common.rs");

@@ -1,4 +1,4 @@
-use enumflags2::BitFlags;
+use enumflags2::{bitflags, BitFlags};
 
 include!("../common.rs");
 
@@ -85,10 +85,10 @@ fn format() {
 
 #[test]
 fn debug_generic() {
-    use enumflags2::{BitFlags, RawBitFlags};
+    use enumflags2::{BitFlags, BitFlag};
 
     #[derive(Debug)]
-    struct Debug<T: RawBitFlags>(BitFlags<T>);
+    struct Debug<T: BitFlag>(BitFlags<T>);
 
     let _ = format!("{:?}", Debug(BitFlags::<Test>::all()));
 }

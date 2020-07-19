@@ -1,9 +1,10 @@
-use enumflags2::BitFlags;
+use enumflags2::{bitflags, BitFlags};
 use serde::{Serialize, Deserialize};
 
 #[test]
 fn serde_compile() {
-    #[derive(enumflags2::BitFlags, Copy, Clone, Debug, Serialize, Deserialize)]
+    #[bitflags]
+    #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
     #[repr(u8)]
     enum Test {
         A = 1 << 0,

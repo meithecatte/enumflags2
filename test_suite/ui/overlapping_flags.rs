@@ -1,4 +1,5 @@
-#[derive(Copy, Clone, enumflags2::BitFlags)]
+#[enumflags2::bitflags]
+#[derive(Copy, Clone)]
 enum Foo {
     SomeFlag = 1 << 0,
     OverlappingFlag = 1 << 0,

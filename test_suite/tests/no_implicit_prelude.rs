@@ -1,9 +1,11 @@
 #![no_implicit_prelude]
 
+#[macro_use]
 extern crate enumflags2;
 use enumflags2::BitFlags;
 
-#[derive(BitFlags, Copy, Clone, Debug, PartialEq)]
+#[bitflags]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[repr(u8)]
 pub enum Test {
     A = 1 << 0,

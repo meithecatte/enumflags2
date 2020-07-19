@@ -1,5 +1,5 @@
-error: BitFlags can only be derived on enums
- --> $DIR/not_enum.rs:2:1
+error: #[bitflags] requires an enum
+ --> $DIR/not_enum.rs:3:1
   |
-2 | struct Foo(u16);
+3 | struct Foo(u16);
   | ^^^^^^

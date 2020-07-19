@@ -1,5 +1,5 @@
 error: Integer literal out of range
- --> $DIR/literal_out_of_range.rs:3:17
+ --> $DIR/literal_out_of_range.rs:4:17
   |
-3 |     BigNumber = 0xdeadbeefcafebabe1337,
+4 |     BigNumber = 0xdeadbeefcafebabe1337,
   |                 ^^^^^^^^^^^^^^^^^^^^^^

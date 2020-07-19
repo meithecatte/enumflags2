@@ -1,5 +1,5 @@
 error: Flags must have exactly one set bit
- --> $DIR/zero_disciminant.rs:3:12
+ --> $DIR/zero_disciminant.rs:4:12
   |
-3 |     Zero = 0,
+4 |     Zero = 0,
   |            ^

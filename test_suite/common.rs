@@ -1,4 +1,5 @@
-#[derive(BitFlags, Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[bitflags]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[repr(u8)]
 enum Test {
     A = 1 << 0,
@@ -7,7 +8,8 @@ enum Test {
     D = 1 << 3,
 }
 
-#[derive(BitFlags, Copy, Clone, Debug)]
+#[bitflags]
+#[derive(Copy, Clone, Debug)]
 #[repr(u64)]
 enum Test1 {
     A = 1 << 0,
@@ -93,7 +95,8 @@ fn assign_ops() {
 
 #[test]
 fn fn_derive() {
-    #[derive(BitFlags, Copy, Clone, Debug)]
+    #[bitflags]
+    #[derive(Copy, Clone, Debug)]
     #[repr(u8)]
     enum TestFn {
         A = 1 << 0,
@@ -103,7 +106,8 @@ fn fn_derive() {
 #[test]
 fn module() {
     mod some_modules {
-        #[derive(enumflags2::BitFlags, Copy, Clone, Debug)]
+        #[enumflags2::bitflags]
+        #[derive(Copy, Clone, Debug)]
         #[repr(u8)]
         enum Test2 {
             A = 1 << 0,

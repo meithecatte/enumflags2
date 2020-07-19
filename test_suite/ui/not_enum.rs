@@ -1,4 +1,5 @@
-#[derive(Copy, Clone, enumflags2::BitFlags)]
+#[enumflags2::bitflags]
+#[derive(Copy, Clone)]
 struct Foo(u16);
 
 fn main() {}
