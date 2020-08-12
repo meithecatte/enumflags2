@@ -1,6 +1,6 @@
 [package]
 name = "enumflags2_derive"
-version = "0.6.4"
+version = "0.7.0-preview1"
 authors = ["maik klein <maikklein@googlemail.com>", "Jakub \"NieDżejkob\" Kądziołka <kuba@kadziolka.net>"]
 description = "Do not use directly, use the reexport in the `enumflags2` crate. This allows for better compatibility across versions."
 license = "MIT OR Apache-2.0"
