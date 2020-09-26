@@ -37,7 +37,7 @@ pub fn bitflags_internal(
         }
     };
 
-    let impls = TokenStream::from(impls.unwrap_or_else(|err| err.to_compile_error()));
+    let impls = impls.unwrap_or_else(|err| err.to_compile_error());
     let combined = quote! {
         #ast
         #impls
