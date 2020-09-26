@@ -9,8 +9,8 @@
 //! use enumflags2::{bitflags, BitFlags};
 //!
 //! #[bitflags]
-//! #[derive(Copy, Clone, Debug, PartialEq)]
 //! #[repr(u8)]
+//! #[derive(Copy, Clone, Debug, PartialEq)]
 //! enum Test {
 //!     A = 0b0001,
 //!     B = 0b0010,
@@ -105,6 +105,7 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     /// ```
     /// # use enumflags2::{bitflags, BitFlags};
     /// #[bitflags]
+    /// #[repr(u8)]
     /// #[derive(Clone, Copy, PartialEq, Eq)]
     /// enum MyFlag {
     ///     One = 1 << 0,
@@ -134,6 +135,7 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     /// ```
     /// # use enumflags2::{bitflags, BitFlags};
     /// #[bitflags]
+    /// #[repr(u8)]
     /// #[derive(Clone, Copy, PartialEq, Eq)]
     /// enum MyFlag {
     ///     One = 1 << 0,
@@ -289,6 +291,7 @@ where
     /// ```
     /// # use enumflags2::{bitflags, BitFlags};
     /// #[bitflags]
+    /// #[repr(u8)]
     /// #[derive(Clone, Copy, PartialEq, Eq)]
     /// enum MyFlag {
     ///     One = 1 << 0,
@@ -315,6 +318,7 @@ where
     /// ```
     /// # use enumflags2::{bitflags, BitFlags};
     /// #[bitflags]
+    /// #[repr(u8)]
     /// #[derive(Clone, Copy, PartialEq, Eq)]
     /// enum MyFlag {
     ///     One = 1 << 0,

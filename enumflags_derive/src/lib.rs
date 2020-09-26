@@ -159,10 +159,12 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
     let variants = data.variants.iter().map(|v| &v.ident);
     let variants_len = data.variants.len();
     let names = std::iter::repeat(&ident);
-    let ty = extract_repr(&item.attrs)?
-        .unwrap_or_else(|| Ident::new("usize", span));
 
     let deferred = verify_flag_values(ident, data.variants.iter())?;
+
+    let ty = extract_repr(&item.attrs)?
+        .ok_or_else(|| syn::Error::new_spanned(&ident,
+                        "repr attribute missing. Add #[repr(u64)] or a similar attribute to specify the size of the bitfield."))?;
     let std_path = quote_spanned!(span => ::enumflags2::_internal::core);
     let all = if variants_len == 0 {
         quote!(0)
