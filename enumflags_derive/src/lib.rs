@@ -3,6 +3,7 @@ extern crate proc_macro;
 #[macro_use]
 extern crate quote;
 
+use std::convert::TryFrom;
 use syn::{Data, Ident, DeriveInput, DataEnum, spanned::Spanned};
 use proc_macro2::{TokenStream, Span};
 
@@ -46,42 +47,27 @@ pub fn bitflags_internal(
 }
 
 /// Try to evaluate the expression given.
-///
-/// Returns `Err` when the expression is erroneous, and `Ok(None)` when
-/// information outside of the syntax, such as a `const`.
-fn fold_expr(expr: &syn::Expr) -> Result<Option<u64>, syn::Error> {
-    /// Recurse, but bubble-up both kinds of errors.
-    /// (I miss my monad transformers)
-    macro_rules! fold_expr {
-        ($($x:tt)*) => {
-            match fold_expr($($x)*)? {
-                Some(x) => x,
-                None => return Ok(None),
-            }
-        }
-    }
-
+fn fold_expr(expr: &syn::Expr) -> Option<u64> {
     use syn::Expr;
     match expr {
         Expr::Lit(ref expr_lit) => {
             match expr_lit.lit {
-                syn::Lit::Int(ref lit_int) => {
-                    Ok(Some(lit_int.base10_parse()
-                        .map_err(|_| syn::Error::new_spanned(lit_int,
-                                "Integer literal out of range"))?))
-                }
-                _ => Ok(None),
+                syn::Lit::Int(ref lit_int) => lit_int.base10_parse().ok(),
+                _ => None,
             }
         },
         Expr::Binary(ref expr_binary) => {
-            let l = fold_expr!(&expr_binary.left);
-            let r = fold_expr!(&expr_binary.right);
+            let l = fold_expr(&expr_binary.left)?;
+            let r = fold_expr(&expr_binary.right)?;
             match &expr_binary.op {
-                syn::BinOp::Shl(_) => Ok(Some(l << r)),
-                _ => Ok(None),
+                syn::BinOp::Shl(_) => {
+                    u32::try_from(r).ok()
+                        .and_then(|r| l.checked_shl(r))
+                }
+                _ => None,
             }
         }
-        _ => Ok(None),
+        _ => None,
     }
 }
 
@@ -98,7 +84,7 @@ fn collect_flags<'a>(variants: impl Iterator<Item=&'a syn::Variant>)
             }
 
             let value = if let Some(ref expr) = variant.discriminant {
-                if let Some(n) = fold_expr(&expr.1)? {
+                if let Some(n) = fold_expr(&expr.1) {
                     FlagValue::Literal(n)
                 } else {
                     FlagValue::Deferred

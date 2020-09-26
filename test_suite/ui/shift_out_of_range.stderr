@@ -1,0 +1,11 @@
+error[E0080]: evaluation of constant value failed
+ --> $DIR/shift_out_of_range.rs:5:17
+  |
+5 |     BigNumber = 1 << 69,
+  |                 ^^^^^^^ attempt to shift left with overflow
+
+error[E0080]: evaluation of constant value failed
+  --> $DIR/shift_out_of_range.rs:12:17
+   |
+12 |     BigNumber = 1 << 20,
+   |                 ^^^^^^^ attempt to shift left with overflow
