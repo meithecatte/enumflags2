@@ -26,7 +26,7 @@ pub fn bitflags_internal(
 ) -> proc_macro::TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
 
-    let impls = match ast.data {
+    let output = match ast.data {
         Data::Enum(ref data) => {
             gen_enumflags(&ast.ident, &ast, data)
         }
@@ -38,12 +38,13 @@ pub fn bitflags_internal(
         }
     };
 
-    let impls = impls.unwrap_or_else(|err| err.to_compile_error());
-    let combined = quote! {
-        #ast
-        #impls
-    };
-    combined.into()
+    output.unwrap_or_else(|err| {
+        let error = err.to_compile_error();
+        quote! {
+            #ast
+            #error
+        }
+    }).into()
 }
 
 /// Try to evaluate the expression given.
@@ -178,10 +179,11 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
 {
     let span = Span::call_site();
     // for quote! interpolation
-    let variant_names = data.variants.iter().map(|v| &v.ident);
-    let variant_count = data.variants.len();
-
-    let repeated_name = std::iter::repeat(&ident);
+    let variant_names =
+        data.variants.iter()
+            .map(|v| &v.ident)
+            .collect::<Vec<_>>();
+    let repeated_name = vec![&ident; data.variants.len()];
 
     let variants = collect_flags(data.variants.iter())?;
     let deferred = variants.iter()
@@ -192,16 +194,11 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
         .ok_or_else(|| syn::Error::new_spanned(&ident,
                         "repr attribute missing. Add #[repr(u64)] or a similar attribute to specify the size of the bitfield."))?;
     let std_path = quote_spanned!(span => ::enumflags2::_internal::core);
-    let all = if variant_count == 0 {
-        quote!(0)
-    } else {
-        let repeated_name = repeated_name.clone();
-        let variant_names = variant_names.clone();
-        quote!(#(#repeated_name::#variant_names as #ty)|*)
-    };
 
     Ok(quote_spanned! {
-        span => #(#deferred)*
+        span =>
+            #item
+            #(#deferred)*
             impl #std_path::ops::Not for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn not(self) -> Self::Output {
@@ -236,23 +233,17 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
             impl ::enumflags2::_internal::RawBitFlags for #ident {
                 type Type = #ty;
 
-                fn all_bits() -> Self::Type {
-                    // make sure it's evaluated at compile time
-                    const VALUE: #ty = #all;
-                    VALUE
-                }
+                const ALL_BITS: Self::Type =
+                    0 #(| (#repeated_name::#variant_names as #ty))*;
+
+                const FLAG_LIST: &'static [Self] =
+                    &[#(#repeated_name::#variant_names),*];
+
+                const BITFLAGS_TYPE_NAME : &'static str =
+                    concat!("BitFlags<", stringify!(#ident), ">");
 
                 fn bits(self) -> Self::Type {
                     self as #ty
-                }
-
-                fn flag_list() -> &'static [Self] {
-                    const VARIANTS: [#ident; #variant_count] = [#(#repeated_name :: #variant_names),*];
-                    &VARIANTS
-                }
-
-                fn bitflags_type_name() -> &'static str {
-                    concat!("BitFlags<", stringify!(#ident), ">")
                 }
             }
 

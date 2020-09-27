@@ -167,21 +167,19 @@ pub mod _internal {
         /// The underlying integer type.
         type Type: BitFlagNum;
 
-        /// Return a value with all flag bits set.
-        fn all_bits() -> Self::Type;
+        /// A value with all flag bits set.
+        const ALL_BITS: Self::Type;
+
+        /// A slice that contains each variant exactly one.
+        const FLAG_LIST: &'static [Self];
+
+        /// The name of the type for debug formatting purposes.
+        ///
+        /// This is typically `BitFlags<EnumName>`
+        const BITFLAGS_TYPE_NAME: &'static str;
 
         /// Return the bits as a number type.
         fn bits(self) -> Self::Type;
-
-        /// Return a slice that contains each variant exactly one.
-        fn flag_list() -> &'static [Self];
-
-        /// Return the name of the type for debug formatting purposes.
-        ///
-        /// This is typically `BitFlags<EnumName>`
-        fn bitflags_type_name() -> &'static str {
-            "BitFlags"
-        }
     }
 
     use ::core::ops::{BitAnd, BitOr, BitXor, Not};
@@ -333,12 +331,12 @@ where
     /// assert_eq!(empty.contains(MyFlag::Three), true);
     /// ```
     pub fn all() -> Self {
-        unsafe { BitFlags::new(T::all_bits()) }
+        unsafe { BitFlags::new(T::ALL_BITS) }
     }
 
     /// Returns true if all flags are set
     pub fn is_all(self) -> bool {
-        self.val == T::all_bits()
+        self.val == T::ALL_BITS
     }
 
     /// Returns true if no flag is set
@@ -383,7 +381,7 @@ where
 
     /// Truncates flags that are illegal
     pub fn from_bits_truncate(bits: T::Type) -> Self {
-        unsafe { BitFlags::new(bits & T::all_bits()) }
+        unsafe { BitFlags::new(bits & T::ALL_BITS) }
     }
 
     /// Toggles the matching bits
@@ -403,7 +401,7 @@ where
 
     /// Returns an iterator that yields each set flag
     pub fn iter(self) -> impl Iterator<Item = T> {
-        T::flag_list().iter().cloned().filter(move |&flag| self.contains(flag))
+        T::FLAG_LIST.iter().cloned().filter(move |&flag| self.contains(flag))
     }
 }
 
@@ -485,7 +483,7 @@ where
 {
     type Output = BitFlags<T>;
     fn not(self) -> BitFlags<T> {
-        unsafe { BitFlags::new(!self.bits() & T::all_bits()) }
+        unsafe { BitFlags::new(!self.bits() & T::ALL_BITS) }
     }
 }
 

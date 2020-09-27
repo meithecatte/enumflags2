@@ -6,10 +6,10 @@ where
     T: BitFlag + fmt::Debug,
 {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let name = T::bitflags_type_name();
+        let name = T::BITFLAGS_TYPE_NAME;
         let bits = DebugBinaryFormatter(&self.val);
         let iter = if !self.is_empty() {
-            let iter = T::flag_list().iter().filter(|&&flag| self.contains(flag));
+            let iter = T::FLAG_LIST.iter().filter(|&&flag| self.contains(flag));
             Some(FlagFormatter(iter))
         } else {
             None
