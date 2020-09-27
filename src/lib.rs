@@ -167,6 +167,9 @@ pub mod _internal {
         /// The underlying integer type.
         type Type: BitFlagNum;
 
+        /// A value with no bits set.
+        const EMPTY: Self::Type;
+
         /// A value with all flag bits set.
         const ALL_BITS: Self::Type;
 
@@ -333,6 +336,18 @@ where
     pub fn all() -> Self {
         unsafe { BitFlags::new(T::ALL_BITS) }
     }
+
+    /// An empty `BitFlags`. Equivalent to [`empty()`],
+    /// but works in a const context.
+    ///
+    /// [`empty()`]: #method.empty
+    pub const EMPTY: Self = BitFlags { val: T::EMPTY };
+
+    /// A `BitFlags` with all flags set. Equivalent to [`all()`],
+    /// but works in a const context.
+    ///
+    /// [`all()`]: #method.all
+    pub const ALL: Self = BitFlags { val: T::ALL_BITS };
 
     /// Returns true if all flags are set
     pub fn is_all(self) -> bool {

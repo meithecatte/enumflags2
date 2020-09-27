@@ -233,6 +233,8 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
             impl ::enumflags2::_internal::RawBitFlags for #ident {
                 type Type = #ty;
 
+                const EMPTY: Self::Type = 0;
+
                 const ALL_BITS: Self::Type =
                     0 #(| (#repeated_name::#variant_names as #ty))*;
 
