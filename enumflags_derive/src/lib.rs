@@ -14,7 +14,7 @@ struct Flag {
 }
 
 enum FlagValue {
-    Literal(u64),
+    Literal(u128),
     Deferred,
     Inferred,
 }
@@ -48,7 +48,7 @@ pub fn bitflags_internal(
 }
 
 /// Try to evaluate the expression given.
-fn fold_expr(expr: &syn::Expr) -> Option<u64> {
+fn fold_expr(expr: &syn::Expr) -> Option<u128> {
     use syn::Expr;
     match expr {
         Expr::Lit(ref expr_lit) => {
@@ -163,9 +163,9 @@ fn check_flag(
                 #[doc(hidden)]
                 const #assertion_name:
                     <<[(); (
-                        (#type_name::#variant_name as u64).wrapping_sub(1) &
-                        (#type_name::#variant_name as u64) == 0 &&
-                        (#type_name::#variant_name as u64) != 0
+                        (#type_name::#variant_name as u128).wrapping_sub(1) &
+                        (#type_name::#variant_name as u128) == 0 &&
+                        (#type_name::#variant_name as u128) != 0
                     ) as usize] as enumflags2::_internal::AssertionHelper>
                         ::Status as enumflags2::_internal::ExactlyOneBitSet>::X
                     = ();
