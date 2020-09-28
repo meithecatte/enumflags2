@@ -3,14 +3,16 @@
 const FOO_BAR: u8 = 1;
 const FOO_BAZ: u8 = 2;
 
-#[derive(Clone, Copy, enumflags2::BitFlags)]
+#[enumflags2::bitflags]
+#[derive(Clone, Copy)]
 #[repr(u8)]
 enum Foo {
     Bar = FOO_BAR,
     Baz = FOO_BAZ,
 }
 
-#[derive(Clone, Copy, enumflags2::BitFlags)]
+#[enumflags2::bitflags]
+#[derive(Clone, Copy)]
 #[repr(u8)]
 enum SingleTest {
     Hello = FOO_BAR,

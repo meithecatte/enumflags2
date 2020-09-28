@@ -1,7 +1,7 @@
 error[E0081]: discriminant value `1` already exists
- --> $DIR/overlapping_flags.rs:4:23
+ --> $DIR/overlapping_flags.rs:6:23
   |
-3 |     SomeFlag = 1 << 0,
+5 |     SomeFlag = 1 << 0,
   |                ------ first use of `1`
-4 |     OverlappingFlag = 1 << 0,
+6 |     OverlappingFlag = 1 << 0,
   |                       ^^^^^^ enum already has `1`

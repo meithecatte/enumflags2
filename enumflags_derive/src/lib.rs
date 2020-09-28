@@ -3,82 +3,110 @@ extern crate proc_macro;
 #[macro_use]
 extern crate quote;
 
+use std::convert::TryFrom;
 use syn::{Data, Ident, DeriveInput, DataEnum, spanned::Spanned};
-use proc_macro2::TokenStream;
-use proc_macro2::Span;
+use proc_macro2::{TokenStream, Span};
 
-/// Shorthand for a quoted `compile_error!`.
-macro_rules! error {
-    ($span:expr => $($x:tt)*) => {
-        quote_spanned!($span => compile_error!($($x)*);)
-    };
-    ($($x:tt)*) => {
-        quote!(compile_error!($($x)*);)
-    };
+struct Flag {
+    name: Ident,
+    span: Span,
+    value: FlagValue,
 }
 
-#[proc_macro_derive(BitFlags_internal)]
-pub fn derive_enum_flags(input: proc_macro::TokenStream)
-    -> proc_macro::TokenStream
-{
+enum FlagValue {
+    Literal(u128),
+    Deferred,
+    Inferred,
+}
+
+#[proc_macro_attribute]
+pub fn bitflags_internal(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
 
-    match ast.data {
+    let output = match ast.data {
         Data::Enum(ref data) => {
             gen_enumflags(&ast.ident, &ast, data)
-                .unwrap_or_else(|err| err.to_compile_error())
-                .into()
         }
         Data::Struct(ref data) => {
-            error!(data.struct_token.span => "BitFlags can only be derived on enums").into()
+            Err(syn::Error::new_spanned(data.struct_token, "#[bitflags] requires an enum"))
         }
         Data::Union(ref data) => {
-            error!(data.union_token.span => "BitFlags can only be derived on enums").into()
+            Err(syn::Error::new_spanned(data.union_token, "#[bitflags] requires an enum"))
         }
-    }
+    };
+
+    output.unwrap_or_else(|err| {
+        let error = err.to_compile_error();
+        quote! {
+            #ast
+            #error
+        }
+    }).into()
 }
 
 /// Try to evaluate the expression given.
-fn fold_expr(expr: &syn::Expr) -> Result<Option<u64>, syn::Error> {
-    /// Recurse, but bubble-up both kinds of errors.
-    /// (I miss my monad transformers)
-    macro_rules! fold_expr {
-        ($($x:tt)*) => {
-            match fold_expr($($x)*)? {
-                Some(x) => x,
-                None => return Ok(None),
-            }
-        }
-    }
-
+fn fold_expr(expr: &syn::Expr) -> Option<u128> {
     use syn::Expr;
     match expr {
         Expr::Lit(ref expr_lit) => {
             match expr_lit.lit {
-                syn::Lit::Int(ref lit_int) => {
-                    Ok(Some(lit_int.base10_parse()
-                        .map_err(|_| syn::Error::new_spanned(lit_int,
-                                "Integer literal out of range"))?))
-                }
-                _ => Ok(None),
+                syn::Lit::Int(ref lit_int) => lit_int.base10_parse().ok(),
+                _ => None,
             }
         },
         Expr::Binary(ref expr_binary) => {
-            let l = fold_expr!(&expr_binary.left);
-            let r = fold_expr!(&expr_binary.right);
+            let l = fold_expr(&expr_binary.left)?;
+            let r = fold_expr(&expr_binary.right)?;
             match &expr_binary.op {
-                syn::BinOp::Shl(_) => Ok(Some(l << r)),
-                _ => Ok(None),
+                syn::BinOp::Shl(_) => {
+                    u32::try_from(r).ok()
+                        .and_then(|r| l.checked_shl(r))
+                }
+                _ => None,
             }
         }
-        _ => Ok(None),
+        _ => None,
     }
+}
+
+fn collect_flags<'a>(variants: impl Iterator<Item=&'a syn::Variant>)
+    -> Result<Vec<Flag>, syn::Error>
+{
+    variants
+        .map(|variant| {
+            // MSRV: Would this be cleaner with `matches!`?
+            match variant.fields {
+                syn::Fields::Unit => (),
+                _ => return Err(syn::Error::new_spanned(&variant.fields,
+                    "Bitflag variants cannot contain additional data")),
+            }
+
+            let value = if let Some(ref expr) = variant.discriminant {
+                if let Some(n) = fold_expr(&expr.1) {
+                    FlagValue::Literal(n)
+                } else {
+                    FlagValue::Deferred
+                }
+            } else {
+                FlagValue::Inferred
+            };
+
+            Ok(Flag {
+                name: variant.ident.clone(),
+                span: variant.span(),
+                value,
+            })
+        })
+        .collect()
 }
 
 /// Given a list of attributes, find the `repr`, if any, and return the integer
 /// type specified.
 fn extract_repr(attrs: &[syn::Attribute])
-    -> Result<Option<syn::Ident>, syn::Error>
+    -> Result<Option<Ident>, syn::Error>
 {
     use syn::{Meta, NestedMeta};
     attrs.iter()
@@ -104,55 +132,69 @@ fn extract_repr(attrs: &[syn::Attribute])
         .transpose()
 }
 
+/// Check the repr and return the number of bits available
+fn type_bits(ty: &Ident) -> Result<u8, syn::Error> {
+    // This would be so much easier if we could just match on an Ident...
+    if ty == "usize" {
+        Err(syn::Error::new_spanned(ty,
+            "#[repr(usize)] is not supported. Use u32 or u64 instead."))
+    }
+    else if ty == "i8" || ty == "i16" || ty == "i32"
+            || ty == "i64" || ty == "i128" || ty == "isize" {
+        Err(syn::Error::new_spanned(ty,
+            "Signed types in a repr are not supported."))
+    }
+    else if ty == "u8" { Ok(8) }
+    else if ty == "u16" { Ok(16) }
+    else if ty == "u32" { Ok(32) }
+    else if ty == "u64" { Ok(64) }
+    else if ty == "u128" { Ok(128) }
+    else {
+        Err(syn::Error::new_spanned(ty,
+            "repr must be an integer type for #[bitflags]."))
+    }
+}
+
 /// Returns deferred checks
-fn verify_flag_values<'a>(
+fn check_flag(
     type_name: &Ident,
-    variants: impl Iterator<Item=&'a syn::Variant>
-) -> Result<TokenStream, syn::Error> {
-    let mut deferred_checks: Vec<TokenStream> = vec![];
-    for variant in variants {
-        // I'd use matches! if not for MSRV...
-        match variant.fields {
-            syn::Fields::Unit => (),
-            _ => return Err(syn::Error::new_spanned(&variant.fields,
-                "Bitflag variants cannot contain additional data")),
+    flag: &Flag,
+) -> Result<Option<TokenStream>, syn::Error> {
+    use FlagValue::*;
+    match flag.value {
+        Literal(n) => {
+            if !n.is_power_of_two() {
+                Err(syn::Error::new(flag.span,
+                    "Flags must have exactly one set bit"))
+            } else {
+                Ok(None)
+            }
         }
+        Inferred => {
+            Err(syn::Error::new(flag.span,
+                "Please add an explicit discriminant"))
+        }
+        Deferred => {
+            let variant_name = &flag.name;
+            // MSRV: Use an unnamed constant (`const _: ...`).
+            let assertion_name = syn::Ident::new(
+                &format!("__enumflags_assertion_{}_{}",
+                        type_name, flag.name),
+                Span::call_site()); // call_site because def_site is unstable
 
-        let discr = variant.discriminant.as_ref()
-           .ok_or_else(|| syn::Error::new_spanned(variant,
-                         "Please add an explicit discriminant"))?;
-        match fold_expr(&discr.1)? {
-            Some(flag) => {
-                if !flag.is_power_of_two() {
-                    return Err(syn::Error::new_spanned(&discr.1,
-                        "Flags must have exactly one set bit"));
-                }
-            }
-            None => {
-                let variant_name = &variant.ident;
-                // TODO: Remove this madness when Debian ships a new compiler.
-                let assertion_name = syn::Ident::new(
-                    &format!("__enumflags_assertion_{}_{}",
-                            type_name, variant_name),
-                    Span::call_site()); // call_site because def_site is unstable
-
-                deferred_checks.push(quote_spanned!(variant.span() =>
-                    #[doc(hidden)]
-                    const #assertion_name:
-                        <<[(); (
-                            (#type_name::#variant_name as u64).wrapping_sub(1) &
-                            (#type_name::#variant_name as u64) == 0 &&
-                            (#type_name::#variant_name as u64) != 0
-                        ) as usize] as enumflags2::_internal::AssertionHelper>
-                            ::Status as enumflags2::_internal::ExactlyOneBitSet>::X = ();
-                ));
-            }
+            Ok(Some(quote_spanned!(flag.span =>
+                #[doc(hidden)]
+                const #assertion_name:
+                    <<[(); (
+                        (#type_name::#variant_name as u128).wrapping_sub(1) &
+                        (#type_name::#variant_name as u128) == 0 &&
+                        (#type_name::#variant_name as u128) != 0
+                    ) as usize] as enumflags2::_internal::AssertionHelper>
+                        ::Status as enumflags2::_internal::ExactlyOneBitSet>::X
+                    = ();
+            )))
         }
     }
-
-    Ok(quote!(
-        #(#deferred_checks)*
-    ))
 }
 
 fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
@@ -160,24 +202,27 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
 {
     let span = Span::call_site();
     // for quote! interpolation
-    let variants = data.variants.iter().map(|v| &v.ident);
-    let variants_len = data.variants.len();
-    let names = std::iter::repeat(&ident);
-    let ty = extract_repr(&item.attrs)?
-        .unwrap_or_else(|| Ident::new("usize", span));
+    let variant_names =
+        data.variants.iter()
+            .map(|v| &v.ident)
+            .collect::<Vec<_>>();
+    let repeated_name = vec![&ident; data.variants.len()];
 
-    let deferred = verify_flag_values(ident, data.variants.iter())?;
+    let variants = collect_flags(data.variants.iter())?;
+    let deferred = variants.iter()
+        .flat_map(|variant| check_flag(ident, variant).transpose())
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let ty = extract_repr(&item.attrs)?
+        .ok_or_else(|| syn::Error::new_spanned(&ident,
+                        "repr attribute missing. Add #[repr(u64)] or a similar attribute to specify the size of the bitfield."))?;
+    type_bits(&ty)?;
     let std_path = quote_spanned!(span => ::enumflags2::_internal::core);
-    let all = if variants_len == 0 {
-        quote!(0)
-    } else {
-        let names = names.clone();
-        let variants = variants.clone();
-        quote!(#(#names::#variants as #ty)|*)
-    };
 
     Ok(quote_spanned! {
-        span => #deferred
+        span =>
+            #item
+            #(#deferred)*
             impl #std_path::ops::Not for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn not(self) -> Self::Output {
@@ -212,26 +257,22 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
             impl ::enumflags2::_internal::RawBitFlags for #ident {
                 type Type = #ty;
 
-                fn all_bits() -> Self::Type {
-                    // make sure it's evaluated at compile time
-                    const VALUE: #ty = #all;
-                    VALUE
-                }
+                const EMPTY: Self::Type = 0;
+
+                const ALL_BITS: Self::Type =
+                    0 #(| (#repeated_name::#variant_names as #ty))*;
+
+                const FLAG_LIST: &'static [Self] =
+                    &[#(#repeated_name::#variant_names),*];
+
+                const BITFLAGS_TYPE_NAME : &'static str =
+                    concat!("BitFlags<", stringify!(#ident), ">");
 
                 fn bits(self) -> Self::Type {
                     self as #ty
                 }
-
-                fn flag_list() -> &'static [Self] {
-                    const VARIANTS: [#ident; #variants_len] = [#(#names :: #variants),*];
-                    &VARIANTS
-                }
-
-                fn bitflags_type_name() -> &'static str {
-                    concat!("BitFlags<", stringify!(#ident), ">")
-                }
             }
 
-            impl ::enumflags2::RawBitFlags for #ident {}
+            impl ::enumflags2::BitFlag for #ident {}
     })
 }
