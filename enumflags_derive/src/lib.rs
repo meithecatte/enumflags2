@@ -106,7 +106,7 @@ fn collect_flags<'a>(variants: impl Iterator<Item=&'a syn::Variant>)
 /// Given a list of attributes, find the `repr`, if any, and return the integer
 /// type specified.
 fn extract_repr(attrs: &[syn::Attribute])
-    -> Result<Option<syn::Ident>, syn::Error>
+    -> Result<Option<Ident>, syn::Error>
 {
     use syn::{Meta, NestedMeta};
     attrs.iter()
@@ -130,6 +130,29 @@ fn extract_repr(attrs: &[syn::Attribute])
             }
         })
         .transpose()
+}
+
+/// Check the repr and return the number of bits available
+fn type_bits(ty: &Ident) -> Result<u8, syn::Error> {
+    // This would be so much easier if we could just match on an Ident...
+    if ty == "usize" {
+        Err(syn::Error::new_spanned(ty,
+            "#[repr(usize)] is not supported. Use u32 or u64 instead."))
+    }
+    else if ty == "i8" || ty == "i16" || ty == "i32"
+            || ty == "i64" || ty == "i128" || ty == "isize" {
+        Err(syn::Error::new_spanned(ty,
+            "Signed types in a repr are not supported."))
+    }
+    else if ty == "u8" { Ok(8) }
+    else if ty == "u16" { Ok(16) }
+    else if ty == "u32" { Ok(32) }
+    else if ty == "u64" { Ok(64) }
+    else if ty == "u128" { Ok(128) }
+    else {
+        Err(syn::Error::new_spanned(ty,
+            "repr must be an integer type for #[bitflags]."))
+    }
 }
 
 /// Returns deferred checks
@@ -193,6 +216,7 @@ fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
     let ty = extract_repr(&item.attrs)?
         .ok_or_else(|| syn::Error::new_spanned(&ident,
                         "repr attribute missing. Add #[repr(u64)] or a similar attribute to specify the size of the bitfield."))?;
+    type_bits(&ty)?;
     let std_path = quote_spanned!(span => ::enumflags2::_internal::core);
 
     Ok(quote_spanned! {
