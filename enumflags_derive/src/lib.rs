@@ -4,7 +4,7 @@ extern crate proc_macro;
 extern crate quote;
 
 use std::convert::TryFrom;
-use syn::{Data, Ident, DeriveInput, DataEnum, spanned::Spanned};
+use syn::{Ident, Item, ItemEnum, spanned::Spanned, parse_macro_input};
 use proc_macro2::{TokenStream, Span};
 
 struct Flag {
@@ -24,18 +24,11 @@ pub fn bitflags_internal(
     _attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let ast: DeriveInput = syn::parse(input).unwrap();
-
-    let output = match ast.data {
-        Data::Enum(ref data) => {
-            gen_enumflags(&ast.ident, &ast, data)
-        }
-        Data::Struct(ref data) => {
-            Err(syn::Error::new_spanned(data.struct_token, "#[bitflags] requires an enum"))
-        }
-        Data::Union(ref data) => {
-            Err(syn::Error::new_spanned(data.union_token, "#[bitflags] requires an enum"))
-        }
+    let ast = parse_macro_input!(input as Item);
+    let output = match ast {
+        Item::Enum(ref item_enum) => gen_enumflags(item_enum),
+        _ => Err(syn::Error::new_spanned(&ast,
+                "#[bitflags] requires an enum")),
     };
 
     output.unwrap_or_else(|err| {
@@ -197,31 +190,39 @@ fn check_flag(
     }
 }
 
-fn gen_enumflags(ident: &Ident, item: &DeriveInput, data: &DataEnum)
+fn gen_enumflags(ast: &ItemEnum)
     -> Result<TokenStream, syn::Error>
 {
+    let ident = &ast.ident;
+
     let span = Span::call_site();
     // for quote! interpolation
     let variant_names =
-        data.variants.iter()
+        ast.variants.iter()
             .map(|v| &v.ident)
             .collect::<Vec<_>>();
-    let repeated_name = vec![&ident; data.variants.len()];
+    let repeated_name = vec![&ident; ast.variants.len()];
 
-    let variants = collect_flags(data.variants.iter())?;
+    let variants = collect_flags(ast.variants.iter())?;
     let deferred = variants.iter()
         .flat_map(|variant| check_flag(ident, variant).transpose())
         .collect::<Result<Vec<_>, _>>()?;
 
-    let ty = extract_repr(&item.attrs)?
+    let ty = extract_repr(&ast.attrs)?
         .ok_or_else(|| syn::Error::new_spanned(&ident,
                         "repr attribute missing. Add #[repr(u64)] or a similar attribute to specify the size of the bitfield."))?;
-    type_bits(&ty)?;
+    let bits = type_bits(&ty)?;
+
+    if (bits as usize) < variants.len() {
+        return Err(syn::Error::new_spanned(&ty,
+                   format!("Not enough bits for {} flags", variants.len())));
+    }
+
     let std_path = quote_spanned!(span => ::enumflags2::_internal::core);
 
     Ok(quote_spanned! {
         span =>
-            #item
+            #ast
             #(#deferred)*
             impl #std_path::ops::Not for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;

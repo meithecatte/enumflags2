@@ -5,7 +5,7 @@ error: #[bitflags] requires an enum
 3 | | struct Foo(u16);
   | |________________^
 
-error: `derive` may only be applied to structs, enums and unions
+error[E0774]: `derive` may only be applied to structs, enums and unions
  --> $DIR/not_enum.rs:6:1
   |
 6 | #[derive(Copy, Clone)]
