@@ -92,6 +92,9 @@ extern crate enumflags2_derive;
 #[doc(hidden)]
 pub use enumflags2_derive::bitflags_internal as bitflags;
 
+#[doc(hidden)]
+pub use rustversion;
+
 /// A trait automatically implemented by `#[bitflags]` to make the enum
 /// a valid type parameter for `BitFlags<T>`.
 pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
@@ -582,6 +585,7 @@ mod impl_serde {
 /// const FLAGS_AC: BitFlags<MyFlag> = const_bitflags!(MyFlag::{ A | C });
 /// assert_eq!(FLAGS_AC, MyFlag::A | MyFlag::C);
 /// ```
+#[rustversion::since(1.46)]
 #[macro_export]
 macro_rules! const_bitflags {
     ( $enum_ident:ident :: { $(|)? $($variant:ident)|* })=>{{

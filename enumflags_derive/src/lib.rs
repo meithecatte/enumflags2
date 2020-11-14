@@ -277,11 +277,13 @@ fn gen_enumflags(ast: &ItemEnum)
 
             impl ::enumflags2::BitFlag for #ident {}
 
+            #[::enumflags2::rustversion::since(1.46)]
             impl ::enumflags2::ConstBitFlags<#ident> for ::enumflags2::BitFlags<#ident> {
                 const FLAG_LIST_AS_BITFLAGS: &'static [::enumflags2::BitFlags<#ident>] =
                     &[#(unsafe { #std_path::mem::transmute::<#ty, ::enumflags2::BitFlags::<#ident>>(#repeated_name::#variant_names as #ty) }),*];
             }
 
+            #[::enumflags2::rustversion::since(1.46)]
             impl #ident {
                 const fn as_bitflags(&self) -> ::enumflags2::BitFlags<#ident> {
                     match self {

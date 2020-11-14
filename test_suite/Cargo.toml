@@ -12,6 +12,7 @@ version = "1"
 features = ["derive"]
 
 [dev-dependencies]
+rustversion = "1.0"
 trybuild = "1.0"
 
 [[test]]

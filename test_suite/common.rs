@@ -118,6 +118,7 @@ fn module() {
     }
 }
 
+#[rustversion::since(1.46)]
 #[test]
 fn test_const() {
     use enumflags2::{BitFlags, const_bitflags};
