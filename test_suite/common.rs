@@ -117,3 +117,26 @@ fn module() {
         }
     }
 }
+
+#[test]
+fn test_const() {
+    use enumflags2::{BitFlags, const_bitflags};
+
+    const TEST_A: BitFlags<Test> = Test::A.as_bitflags();
+    const TEST_B: BitFlags<Test> = Test::B.as_bitflags();
+    const TEST_C: BitFlags<Test> = Test::C.as_bitflags();
+    const TEST_D: BitFlags<Test> = Test::D.as_bitflags();
+
+    assert_eq!(TEST_A, BitFlags::<Test>::from_flag(Test::A));
+    assert_eq!(TEST_B, BitFlags::<Test>::from_flag(Test::B));
+    assert_eq!(TEST_C, BitFlags::<Test>::from_flag(Test::C));
+    assert_eq!(TEST_D, BitFlags::<Test>::from_flag(Test::D));
+
+    const TEST_AC: BitFlags<Test> = const_bitflags!(Test::{ A | C });
+
+    assert_eq!(TEST_AC, Test::A | Test::C);
+
+    const TEST_ALL: BitFlags<Test> = const_bitflags!(Test::{ A | B | C | D });
+
+    assert_eq!(TEST_ALL, BitFlags::<Test>::all());
+}

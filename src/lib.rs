@@ -565,3 +565,32 @@ mod impl_serde {
         }
     }
 }
+
+/// Convenient macro to initialize const `BitFlags`.
+///
+/// ```
+/// # use enumflags2::{bitflags, BitFlags, const_bitflags};
+/// #[bitflags]
+/// #[repr(u8)]
+/// #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// enum MyFlag {
+///     A = 1 << 0,
+///     B = 1 << 1,
+///     C = 1 << 2,
+/// }
+///
+/// const FLAGS_AC: BitFlags<MyFlag> = const_bitflags!(MyFlag::{ A | C });
+/// assert_eq!(FLAGS_AC, MyFlag::A | MyFlag::C);
+/// ```
+#[macro_export]
+macro_rules! const_bitflags {
+    ( $enum_ident:ident :: { $(|)? $($variant:ident)|* })=>{{
+        let mut value = <$enum_ident as $crate::_internal::RawBitFlags>::EMPTY;
+
+        $(
+            value |= $enum_ident::$variant as <$enum_ident as $crate::_internal::RawBitFlags>::Type;
+        )*
+
+        unsafe { ::core::mem::transmute::<<$enum_ident as $crate::_internal::RawBitFlags>::Type, $crate::BitFlags::<$enum_ident>>(value) }
+    }};
+}
