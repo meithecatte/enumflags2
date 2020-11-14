@@ -201,6 +201,7 @@ fn gen_enumflags(ast: &ItemEnum)
         ast.variants.iter()
             .map(|v| &v.ident)
             .collect::<Vec<_>>();
+    let variant_ids = (0..ast.variants.len()).collect::<Vec<_>>();
     let repeated_name = vec![&ident; ast.variants.len()];
 
     let variants = collect_flags(ast.variants.iter())?;
@@ -275,5 +276,18 @@ fn gen_enumflags(ast: &ItemEnum)
             }
 
             impl ::enumflags2::BitFlag for #ident {}
+
+            impl ::enumflags2::ConstBitFlags<#ident> for ::enumflags2::BitFlags<#ident> {
+                const FLAG_LIST_AS_BITFLAGS: &'static [::enumflags2::BitFlags<#ident>] =
+                    &[#(unsafe { #std_path::mem::transmute::<#ty, ::enumflags2::BitFlags::<#ident>>(#repeated_name::#variant_names as #ty) }),*];
+            }
+
+            impl #ident {
+                const fn as_bitflags(&self) -> ::enumflags2::BitFlags<#ident> {
+                    match self {
+                        #(#repeated_name::#variant_names => <::enumflags2::BitFlags::<#ident> as ::enumflags2::ConstBitFlags::<#ident>>::FLAG_LIST_AS_BITFLAGS[#variant_ids]),*
+                    }
+                }
+            }
     })
 }

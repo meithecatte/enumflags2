@@ -210,7 +210,7 @@ pub mod _internal {
 
     // Re-export libcore so the macro doesn't inject "extern crate" downstream.
     pub mod core {
-        pub use core::{convert, option, ops};
+        pub use core::{convert, mem, option, ops};
     }
 
     pub struct AssertionSucceeded;
@@ -418,6 +418,12 @@ where
     pub fn iter(self) -> impl Iterator<Item = T> {
         T::FLAG_LIST.iter().cloned().filter(move |&flag| self.contains(flag))
     }
+}
+
+/// A trait to manipulate `const BitFlags<T>`
+pub trait ConstBitFlags<T: BitFlag> {
+    /// A slice that contains each variant as a `BitFlags<T>` exactly one.
+    const FLAG_LIST_AS_BITFLAGS: &'static [BitFlags<T>];
 }
 
 impl<T, B> cmp::PartialEq<B> for BitFlags<T>
