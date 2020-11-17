@@ -279,7 +279,7 @@ where
     ///
     /// The argument must not have set bits at positions not corresponding to
     /// any flag.
-    pub unsafe fn new(val: T::Numeric) -> Self {
+    pub unsafe fn from_bits_unchecked(val: T::Numeric) -> Self {
         BitFlags { val }
     }
 
@@ -307,7 +307,7 @@ where
     /// assert_eq!(empty.contains(MyFlag::Three), false);
     /// ```
     pub fn empty() -> Self {
-        unsafe { BitFlags::new(T::Numeric::default()) }
+        unsafe { BitFlags::from_bits_unchecked(T::Numeric::default()) }
     }
 
     /// Create a `BitFlags` with all flags set.
@@ -334,7 +334,7 @@ where
     /// assert_eq!(empty.contains(MyFlag::Three), true);
     /// ```
     pub fn all() -> Self {
-        unsafe { BitFlags::new(T::ALL_BITS) }
+        unsafe { BitFlags::from_bits_unchecked(T::ALL_BITS) }
     }
 
     /// An empty `BitFlags`. Equivalent to [`empty()`],
@@ -391,12 +391,12 @@ where
 
     /// Turn a `T` into a `BitFlags<T>`. Also available as `flag.into()`.
     pub fn from_flag(flag: T) -> Self {
-        BitFlags { val: flag.bits() }
+        unsafe { Self::from_bits_unchecked(flag.bits()) }
     }
 
     /// Truncates flags that are illegal
     pub fn from_bits_truncate(bits: T::Numeric) -> Self {
-        unsafe { BitFlags::new(bits & T::ALL_BITS) }
+        unsafe { BitFlags::from_bits_unchecked(bits & T::ALL_BITS) }
     }
 
     /// Toggles the matching bits
@@ -437,7 +437,7 @@ where
 {
     type Output = BitFlags<T>;
     fn bitor(self, other: B) -> BitFlags<T> {
-        unsafe { BitFlags::new(self.bits() | other.into().bits()) }
+        unsafe { BitFlags::from_bits_unchecked(self.bits() | other.into().bits()) }
     }
 }
 
@@ -448,7 +448,7 @@ where
 {
     type Output = BitFlags<T>;
     fn bitand(self, other: B) -> BitFlags<T> {
-        unsafe { BitFlags::new(self.bits() & other.into().bits()) }
+        unsafe { BitFlags::from_bits_unchecked(self.bits() & other.into().bits()) }
     }
 }
 
@@ -459,7 +459,7 @@ where
 {
     type Output = BitFlags<T>;
     fn bitxor(self, other: B) -> BitFlags<T> {
-        unsafe { BitFlags::new(self.bits() ^ other.into().bits()) }
+        unsafe { BitFlags::from_bits_unchecked(self.bits() ^ other.into().bits()) }
     }
 }
 
@@ -498,7 +498,7 @@ where
 {
     type Output = BitFlags<T>;
     fn not(self) -> BitFlags<T> {
-        unsafe { BitFlags::new(!self.bits() & T::ALL_BITS) }
+        unsafe { BitFlags::from_bits_unchecked(!self.bits() & T::ALL_BITS) }
     }
 }
 

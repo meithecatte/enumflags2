@@ -228,7 +228,7 @@ fn gen_enumflags(ast: &ItemEnum)
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn not(self) -> Self::Output {
                     use ::enumflags2::{BitFlags, _internal::RawBitFlags};
-                    unsafe { BitFlags::new(self.bits()).not() }
+                    unsafe { BitFlags::from_bits_unchecked(self.bits()).not() }
                 }
             }
 
@@ -236,7 +236,7 @@ fn gen_enumflags(ast: &ItemEnum)
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn bitor(self, other: Self) -> Self::Output {
                     use ::enumflags2::{BitFlags, _internal::RawBitFlags};
-                    unsafe { BitFlags::new(self.bits() | other.bits())}
+                    unsafe { BitFlags::from_bits_unchecked(self.bits() | other.bits())}
                 }
             }
 
@@ -244,7 +244,7 @@ fn gen_enumflags(ast: &ItemEnum)
                 type Output = ::enumflags2::BitFlags<#ident>;
                 fn bitand(self, other: Self) -> Self::Output {
                     use ::enumflags2::{BitFlags, _internal::RawBitFlags};
-                    unsafe { BitFlags::new(self.bits() & other.bits())}
+                    unsafe { BitFlags::from_bits_unchecked(self.bits() & other.bits())}
                 }
             }
 
