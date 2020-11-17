@@ -10,11 +10,11 @@ macro_rules! impl_try_from {
         $(
             impl<T> TryFrom<$ty> for BitFlags<T>
             where
-                T: BitFlag<Type=$ty>,
+                T: BitFlag<Numeric=$ty>,
             {
                 type Error = FromBitsError<T>;
 
-                fn try_from(bits: T::Type) -> Result<Self, Self::Error> {
+                fn try_from(bits: T::Numeric) -> Result<Self, Self::Error> {
                     Self::from_bits(bits)
                 }
             }
@@ -52,7 +52,7 @@ impl_try_from! {
 #[derive(Debug, Copy, Clone)]
 pub struct FromBitsError<T: BitFlag> {
     pub(crate) flags: BitFlags<T>,
-    pub(crate) invalid: T::Type,
+    pub(crate) invalid: T::Numeric,
 }
 
 impl<T: BitFlag> FromBitsError<T> {
@@ -62,7 +62,7 @@ impl<T: BitFlag> FromBitsError<T> {
     }
 
     /// Return the bits that didn't correspond to any flags.
-    pub fn invalid_bits(self) -> T::Type {
+    pub fn invalid_bits(self) -> T::Numeric {
         self.invalid
     }
 }

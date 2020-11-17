@@ -38,7 +38,7 @@ where
 impl<T> fmt::Binary for BitFlags<T>
 where
     T: BitFlag,
-    T::Type: fmt::Binary,
+    T::Numeric: fmt::Binary,
 {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Binary::fmt(&self.bits(), fmt)
@@ -48,7 +48,7 @@ where
 impl<T> fmt::Octal for BitFlags<T>
 where
     T: BitFlag,
-    T::Type: fmt::Octal,
+    T::Numeric: fmt::Octal,
 {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Octal::fmt(&self.bits(), fmt)
@@ -58,7 +58,7 @@ where
 impl<T> fmt::LowerHex for BitFlags<T>
 where
     T: BitFlag,
-    T::Type: fmt::LowerHex,
+    T::Numeric: fmt::LowerHex,
 {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::LowerHex::fmt(&self.bits(), fmt)
@@ -68,7 +68,7 @@ where
 impl<T> fmt::UpperHex for BitFlags<T>
 where
     T: BitFlag,
-    T::Type: fmt::UpperHex,
+    T::Numeric: fmt::UpperHex,
 {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::UpperHex::fmt(&self.bits(), fmt)

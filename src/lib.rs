@@ -165,13 +165,13 @@ pub mod _internal {
     /// a valid type parameter for `BitFlags<T>`.
     pub trait RawBitFlags: Copy + Clone + 'static {
         /// The underlying integer type.
-        type Type: BitFlagNum;
+        type Numeric: BitFlagNum;
 
         /// A value with no bits set.
-        const EMPTY: Self::Type;
+        const EMPTY: Self::Numeric;
 
         /// A value with all flag bits set.
-        const ALL_BITS: Self::Type;
+        const ALL_BITS: Self::Numeric;
 
         /// A slice that contains each variant exactly one.
         const FLAG_LIST: &'static [Self];
@@ -182,7 +182,7 @@ pub mod _internal {
         const BITFLAGS_TYPE_NAME: &'static str;
 
         /// Return the bits as a number type.
-        fn bits(self) -> Self::Type;
+        fn bits(self) -> Self::Numeric;
     }
 
     use ::core::ops::{BitAnd, BitOr, BitXor, Not};
@@ -238,7 +238,7 @@ pub mod _internal {
 // Internal debug formatting implementations
 mod formatting;
 
-// impl TryFrom<T::Type> for BitFlags<T>
+// impl TryFrom<T::Numeric> for BitFlags<T>
 mod fallible;
 pub use crate::fallible::FromBitsError;
 
@@ -247,7 +247,7 @@ pub use crate::fallible::FromBitsError;
 #[derive(Copy, Clone, Eq, Hash)]
 #[repr(transparent)]
 pub struct BitFlags<T: BitFlag> {
-    val: T::Type,
+    val: T::Numeric,
 }
 
 /// The default value returned is one with all flags unset, i. e. [`empty`][Self::empty].
@@ -279,7 +279,7 @@ where
     ///
     /// The argument must not have set bits at positions not corresponding to
     /// any flag.
-    pub unsafe fn new(val: T::Type) -> Self {
+    pub unsafe fn new(val: T::Numeric) -> Self {
         BitFlags { val }
     }
 
@@ -307,7 +307,7 @@ where
     /// assert_eq!(empty.contains(MyFlag::Three), false);
     /// ```
     pub fn empty() -> Self {
-        unsafe { BitFlags::new(T::Type::default()) }
+        unsafe { BitFlags::new(T::Numeric::default()) }
     }
 
     /// Create a `BitFlags` with all flags set.
@@ -360,7 +360,7 @@ where
     }
 
     /// Returns the underlying type value
-    pub fn bits(self) -> T::Type {
+    pub fn bits(self) -> T::Numeric {
         self.val
     }
 
@@ -377,7 +377,7 @@ where
 
     /// Returns a `BitFlags<T>` if the raw value provided does not contain
     /// any illegal flags.
-    pub fn from_bits(bits: T::Type) -> Result<Self, FromBitsError<T>> {
+    pub fn from_bits(bits: T::Numeric) -> Result<Self, FromBitsError<T>> {
         let flags = Self::from_bits_truncate(bits);
         if flags.bits() == bits {
             Ok(flags)
@@ -395,7 +395,7 @@ where
     }
 
     /// Truncates flags that are illegal
-    pub fn from_bits_truncate(bits: T::Type) -> Self {
+    pub fn from_bits_truncate(bits: T::Numeric) -> Self {
         unsafe { BitFlags::new(bits & T::ALL_BITS) }
     }
 
@@ -537,10 +537,10 @@ mod impl_serde {
     impl<'a, T> Deserialize<'a> for BitFlags<T>
     where
         T: BitFlag,
-        T::Type: Deserialize<'a> + Into<u64>,
+        T::Numeric: Deserialize<'a> + Into<u64>,
     {
         fn deserialize<D: serde::Deserializer<'a>>(d: D) -> Result<Self, D::Error> {
-            let val = T::Type::deserialize(d)?;
+            let val = T::Numeric::deserialize(d)?;
             Self::from_bits(val)
                 .map_err(|_| D::Error::invalid_value(
                     Unexpected::Unsigned(val.into()),
@@ -552,10 +552,10 @@ mod impl_serde {
     impl<T> Serialize for BitFlags<T>
     where
         T: BitFlag,
-        T::Type: Serialize,
+        T::Numeric: Serialize,
     {
         fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-            T::Type::serialize(&self.val, s)
+            T::Numeric::serialize(&self.val, s)
         }
     }
 }

@@ -256,11 +256,11 @@ fn gen_enumflags(ast: &ItemEnum)
             }
 
             impl ::enumflags2::_internal::RawBitFlags for #ident {
-                type Type = #ty;
+                type Numeric = #ty;
 
-                const EMPTY: Self::Type = 0;
+                const EMPTY: Self::Numeric = 0;
 
-                const ALL_BITS: Self::Type =
+                const ALL_BITS: Self::Numeric =
                     0 #(| (#repeated_name::#variant_names as #ty))*;
 
                 const FLAG_LIST: &'static [Self] =
@@ -269,7 +269,7 @@ fn gen_enumflags(ast: &ItemEnum)
                 const BITFLAGS_TYPE_NAME : &'static str =
                     concat!("BitFlags<", stringify!(#ident), ">");
 
-                fn bits(self) -> Self::Type {
+                fn bits(self) -> Self::Numeric {
                     self as #ty
                 }
             }
