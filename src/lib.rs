@@ -84,6 +84,7 @@
 
 use core::{cmp, ops};
 use core::iter::FromIterator;
+use core::marker::PhantomData;
 
 #[allow(unused_imports)]
 #[macro_use]
@@ -244,10 +245,84 @@ pub use crate::fallible::FromBitsError;
 
 /// Represents a set of flags of some type `T`.
 /// `T` must have the `#[bitflags]` attribute applied.
-#[derive(Copy, Clone, Eq, Hash)]
+///
+/// A `BitFlags<T>` is as large as the `T` itself,
+/// and stores one flag per bit.
+///
+/// ## Memory layout
+///
+/// `BitFlags<T>` is marked with the `#[repr(transparent)]` trait, meaning
+/// it can be safely transmuted into the corresponding numeric type.
+///
+/// Usually, the same can be achieved by using [`BitFlags::from_bits`],
+/// [`BitFlags::from_bits_truncated`] or [`BitFlags::from_bits_unchecked`],
+/// but transmuting might still be useful if, for example, you're dealing with
+/// an entire array of `BitFlags`.
+///
+/// Transmuting from a numeric type into `BitFlags` may also be done, but
+/// care must be taken to make sure that each set bit in the value corresponds
+/// to an existing flag (cf. [`from_bits_unchecked`]).
+///
+/// For example:
+///
+/// ```
+/// # use enumflags2::{BitFlags, bitflags};
+/// #[bitflags]
+/// #[repr(u8)] // <-- the repr determines the numeric type
+/// #[derive(Copy, Clone)]
+/// enum TransmuteMe {
+///     One = 1 << 0,
+///     Two = 1 << 1,
+/// }
+///
+/// # use std::slice;
+/// // NOTE: we use a small, self-contained function to handle the slice
+/// // conversion to make sure the lifetimes are right.
+/// fn transmute_slice<'a>(input: &'a [BitFlags<TransmuteMe>]) -> &'a [u8] {
+///     unsafe {
+///         slice::from_raw_parts(input.as_ptr() as *const u8, input.len())
+///     }
+/// }
+///
+/// let many_flags = &[
+///     TransmuteMe::One.into(),
+///     TransmuteMe::One | TransmuteMe::Two,
+/// ];
+///
+/// let as_nums = transmute_slice(many_flags);
+/// assert_eq!(as_nums, &[0b01, 0b11]);
+/// ```
+///
+/// ## Implementation notes
+///
+/// You might expect this struct to be defined as
+///
+/// ```ignore
+/// struct BitFlags<T: BitFlag> {
+///     value: T::Numeric
+/// }
+/// ```
+///
+/// Ideally, that would be the case. However, because `const fn`s cannot
+/// have trait bounds in current Rust, this would prevent us from providing
+/// most `const fn` APIs. As a workaround, we define `BitFlags` with two
+/// type parameters, with a default for the second one:
+///
+/// ```ignore
+/// struct BitFlags<T, N = <T as BitFlag>::Numeric> {
+///     value: N,
+///     marker: PhantomData<T>,
+/// }
+/// ```
+///
+/// The types substituted for `T` and `N` must always match, creating a
+/// `BitFlags` value where that isn't the case is considered to be impossible
+/// without unsafe code.
+#[derive(Copy, Clone, Hash)]
 #[repr(transparent)]
-pub struct BitFlags<T: BitFlag> {
-    val: T::Numeric,
+pub struct BitFlags<T, N = <T as _internal::RawBitFlags>::Numeric> {
+    val: N,
+    marker: PhantomData<T>,
 }
 
 /// The default value returned is one with all flags unset, i. e. [`empty`][Self::empty].
@@ -280,7 +355,7 @@ where
     /// The argument must not have set bits at positions not corresponding to
     /// any flag.
     pub unsafe fn from_bits_unchecked(val: T::Numeric) -> Self {
-        BitFlags { val }
+        BitFlags { val, marker: PhantomData }
     }
 
     /// Create a `BitFlags` with no flags set (in other words, with a value of `0`).
@@ -341,13 +416,13 @@ where
     /// but works in a const context.
     ///
     /// [`empty()`]: #method.empty
-    pub const EMPTY: Self = BitFlags { val: T::EMPTY };
+    pub const EMPTY: Self = BitFlags { val: T::EMPTY, marker: PhantomData };
 
     /// A `BitFlags` with all flags set. Equivalent to [`all()`],
     /// but works in a const context.
     ///
     /// [`all()`]: #method.all
-    pub const ALL: Self = BitFlags { val: T::ALL_BITS };
+    pub const ALL: Self = BitFlags { val: T::ALL_BITS, marker: PhantomData };
 
     /// Returns true if all flags are set
     pub fn is_all(self) -> bool {
