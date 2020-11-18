@@ -365,6 +365,36 @@ impl<T: BitFlag> From<T> for BitFlags<T> {
     }
 }
 
+for_each_uint! { ty =>
+    impl<T> BitFlags<T, $ty> {
+        /// Bitwise OR — return value contains flag if either argument does.
+        ///
+        /// Also available as `a | b`, but operator overloads are not usable
+        /// in `const fn`s at the moment.
+        #[must_use]
+        #[inline(always)]
+        pub const fn union(self, other: Self) -> Self {
+            BitFlags {
+                val: self.val | other.val,
+                marker: PhantomData,
+            }
+        }
+
+        /// Bitwise AND — return value contains flag if both arguments do.
+        ///
+        /// Also available as `a & b`, but operator overloads are not usable
+        /// in `const fn`s at the moment.
+        #[must_use]
+        #[inline(always)]
+        pub const fn intersection(self, other: Self) -> Self {
+            BitFlags {
+                val: self.val & other.val,
+                marker: PhantomData,
+            }
+        }
+    }
+}
+
 impl<T> BitFlags<T>
 where
     T: BitFlag,
