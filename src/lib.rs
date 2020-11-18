@@ -93,6 +93,30 @@ extern crate enumflags2_derive;
 #[doc(hidden)]
 pub use enumflags2_derive::bitflags_internal as bitflags;
 
+// Internal macro: expand into a separate copy for each supported numeric type.
+macro_rules! for_each_uint {
+    ( $tyvar:ident => $($input:tt)* ) => {
+        // This wrapper macro is necessary to create a $ escape sequence
+        // for use in macro repetitions in implement!
+        // cf. https://github.com/rust-lang/rust/issues/35853
+        macro_rules! with_dollar {
+            ( $d:tt ) => {
+                macro_rules! implement {
+                    ( $d($d $tyvar:ty),* ) => {
+                        $d(
+                            $($input)*
+                        )*
+                    }
+                }
+            }
+        }
+
+        with_dollar!($);
+
+        implement! { u8, u16, u32, u64, u128 }
+    }
+}
+
 /// A trait automatically implemented by `#[bitflags]` to make the enum
 /// a valid type parameter for `BitFlags<T>`.
 pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
@@ -203,11 +227,9 @@ pub mod _internal {
         + Clone {
     }
 
-    impl BitFlagNum for u8 {}
-    impl BitFlagNum for u16 {}
-    impl BitFlagNum for u32 {}
-    impl BitFlagNum for u64 {}
-    impl BitFlagNum for usize {}
+    for_each_uint! { ty =>
+        impl BitFlagNum for $ty {}
+    }
 
     // Re-export libcore so the macro doesn't inject "extern crate" downstream.
     pub mod core {

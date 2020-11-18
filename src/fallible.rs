@@ -5,25 +5,17 @@ use super::BitFlag;
 
 // Coherence doesn't let us use a generic type here. Work around by implementing
 // for each integer type manually.
-macro_rules! impl_try_from {
-    ($($ty:ty),*) => {
-        $(
-            impl<T> TryFrom<$ty> for BitFlags<T>
-            where
-                T: BitFlag<Numeric=$ty>,
-            {
-                type Error = FromBitsError<T>;
+for_each_uint! { ty =>
+    impl<T> TryFrom<$ty> for BitFlags<T>
+    where
+        T: BitFlag<Numeric=$ty>,
+    {
+        type Error = FromBitsError<T>;
 
-                fn try_from(bits: T::Numeric) -> Result<Self, Self::Error> {
-                    Self::from_bits(bits)
-                }
-            }
-        )*
-    };
-}
-
-impl_try_from! {
-    u8, u16, u32, u64, usize
+        fn try_from(bits: T::Numeric) -> Result<Self, Self::Error> {
+            Self::from_bits(bits)
+        }
+    }
 }
 
 /// The error struct used by [`BitFlags::from_bits`]
