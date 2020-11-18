@@ -226,6 +226,7 @@ fn gen_enumflags(ast: &ItemEnum)
             #(#deferred)*
             impl #std_path::ops::Not for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
+                #[inline(always)]
                 fn not(self) -> Self::Output {
                     use ::enumflags2::{BitFlags, _internal::RawBitFlags};
                     unsafe { BitFlags::from_bits_unchecked(self.bits()).not() }
@@ -234,6 +235,7 @@ fn gen_enumflags(ast: &ItemEnum)
 
             impl #std_path::ops::BitOr for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
+                #[inline(always)]
                 fn bitor(self, other: Self) -> Self::Output {
                     use ::enumflags2::{BitFlags, _internal::RawBitFlags};
                     unsafe { BitFlags::from_bits_unchecked(self.bits() | other.bits())}
@@ -242,6 +244,7 @@ fn gen_enumflags(ast: &ItemEnum)
 
             impl #std_path::ops::BitAnd for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
+                #[inline(always)]
                 fn bitand(self, other: Self) -> Self::Output {
                     use ::enumflags2::{BitFlags, _internal::RawBitFlags};
                     unsafe { BitFlags::from_bits_unchecked(self.bits() & other.bits())}
@@ -250,6 +253,7 @@ fn gen_enumflags(ast: &ItemEnum)
 
             impl #std_path::ops::BitXor for #ident {
                 type Output = ::enumflags2::BitFlags<#ident>;
+                #[inline(always)]
                 fn bitxor(self, other: Self) -> Self::Output {
                     #std_path::convert::Into::<Self::Output>::into(self) ^ #std_path::convert::Into::<Self::Output>::into(other)
                 }

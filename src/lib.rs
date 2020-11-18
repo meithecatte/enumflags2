@@ -352,12 +352,14 @@ impl<T> Default for BitFlags<T>
 where
     T: BitFlag,
 {
+    #[inline(always)]
     fn default() -> Self {
         Self::empty()
     }
 }
 
 impl<T: BitFlag> From<T> for BitFlags<T> {
+    #[inline(always)]
     fn from(t: T) -> BitFlags<T> {
         Self::from_flag(t)
     }
@@ -376,6 +378,7 @@ where
     ///
     /// The argument must not have set bits at positions not corresponding to
     /// any flag.
+    #[inline(always)]
     pub unsafe fn from_bits_unchecked(val: T::Numeric) -> Self {
         BitFlags { val, marker: PhantomData }
     }
@@ -403,8 +406,9 @@ where
     /// assert_eq!(empty.contains(MyFlag::Two), false);
     /// assert_eq!(empty.contains(MyFlag::Three), false);
     /// ```
+    #[inline(always)]
     pub fn empty() -> Self {
-        unsafe { BitFlags::from_bits_unchecked(T::Numeric::default()) }
+        Self::EMPTY
     }
 
     /// Create a `BitFlags` with all flags set.
@@ -430,8 +434,9 @@ where
     /// assert_eq!(empty.contains(MyFlag::Two), true);
     /// assert_eq!(empty.contains(MyFlag::Three), true);
     /// ```
+    #[inline(always)]
     pub fn all() -> Self {
-        unsafe { BitFlags::from_bits_unchecked(T::ALL_BITS) }
+        Self::ALL
     }
 
     /// An empty `BitFlags`. Equivalent to [`empty()`],
@@ -447,26 +452,45 @@ where
     pub const ALL: Self = BitFlags { val: T::ALL_BITS, marker: PhantomData };
 
     /// Returns true if all flags are set
+    #[inline(always)]
     pub fn is_all(self) -> bool {
         self.val == T::ALL_BITS
     }
 
     /// Returns true if no flag is set
+    #[inline(always)]
     pub fn is_empty(self) -> bool {
-        self.val == Self::empty().bits()
+        self.val == T::EMPTY
     }
 
-    /// Returns the underlying type value
+    /// Returns the underlying bitwise value.
+    ///
+    /// ```
+    /// # use enumflags2::{bitflags, BitFlags};
+    /// #[bitflags]
+    /// #[repr(u8)]
+    /// #[derive(Clone, Copy)]
+    /// enum Flags {
+    ///     Foo = 1 << 0,
+    ///     Bar = 1 << 1,
+    /// }
+    ///
+    /// let both_flags = Flags::Foo | Flags::Bar;
+    /// assert_eq!(both_flags.bits(), 0b11);
+    /// ```
+    #[inline(always)]
     pub fn bits(self) -> T::Numeric {
         self.val
     }
 
     /// Returns true if at least one flag is shared.
+    #[inline(always)]
     pub fn intersects<B: Into<BitFlags<T>>>(self, other: B) -> bool {
-        (self.bits() & other.into().bits()) > Self::empty().bits()
+        (self.bits() & other.into().bits()) != Self::EMPTY.val
     }
 
     /// Returns true if all flags are contained.
+    #[inline(always)]
     pub fn contains<B: Into<BitFlags<T>>>(self, other: B) -> bool {
         let other = other.into();
         (self.bits() & other.bits()) == other.bits()
@@ -487,26 +511,31 @@ where
     }
 
     /// Turn a `T` into a `BitFlags<T>`. Also available as `flag.into()`.
+    #[inline(always)]
     pub fn from_flag(flag: T) -> Self {
         unsafe { Self::from_bits_unchecked(flag.bits()) }
     }
 
     /// Truncates flags that are illegal
+    #[inline(always)]
     pub fn from_bits_truncate(bits: T::Numeric) -> Self {
         unsafe { BitFlags::from_bits_unchecked(bits & T::ALL_BITS) }
     }
 
     /// Toggles the matching bits
+    #[inline(always)]
     pub fn toggle<B: Into<BitFlags<T>>>(&mut self, other: B) {
         *self ^= other.into();
     }
 
     /// Inserts the flags into the BitFlag
+    #[inline(always)]
     pub fn insert<B: Into<BitFlags<T>>>(&mut self, other: B) {
         *self |= other.into();
     }
 
     /// Removes the matching flags
+    #[inline(always)]
     pub fn remove<B: Into<BitFlags<T>>>(&mut self, other: B) {
         *self &= !other.into();
     }
@@ -522,6 +551,7 @@ where
     T: BitFlag,
     B: Into<BitFlags<T>> + Copy,
 {
+    #[inline(always)]
     fn eq(&self, other: &B) -> bool {
         self.bits() == Into::<Self>::into(*other).bits()
     }
@@ -533,6 +563,7 @@ where
     B: Into<BitFlags<T>>,
 {
     type Output = BitFlags<T>;
+    #[inline(always)]
     fn bitor(self, other: B) -> BitFlags<T> {
         unsafe { BitFlags::from_bits_unchecked(self.bits() | other.into().bits()) }
     }
@@ -544,6 +575,7 @@ where
     B: Into<BitFlags<T>>,
 {
     type Output = BitFlags<T>;
+    #[inline(always)]
     fn bitand(self, other: B) -> BitFlags<T> {
         unsafe { BitFlags::from_bits_unchecked(self.bits() & other.into().bits()) }
     }
@@ -555,6 +587,7 @@ where
     B: Into<BitFlags<T>>,
 {
     type Output = BitFlags<T>;
+    #[inline(always)]
     fn bitxor(self, other: B) -> BitFlags<T> {
         unsafe { BitFlags::from_bits_unchecked(self.bits() ^ other.into().bits()) }
     }
@@ -565,6 +598,7 @@ where
     T: BitFlag,
     B: Into<BitFlags<T>>,
 {
+    #[inline(always)]
     fn bitor_assign(&mut self, other: B) {
         *self = *self | other;
     }
@@ -575,6 +609,7 @@ where
     T: BitFlag,
     B: Into<BitFlags<T>>,
 {
+    #[inline(always)]
     fn bitand_assign(&mut self, other: B) {
         *self = *self & other;
     }
@@ -584,6 +619,7 @@ where
     T: BitFlag,
     B: Into<BitFlags<T>>,
 {
+    #[inline(always)]
     fn bitxor_assign(&mut self, other: B) {
         *self = *self ^ other;
     }
@@ -594,6 +630,7 @@ where
     T: BitFlag,
 {
     type Output = BitFlags<T>;
+    #[inline(always)]
     fn not(self) -> BitFlags<T> {
         unsafe { BitFlags::from_bits_unchecked(!self.bits() & T::ALL_BITS) }
     }
