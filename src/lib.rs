@@ -347,6 +347,36 @@ pub struct BitFlags<T, N = <T as _internal::RawBitFlags>::Numeric> {
     marker: PhantomData<T>,
 }
 
+/// `make_bitflags!` provides a succint syntax for creating instances of
+/// `BitFlags<T>`. Instead of repeating the name of your type for each flag
+/// you want to add, try `make_bitflags!(Flags::{Foo | Bar})`.
+///
+/// ```
+/// use enumflags2::{bitflags, make_bitflags};
+/// #[bitflags]
+/// #[repr(u8)]
+/// #[derive(Clone, Copy, Debug)]
+/// enum Test {
+///     A = 1 << 0,
+///     B = 1 << 1,
+///     C = 1 << 2,
+/// }
+/// let x = make_bitflags!(Test::{A | C});
+/// assert_eq!(x, Test::A | Test::C);
+/// ```
+#[macro_export]
+macro_rules! make_bitflags {
+    ( $enum:ident ::{ $($variant:ident)|* } ) => {
+        {
+            let mut n = 0;
+            $(
+                n |= $enum::$variant as <$enum as $crate::_internal::RawBitFlags>::Numeric;
+            )*
+            unsafe { $crate::BitFlags::<$enum>::from_bits_unchecked(n) }
+        }
+    }
+}
+
 /// The default value returned is one with all flags unset, i. e. [`empty`][Self::empty].
 impl<T> Default for BitFlags<T>
 where
