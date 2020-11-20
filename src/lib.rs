@@ -351,7 +351,8 @@ macro_rules! make_bitflags {
             $(
                 n |= $enum::$variant as <$enum as $crate::_internal::RawBitFlags>::Numeric;
             )*
-            unsafe { $crate::BitFlags::<$enum>::from_bits_unchecked(n) }
+            unsafe { $crate::BitFlags::<$enum>::from_bits_unchecked_c(
+                    n, $crate::BitFlags::CONST_TOKEN) }
         }
     }
 }
@@ -385,20 +386,6 @@ impl<T> BitFlags<T>
 where
     T: BitFlag,
 {
-    /// Create a new BitFlags unsafely, without checking if the bits form
-    /// a valid bit pattern for the type.
-    ///
-    /// Consider using `from_bits` or `from_bits_truncate` instead.
-    ///
-    /// # Safety
-    ///
-    /// The argument must not have set bits at positions not corresponding to
-    /// any flag.
-    #[inline(always)]
-    pub unsafe fn from_bits_unchecked(val: T::Numeric) -> Self {
-        BitFlags { val, marker: PhantomData }
-    }
-
     /// Returns a `BitFlags<T>` if the raw value provided does not contain
     /// any illegal flags.
     pub fn from_bits(bits: T::Numeric) -> Result<Self, FromBitsError<T>> {
@@ -413,10 +400,26 @@ where
         }
     }
 
-    /// Truncates flags that are illegal
+    /// Create a `BitFlags<T>` from an underlying bitwise value. If any
+    /// invalid bits are set, ignore them.
     #[inline(always)]
     pub fn from_bits_truncate(bits: T::Numeric) -> Self {
         unsafe { BitFlags::from_bits_unchecked(bits & T::ALL_BITS) }
+    }
+
+    /// Create a new BitFlags unsafely, without checking if the bits form
+    /// a valid bit pattern for the type.
+    ///
+    /// Consider using [`from_bits`][BitFlags::from_bits]
+    /// or [`from_bits_truncate`][BitFlags::from_bits_truncate] instead.
+    ///
+    /// # Safety
+    ///
+    /// The argument must not have set bits at positions not corresponding to
+    /// any flag.
+    #[inline(always)]
+    pub unsafe fn from_bits_unchecked(val: T::Numeric) -> Self {
+        BitFlags { val, marker: PhantomData }
     }
 
     /// Turn a `T` into a `BitFlags<T>`. Also available as `flag.into()`.
@@ -563,6 +566,57 @@ where
 
 for_each_uint! { $ty $hide_docs =>
     impl<T> BitFlags<T, $ty> {
+        /// Create a new BitFlags unsafely, without checking if the bits form
+        /// a valid bit pattern for the type.
+        ///
+        /// Const variant of
+        /// [`from_bits_unchecked`][BitFlags::from_bits_unchecked].
+        ///
+        /// Consider using
+        /// [`from_bits_truncate_c`][BitFlags::from_bits_truncate_c] instead.
+        ///
+        /// # Safety
+        ///
+        /// The argument must not have set bits at positions not corresponding to
+        /// any flag.
+        pub const unsafe fn from_bits_unchecked_c(
+            val: $ty, const_token: ConstToken<T, $ty>
+        ) -> Self {
+            let _ = const_token;
+            BitFlags {
+                val,
+                marker: PhantomData,
+            }
+        }
+
+        /// Create a `BitFlags<T>` from an underlying bitwise value. If any
+        /// invalid bits are set, ignore them.
+        ///
+        /// ```
+        /// # use enumflags2::{bitflags, BitFlags};
+        /// #[bitflags]
+        /// #[repr(u8)]
+        /// #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        /// enum MyFlag {
+        ///     One = 1 << 0,
+        ///     Two = 1 << 1,
+        ///     Three = 1 << 2,
+        /// }
+        ///
+        /// const FLAGS: BitFlags<MyFlag> =
+        ///     BitFlags::<MyFlag>::from_bits_truncate_c(0b10101010, BitFlags::CONST_TOKEN);
+        /// assert_eq!(FLAGS, MyFlag::Two);
+        /// ```
+        #[inline(always)]
+        pub const fn from_bits_truncate_c(
+            bits: $ty, const_token: ConstToken<T, $ty>
+        ) -> Self {
+            BitFlags {
+                val: bits & const_token.0.val,
+                marker: PhantomData,
+            }
+        }
+
         /// Bitwise OR — return value contains flag if either argument does.
         ///
         /// Also available as `a | b`, but operator overloads are not usable
@@ -600,7 +654,7 @@ for_each_uint! { $ty $hide_docs =>
         /// [`ConstToken`] as an argument.
         ///
         /// ```
-        /// # use enumflags2::{bitflags, BitFlags};
+        /// # use enumflags2::{bitflags, BitFlags, make_bitflags};
         /// #[bitflags]
         /// #[repr(u8)]
         /// #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -610,9 +664,9 @@ for_each_uint! { $ty $hide_docs =>
         ///     Three = 1 << 2,
         /// }
         ///
-        /// let flags = MyFlag::One | MyFlag::Two;
-        /// let negated = flags.not_c(BitFlags::CONST_TOKEN);
-        /// assert_eq!(negated, MyFlag::Three);
+        /// const FLAGS: BitFlags<MyFlag> = make_bitflags!(MyFlag::{One | Two});
+        /// const NEGATED: BitFlags<MyFlag> = FLAGS.not_c(BitFlags::CONST_TOKEN);
+        /// assert_eq!(NEGATED, MyFlag::Three);
         /// ```
         pub const fn not_c(self, const_token: ConstToken<T, $ty>) -> Self {
             BitFlags {
