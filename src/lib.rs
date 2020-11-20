@@ -378,7 +378,7 @@ impl<T: BitFlag> From<T> for BitFlags<T> {
 ///
 /// Some `const fn`s in this crate will need an instance of this type
 /// for some type-level information usually provided by traits.
-/// For an example of usage, see [`not_c`][BitFlags::not_c]
+/// For an example of usage, see [`not_c`][BitFlags::not_c].
 pub struct ConstToken<T, N>(BitFlags<T, N>);
 
 impl<T> BitFlags<T>
@@ -397,6 +397,32 @@ where
     #[inline(always)]
     pub unsafe fn from_bits_unchecked(val: T::Numeric) -> Self {
         BitFlags { val, marker: PhantomData }
+    }
+
+    /// Returns a `BitFlags<T>` if the raw value provided does not contain
+    /// any illegal flags.
+    pub fn from_bits(bits: T::Numeric) -> Result<Self, FromBitsError<T>> {
+        let flags = Self::from_bits_truncate(bits);
+        if flags.bits() == bits {
+            Ok(flags)
+        } else {
+            Err(FromBitsError {
+                flags,
+                invalid: bits & !flags.bits(),
+            })
+        }
+    }
+
+    /// Truncates flags that are illegal
+    #[inline(always)]
+    pub fn from_bits_truncate(bits: T::Numeric) -> Self {
+        unsafe { BitFlags::from_bits_unchecked(bits & T::ALL_BITS) }
+    }
+
+    /// Turn a `T` into a `BitFlags<T>`. Also available as `flag.into()`.
+    #[inline(always)]
+    pub fn from_flag(flag: T) -> Self {
+        unsafe { Self::from_bits_unchecked(flag.bits()) }
     }
 
     /// Create a `BitFlags` with no flags set (in other words, with a value of `0`).
@@ -509,32 +535,6 @@ where
     pub fn contains<B: Into<BitFlags<T>>>(self, other: B) -> bool {
         let other = other.into();
         (self.bits() & other.bits()) == other.bits()
-    }
-
-    /// Returns a `BitFlags<T>` if the raw value provided does not contain
-    /// any illegal flags.
-    pub fn from_bits(bits: T::Numeric) -> Result<Self, FromBitsError<T>> {
-        let flags = Self::from_bits_truncate(bits);
-        if flags.bits() == bits {
-            Ok(flags)
-        } else {
-            Err(FromBitsError {
-                flags,
-                invalid: bits & !flags.bits(),
-            })
-        }
-    }
-
-    /// Turn a `T` into a `BitFlags<T>`. Also available as `flag.into()`.
-    #[inline(always)]
-    pub fn from_flag(flag: T) -> Self {
-        unsafe { Self::from_bits_unchecked(flag.bits()) }
-    }
-
-    /// Truncates flags that are illegal
-    #[inline(always)]
-    pub fn from_bits_truncate(bits: T::Numeric) -> Self {
-        unsafe { BitFlags::from_bits_unchecked(bits & T::ALL_BITS) }
     }
 
     /// Toggles the matching bits
