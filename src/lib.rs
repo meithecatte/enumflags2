@@ -579,6 +579,8 @@ for_each_uint! { $ty $hide_docs =>
         ///
         /// The argument must not have set bits at positions not corresponding to
         /// any flag.
+        #[inline(always)]
+        $(#[$hide_docs])?
         pub const unsafe fn from_bits_unchecked_c(
             val: $ty, const_token: ConstToken<T, $ty>
         ) -> Self {
@@ -608,6 +610,7 @@ for_each_uint! { $ty $hide_docs =>
         /// assert_eq!(FLAGS, MyFlag::Two);
         /// ```
         #[inline(always)]
+        $(#[$hide_docs])?
         pub const fn from_bits_truncate_c(
             bits: $ty, const_token: ConstToken<T, $ty>
         ) -> Self {
@@ -668,6 +671,8 @@ for_each_uint! { $ty $hide_docs =>
         /// const NEGATED: BitFlags<MyFlag> = FLAGS.not_c(BitFlags::CONST_TOKEN);
         /// assert_eq!(NEGATED, MyFlag::Three);
         /// ```
+        #[inline(always)]
+        $(#[$hide_docs])?
         pub const fn not_c(self, const_token: ConstToken<T, $ty>) -> Self {
             BitFlags {
                 val: !self.val & const_token.0.val,
