@@ -374,6 +374,13 @@ impl<T: BitFlag> From<T> for BitFlags<T> {
     }
 }
 
+/// Workaround for `const fn` limitations.
+///
+/// Some `const fn`s in this crate will need an instance of this type
+/// for some type-level information usually provided by traits.
+/// For an example of usage, see [`not_c`][BitFlags::not_c]
+pub struct ConstToken<T, N>(BitFlags<T, N>);
+
 impl<T> BitFlags<T>
 where
     T: BitFlag,
@@ -394,7 +401,9 @@ where
 
     /// Create a `BitFlags` with no flags set (in other words, with a value of `0`).
     ///
-    /// See also: [`BitFlag::empty`], a convenience reexport.
+    /// See also: [`BitFlag::empty`], a convenience reexport;
+    /// [`BitFlags::EMPTY`], the same functionality available
+    /// as a constant for `const fn` code.
     ///
     /// ```
     /// # use enumflags2::{bitflags, BitFlags};
@@ -420,7 +429,9 @@ where
 
     /// Create a `BitFlags` with all flags set.
     ///
-    /// See also: [`BitFlag::all`], a convenience reexport.
+    /// See also: [`BitFlag::all`], a convenience reexport;
+    /// [`BitFlags::ALL`], the same functionality available
+    /// as a constant for `const fn` code.
     ///
     /// ```
     /// # use enumflags2::{bitflags, BitFlags};
@@ -451,6 +462,9 @@ where
     /// A `BitFlags` with all flags set. Equivalent to [`all()`][BitFlags::all],
     /// but works in a const context.
     pub const ALL: Self = BitFlags { val: T::ALL_BITS, marker: PhantomData };
+
+    /// A [`ConstToken`] for this type of flag.
+    pub const CONST_TOKEN: ConstToken<T, T::Numeric> = ConstToken(Self::ALL);
 
     /// Returns true if all flags are set
     #[inline(always)]
@@ -573,6 +587,36 @@ for_each_uint! { $ty $hide_docs =>
         pub const fn intersection_c(self, other: Self) -> Self {
             BitFlags {
                 val: self.val & other.val,
+                marker: PhantomData,
+            }
+        }
+
+        /// Bitwise NOT — return value contains flag if argument doesn't.
+        ///
+        /// Also available as `!a`, but operator overloads are not usable
+        /// in `const fn`s at the moment.
+        ///
+        /// Moreover, due to `const fn` limitations, `not_c` needs a
+        /// [`ConstToken`] as an argument.
+        ///
+        /// ```
+        /// # use enumflags2::{bitflags, BitFlags};
+        /// #[bitflags]
+        /// #[repr(u8)]
+        /// #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        /// enum MyFlag {
+        ///     One = 1 << 0,
+        ///     Two = 1 << 1,
+        ///     Three = 1 << 2,
+        /// }
+        ///
+        /// let flags = MyFlag::One | MyFlag::Two;
+        /// let negated = flags.not_c(BitFlags::CONST_TOKEN);
+        /// assert_eq!(negated, MyFlag::Three);
+        /// ```
+        pub const fn not_c(self, const_token: ConstToken<T, $ty>) -> Self {
+            BitFlags {
+                val: !self.val & const_token.0.val,
                 marker: PhantomData,
             }
         }
