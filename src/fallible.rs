@@ -5,7 +5,7 @@ use super::BitFlag;
 
 // Coherence doesn't let us use a generic type here. Work around by implementing
 // for each integer type manually.
-for_each_uint! { ty =>
+for_each_uint! { $ty $hide_docs =>
     impl<T> TryFrom<$ty> for BitFlags<T>
     where
         T: BitFlag<Numeric=$ty>,

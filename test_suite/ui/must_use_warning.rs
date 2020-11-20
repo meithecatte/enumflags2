@@ -13,5 +13,5 @@ fn main() {
     let _ = thing;
     // let's pretend the unused_mut warning doesn't trigger
     thing = Flag::Bar.into();
-    thing.union(Flag::Foo.into());
+    thing.union_c(Flag::Foo.into());
 }
