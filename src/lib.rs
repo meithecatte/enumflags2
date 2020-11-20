@@ -320,7 +320,7 @@ pub use crate::fallible::FromBitsError;
 /// The types substituted for `T` and `N` must always match, creating a
 /// `BitFlags` value where that isn't the case is considered to be impossible
 /// without unsafe code.
-#[derive(Copy, Clone, Hash)]
+#[derive(Copy, Clone, Eq, Hash)]
 #[repr(transparent)]
 pub struct BitFlags<T, N = <T as _internal::RawBitFlags>::Numeric> {
     val: N,
@@ -691,13 +691,19 @@ for_each_uint! { $ty $hide_docs =>
     }
 }
 
-impl<T, B> cmp::PartialEq<B> for BitFlags<T>
+impl<T, N: PartialEq> cmp::PartialEq for BitFlags<T, N> {
+    #[inline(always)]
+    fn eq(&self, other: &Self) -> bool {
+        self.val == other.val
+    }
+}
+
+impl<T> cmp::PartialEq<T> for BitFlags<T>
 where
     T: BitFlag,
-    B: Into<BitFlags<T>> + Copy,
 {
     #[inline(always)]
-    fn eq(&self, other: &B) -> bool {
+    fn eq(&self, other: &T) -> bool {
         self.bits() == Into::<Self>::into(*other).bits()
     }
 }
