@@ -1,7 +1,9 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use enumflags2::BitFlags;
+use enumflags2::{BitFlags, bitflags};
 
-#[derive(Clone, Copy, BitFlags)]
+#[bitflags]
+#[repr(u16)]
+#[derive(Clone, Copy)]
 pub enum Test {
     Flag1 = 1 << 0,
     Flag2 = 1 << 1,
