@@ -6,6 +6,7 @@ extern crate quote;
 use std::convert::TryFrom;
 use syn::{Ident, Item, ItemEnum, spanned::Spanned, parse_macro_input};
 use proc_macro2::{TokenStream, Span};
+use proc_macro::TokenTree;
 
 struct Flag {
     name: Ident,
@@ -21,12 +22,66 @@ enum FlagValue {
 
 #[proc_macro_attribute]
 pub fn bitflags_internal(
-    _attr: proc_macro::TokenStream,
+    attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
+    let defaults = if !attr.is_empty() {
+        let mut attr = attr.into_iter();
+        let default = attr.next().unwrap(); // TODO no unwrap
+        match default {
+            TokenTree::Ident(default) => {
+                if default.to_string() != "default" {
+                    panic!("only default parameter allowed right now");
+                }
+                let eq = attr.next().unwrap(); // TODO no unwrap
+                if eq.to_string() != "=" {
+                    panic!("default must be followed by '='");
+                }
+                let mut defaults = vec![];
+                loop {
+                    let default = match attr.next(){
+                        None => break,
+                        Some(default) => default,
+                    };
+                    match default {
+                        TokenTree::Ident(default) => {
+                            defaults.push(default);
+                        }
+                        default =>
+                            panic!("default must be followed by '=' \
+                            and at least one variant separated by '|'
+                            '{}' is not valid identifier of an variant", default),
+                    }
+                    match attr.next() {
+                        None => break,
+                        Some(separator) => {
+                            if separator.to_string() != "|" {
+                                panic!("default must be followed by '=' \
+                                and at least one variant separated by '|'
+                        '{}' is not a valid separator", separator);
+                            }
+                        }
+                    }
+                }
+                if let Some(not_a_separator) = attr.next() {
+                    panic!("default must be followed by '=' \
+                                and at least one variant separated by '|'
+                        '{}' is not a valid separator", not_a_separator);
+                }
+                if defaults.is_empty() {
+                    panic!("default must be followed by '=' \
+                    and at least one variant separated by '|'");
+                }
+                Some(defaults)
+            },
+            _ => {
+                panic!("only default parameter allowed right now");
+            }
+        }
+    } else { None };
     let ast = parse_macro_input!(input as Item);
     let output = match ast {
-        Item::Enum(ref item_enum) => gen_enumflags(item_enum),
+        Item::Enum(ref item_enum) => gen_enumflags(item_enum, defaults),
         _ => Err(syn::Error::new_spanned(&ast,
                 "#[bitflags] requires an enum")),
     };
@@ -190,7 +245,7 @@ fn check_flag(
     }
 }
 
-fn gen_enumflags(ast: &ItemEnum)
+fn gen_enumflags(ast: &ItemEnum, _defaults: Option<Vec<proc_macro::Ident>>)
     -> Result<TokenStream, syn::Error>
 {
     let ident = &ast.ident;
@@ -220,6 +275,7 @@ fn gen_enumflags(ast: &ItemEnum)
 
     let std_path = quote_spanned!(span => ::enumflags2::_internal::core);
 
+    // TODO use _defaults to generate default `::enumflags2::BitFlags<#ident>`
     Ok(quote_spanned! {
         span =>
             #ast
