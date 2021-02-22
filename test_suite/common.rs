@@ -19,6 +19,16 @@ enum Test1 {
     E = 1 << 34,
 }
 
+#[enumflags2::bitflags(default = B | C)]
+#[derive(Copy, Clone, Debug)]
+#[repr(u8)]
+enum Default6 {
+    A = 1 << 0,
+    B = 1 << 1,
+    C = 1 << 2,
+    D = 1 << 3,
+}
+
 #[test]
 fn test_foo() {
     use enumflags2::BitFlags;
@@ -60,6 +70,8 @@ fn test_foo() {
         assert_eq!(b, Test::A | Test::C);
     }
     assert_eq!((Test::A ^ Test::B), Test::A | Test::B);
+
+    assert_eq!(BitFlags::<Default6>::default(), Default6::B | Default6::C);
 }
 
 #[test]
