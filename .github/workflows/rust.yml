@@ -6,8 +6,10 @@ jobs:
   build:
     strategy:
       matrix:
-        rust: [nightly, stable, 1.41.1]
         include:
+          - rust: nightly
+          - rust: stable
+            extra-test-opts: -- --skip ui
           - rust: 1.41.1
             extra-test-opts: -- --skip ui
     runs-on: ubuntu-latest
@@ -20,9 +22,6 @@ jobs:
         profile: minimal
         default: true
     - run: cargo build
-    - name: Prepare UI tests for nightly
-      if: matrix.rust == 'nightly'
-      run: for x in test_suite/ui/*.nightly; do cp "$x" "${x%.nightly}"; done
     - run: cargo test --all ${{ matrix.extra-test-opts }}
   clippy:
     runs-on: ubuntu-latest
