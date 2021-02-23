@@ -320,7 +320,7 @@ pub use crate::fallible::FromBitsError;
 /// The types substituted for `T` and `N` must always match, creating a
 /// `BitFlags` value where that isn't the case is considered to be impossible
 /// without unsafe code.
-#[derive(Copy, Clone, Eq, Hash)]
+#[derive(Copy, Clone, Eq)]
 #[repr(transparent)]
 pub struct BitFlags<T, N = <T as _internal::RawBitFlags>::Numeric> {
     val: N,
@@ -695,6 +695,14 @@ impl<T, N: PartialEq> cmp::PartialEq for BitFlags<T, N> {
     #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         self.val == other.val
+    }
+}
+
+// Clippy complains when Hash is derived while PartialEq is implemented manually
+impl<T, N: core::hash::Hash> core::hash::Hash for BitFlags<T, N> {
+    #[inline(always)]
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.val.hash(state)
     }
 }
 
