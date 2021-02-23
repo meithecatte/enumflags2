@@ -34,7 +34,7 @@ fn debug_format_alternate() {
     /// Handle the slight difference in alternate debug output on rustc 1.34.2.
     fn compare(mut actual: String, expected: &str) {
         if actual.ends_with("\n}") && !actual.ends_with(",\n}") {
-            actual.replace_range(actual.len()-2.., ",\n}");
+            actual.replace_range(actual.len() - 2.., ",\n}");
         }
 
         assert_eq!(actual, expected);
@@ -42,17 +42,17 @@ fn debug_format_alternate() {
 
     compare(
         format!("{:#010?}", BitFlags::<Test>::all()),
-"BitFlags<Test> {
+        "BitFlags<Test> {
     bits: 0b00001111,
     flags: A | B | C | D,
-}"
+}",
     );
 
     compare(
         format!("{:#?}", BitFlags::<Test>::empty()),
-"BitFlags<Test> {
+        "BitFlags<Test> {
     bits: 0b0,
-}"
+}",
     );
 }
 
@@ -62,30 +62,18 @@ fn format() {
 
     // Assert BitFlags<T> impls fmt::{Binary, Octal, LowerHex, UpperHex}
 
-    assert_eq!(
-        format!("{:b}", BitFlags::<Test>::all()),
-        "1111"
-    );
+    assert_eq!(format!("{:b}", BitFlags::<Test>::all()), "1111");
 
-    assert_eq!(
-        format!("{:o}", BitFlags::<Test>::all()),
-        "17"
-    );
+    assert_eq!(format!("{:o}", BitFlags::<Test>::all()), "17");
 
-    assert_eq!(
-        format!("{:x}", BitFlags::<Test>::all()),
-        "f"
-    );
+    assert_eq!(format!("{:x}", BitFlags::<Test>::all()), "f");
 
-    assert_eq!(
-        format!("{:#04X}", BitFlags::<Test>::all()),
-        "0x0F"
-    );
+    assert_eq!(format!("{:#04X}", BitFlags::<Test>::all()), "0x0F");
 }
 
 #[test]
 fn debug_generic() {
-    use enumflags2::{BitFlags, BitFlag};
+    use enumflags2::{BitFlag, BitFlags};
 
     #[derive(Debug)]
     struct Debug<T: BitFlag>(BitFlags<T>);

@@ -1,7 +1,7 @@
+use super::BitFlag;
+use super::BitFlags;
 use core::convert::TryFrom;
 use core::fmt;
-use super::BitFlags;
-use super::BitFlag;
 
 // Coherence doesn't let us use a generic type here. Work around by implementing
 // for each integer type manually.
@@ -61,7 +61,11 @@ impl<T: BitFlag> FromBitsError<T> {
 
 impl<T: BitFlag + fmt::Debug> fmt::Display for FromBitsError<T> {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(fmt, "Invalid bits for {:?}: {:#b}", self.flags, self.invalid)
+        write!(
+            fmt,
+            "Invalid bits for {:?}: {:#b}",
+            self.flags, self.invalid
+        )
     }
 }
 

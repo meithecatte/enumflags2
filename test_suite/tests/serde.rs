@@ -1,5 +1,5 @@
 use enumflags2::{bitflags, BitFlags};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[test]
 fn serde_compile() {

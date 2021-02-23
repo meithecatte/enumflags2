@@ -1,5 +1,5 @@
-use core::fmt::{self, Debug, Binary};
-use crate::{BitFlags, BitFlag};
+use crate::{BitFlag, BitFlags};
+use core::fmt::{self, Binary, Debug};
 
 impl<T> fmt::Debug for BitFlags<T>
 where
@@ -78,7 +78,7 @@ where
 // Format an iterator of flags into "A | B | etc"
 struct FlagFormatter<I>(I);
 
-impl<T: Debug, I: Clone + Iterator<Item=T>> Debug for FlagFormatter<I> {
+impl<T: Debug, I: Clone + Iterator<Item = T>> Debug for FlagFormatter<I> {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut iter = self.0.clone();
         if let Some(val) = iter.next() {
@@ -110,9 +110,11 @@ impl<'a, F: Debug + Binary + 'a> Debug for DebugBinaryFormatter<'a, F> {
         let format_hex = fmt.flags() >> 4;
         let width = fmt.width().unwrap_or(0);
 
-        if format_hex & 1 != 0 { // FlagV1::DebugLowerHex
+        if format_hex & 1 != 0 {
+            // FlagV1::DebugLowerHex
             write!(fmt, "{:#0width$x?}", &self.0, width = width)
-        } else if format_hex & 2 != 0 { // FlagV1::DebugUpperHex
+        } else if format_hex & 2 != 0 {
+            // FlagV1::DebugUpperHex
             write!(fmt, "{:#0width$X?}", &self.0, width = width)
         } else {
             // Fall back to binary otheriwse

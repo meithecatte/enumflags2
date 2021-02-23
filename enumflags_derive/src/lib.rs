@@ -3,9 +3,14 @@ extern crate proc_macro;
 #[macro_use]
 extern crate quote;
 
+use proc_macro2::{Span, TokenStream};
 use std::convert::TryFrom;
-use syn::{Token, Ident, Item, ItemEnum, spanned::Spanned, parse_macro_input, parse::{Parse, ParseStream}};
-use proc_macro2::{TokenStream, Span};
+use syn::{
+    parse::{Parse, ParseStream},
+    parse_macro_input,
+    spanned::Spanned,
+    Ident, Item, ItemEnum, Token,
+};
 
 struct Flag {
     name: Ident,
@@ -26,9 +31,7 @@ struct Parameters {
 impl Parse for Parameters {
     fn parse(input: ParseStream) -> syn::parse::Result<Self> {
         if input.is_empty() {
-            return Ok(Parameters {
-                default: vec![],
-            });
+            return Ok(Parameters { default: vec![] });
         }
 
         input.parse::<Token![default]>()?;
@@ -39,9 +42,7 @@ impl Parse for Parameters {
             default.push(input.parse()?);
         }
 
-        Ok(Parameters {
-            default
-        })
+        Ok(Parameters { default })
     }
 }
 
@@ -54,37 +55,36 @@ pub fn bitflags_internal(
     let ast = parse_macro_input!(input as Item);
     let output = match ast {
         Item::Enum(ref item_enum) => gen_enumflags(item_enum, default),
-        _ => Err(syn::Error::new_spanned(&ast,
-                "#[bitflags] requires an enum")),
+        _ => Err(syn::Error::new_spanned(
+            &ast,
+            "#[bitflags] requires an enum",
+        )),
     };
 
-    output.unwrap_or_else(|err| {
-        let error = err.to_compile_error();
-        quote! {
-            #ast
-            #error
-        }
-    }).into()
+    output
+        .unwrap_or_else(|err| {
+            let error = err.to_compile_error();
+            quote! {
+                #ast
+                #error
+            }
+        })
+        .into()
 }
 
 /// Try to evaluate the expression given.
 fn fold_expr(expr: &syn::Expr) -> Option<u128> {
     use syn::Expr;
     match expr {
-        Expr::Lit(ref expr_lit) => {
-            match expr_lit.lit {
-                syn::Lit::Int(ref lit_int) => lit_int.base10_parse().ok(),
-                _ => None,
-            }
+        Expr::Lit(ref expr_lit) => match expr_lit.lit {
+            syn::Lit::Int(ref lit_int) => lit_int.base10_parse().ok(),
+            _ => None,
         },
         Expr::Binary(ref expr_binary) => {
             let l = fold_expr(&expr_binary.left)?;
             let r = fold_expr(&expr_binary.right)?;
             match &expr_binary.op {
-                syn::BinOp::Shl(_) => {
-                    u32::try_from(r).ok()
-                        .and_then(|r| l.checked_shl(r))
-                }
+                syn::BinOp::Shl(_) => u32::try_from(r).ok().and_then(|r| l.checked_shl(r)),
                 _ => None,
             }
         }
@@ -92,16 +92,20 @@ fn fold_expr(expr: &syn::Expr) -> Option<u128> {
     }
 }
 
-fn collect_flags<'a>(variants: impl Iterator<Item=&'a syn::Variant>)
-    -> Result<Vec<Flag>, syn::Error>
-{
+fn collect_flags<'a>(
+    variants: impl Iterator<Item = &'a syn::Variant>,
+) -> Result<Vec<Flag>, syn::Error> {
     variants
         .map(|variant| {
             // MSRV: Would this be cleaner with `matches!`?
             match variant.fields {
                 syn::Fields::Unit => (),
-                _ => return Err(syn::Error::new_spanned(&variant.fields,
-                    "Bitflag variants cannot contain additional data")),
+                _ => {
+                    return Err(syn::Error::new_spanned(
+                        &variant.fields,
+                        "Bitflag variants cannot contain additional data",
+                    ))
+                }
             }
 
             let value = if let Some(ref expr) = variant.discriminant {
@@ -125,29 +129,22 @@ fn collect_flags<'a>(variants: impl Iterator<Item=&'a syn::Variant>)
 
 /// Given a list of attributes, find the `repr`, if any, and return the integer
 /// type specified.
-fn extract_repr(attrs: &[syn::Attribute])
-    -> Result<Option<Ident>, syn::Error>
-{
+fn extract_repr(attrs: &[syn::Attribute]) -> Result<Option<Ident>, syn::Error> {
     use syn::{Meta, NestedMeta};
-    attrs.iter()
-        .find_map(|attr| {
-            match attr.parse_meta() {
-                Err(why) => {
-                    Some(Err(syn::Error::new_spanned(attr,
-                        format!("Couldn't parse attribute: {}", why))))
-                }
-                Ok(Meta::List(ref meta)) if meta.path.is_ident("repr") => {
-                    meta.nested.iter()
-                        .find_map(|mi| match mi {
-                            NestedMeta::Meta(Meta::Path(path)) => {
-                                path.get_ident().cloned()
-                                    .map(Ok)
-                            }
-                            _ => None
-                        })
-                }
-                Ok(_) => None
+    attrs
+        .iter()
+        .find_map(|attr| match attr.parse_meta() {
+            Err(why) => Some(Err(syn::Error::new_spanned(
+                attr,
+                format!("Couldn't parse attribute: {}", why),
+            ))),
+            Ok(Meta::List(ref meta)) if meta.path.is_ident("repr") => {
+                meta.nested.iter().find_map(|mi| match mi {
+                    NestedMeta::Meta(Meta::Path(path)) => path.get_ident().cloned().map(Ok),
+                    _ => None,
+                })
             }
+            Ok(_) => None,
         })
         .transpose()
 }
@@ -156,51 +153,64 @@ fn extract_repr(attrs: &[syn::Attribute])
 fn type_bits(ty: &Ident) -> Result<u8, syn::Error> {
     // This would be so much easier if we could just match on an Ident...
     if ty == "usize" {
-        Err(syn::Error::new_spanned(ty,
-            "#[repr(usize)] is not supported. Use u32 or u64 instead."))
-    }
-    else if ty == "i8" || ty == "i16" || ty == "i32"
-            || ty == "i64" || ty == "i128" || ty == "isize" {
-        Err(syn::Error::new_spanned(ty,
-            "Signed types in a repr are not supported."))
-    }
-    else if ty == "u8" { Ok(8) }
-    else if ty == "u16" { Ok(16) }
-    else if ty == "u32" { Ok(32) }
-    else if ty == "u64" { Ok(64) }
-    else if ty == "u128" { Ok(128) }
-    else {
-        Err(syn::Error::new_spanned(ty,
-            "repr must be an integer type for #[bitflags]."))
+        Err(syn::Error::new_spanned(
+            ty,
+            "#[repr(usize)] is not supported. Use u32 or u64 instead.",
+        ))
+    } else if ty == "i8"
+        || ty == "i16"
+        || ty == "i32"
+        || ty == "i64"
+        || ty == "i128"
+        || ty == "isize"
+    {
+        Err(syn::Error::new_spanned(
+            ty,
+            "Signed types in a repr are not supported.",
+        ))
+    } else if ty == "u8" {
+        Ok(8)
+    } else if ty == "u16" {
+        Ok(16)
+    } else if ty == "u32" {
+        Ok(32)
+    } else if ty == "u64" {
+        Ok(64)
+    } else if ty == "u128" {
+        Ok(128)
+    } else {
+        Err(syn::Error::new_spanned(
+            ty,
+            "repr must be an integer type for #[bitflags].",
+        ))
     }
 }
 
 /// Returns deferred checks
-fn check_flag(
-    type_name: &Ident,
-    flag: &Flag,
-) -> Result<Option<TokenStream>, syn::Error> {
+fn check_flag(type_name: &Ident, flag: &Flag) -> Result<Option<TokenStream>, syn::Error> {
     use FlagValue::*;
     match flag.value {
         Literal(n) => {
             if !n.is_power_of_two() {
-                Err(syn::Error::new(flag.span,
-                    "Flags must have exactly one set bit"))
+                Err(syn::Error::new(
+                    flag.span,
+                    "Flags must have exactly one set bit",
+                ))
             } else {
                 Ok(None)
             }
         }
-        Inferred => {
-            Err(syn::Error::new(flag.span,
-                "Please add an explicit discriminant"))
-        }
+        Inferred => Err(syn::Error::new(
+            flag.span,
+            "Please add an explicit discriminant",
+        )),
         Deferred => {
             let variant_name = &flag.name;
             // MSRV: Use an unnamed constant (`const _: ...`).
             let assertion_name = syn::Ident::new(
-                &format!("__enumflags_assertion_{}_{}",
-                        type_name, flag.name),
-                Span::call_site()); // call_site because def_site is unstable
+                &format!("__enumflags_assertion_{}_{}", type_name, flag.name),
+                Span::call_site(),
+            ); // call_site because def_site is unstable
 
             Ok(Some(quote_spanned!(flag.span =>
                 #[doc(hidden)]
@@ -217,21 +227,17 @@ fn check_flag(
     }
 }
 
-fn gen_enumflags(ast: &ItemEnum, default: Vec<Ident>)
-    -> Result<TokenStream, syn::Error>
-{
+fn gen_enumflags(ast: &ItemEnum, default: Vec<Ident>) -> Result<TokenStream, syn::Error> {
     let ident = &ast.ident;
 
     let span = Span::call_site();
     // for quote! interpolation
-    let variant_names =
-        ast.variants.iter()
-            .map(|v| &v.ident)
-            .collect::<Vec<_>>();
+    let variant_names = ast.variants.iter().map(|v| &v.ident).collect::<Vec<_>>();
     let repeated_name = vec![&ident; ast.variants.len()];
 
     let variants = collect_flags(ast.variants.iter())?;
-    let deferred = variants.iter()
+    let deferred = variants
+        .iter()
         .flat_map(|variant| check_flag(ident, variant).transpose())
         .collect::<Result<Vec<_>, _>>()?;
 
@@ -241,8 +247,10 @@ fn gen_enumflags(ast: &ItemEnum, default: Vec<Ident>)
     let bits = type_bits(&ty)?;
 
     if (bits as usize) < variants.len() {
-        return Err(syn::Error::new_spanned(&ty,
-                   format!("Not enough bits for {} flags", variants.len())));
+        return Err(syn::Error::new_spanned(
+            &ty,
+            format!("Not enough bits for {} flags", variants.len()),
+        ));
     }
 
     let std_path = quote_spanned!(span => ::enumflags2::_internal::core);
@@ -291,7 +299,7 @@ fn gen_enumflags(ast: &ItemEnum, default: Vec<Ident>)
 
                 const EMPTY: Self::Numeric = 0;
 
-                const DEFAULT: Self::Numeric = 
+                const DEFAULT: Self::Numeric =
                     0 #(| (#repeated_name::#default as #ty))*;
 
                 const ALL_BITS: Self::Numeric =

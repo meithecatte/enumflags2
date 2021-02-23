@@ -91,9 +91,9 @@
 #![warn(missing_docs)]
 #![cfg_attr(all(not(test), not(feature = "std")), no_std)]
 
-use core::{cmp, ops};
 use core::iter::FromIterator;
 use core::marker::PhantomData;
+use core::{cmp, ops};
 
 #[allow(unused_imports)]
 #[macro_use]
@@ -212,12 +212,12 @@ pub mod _internal {
         fn bits(self) -> Self::Numeric;
     }
 
-    use ::core::ops::{BitAnd, BitOr, BitXor, Not};
     use ::core::cmp::PartialOrd;
     use ::core::fmt;
+    use ::core::ops::{BitAnd, BitOr, BitXor, Not};
 
-    pub trait BitFlagNum
-        : Default
+    pub trait BitFlagNum:
+        Default
         + BitOr<Self, Output = Self>
         + BitAnd<Self, Output = Self>
         + BitXor<Self, Output = Self>
@@ -226,7 +226,8 @@ pub mod _internal {
         + fmt::Debug
         + fmt::Binary
         + Copy
-        + Clone {
+        + Clone
+    {
     }
 
     for_each_uint! { $ty $hide_docs =>
@@ -235,7 +236,7 @@ pub mod _internal {
 
     // Re-export libcore so the macro doesn't inject "extern crate" downstream.
     pub mod core {
-        pub use core::{convert, option, ops};
+        pub use core::{convert, ops, option};
     }
 
     pub struct AssertionSucceeded;
@@ -388,7 +389,10 @@ where
 {
     #[inline(always)]
     fn default() -> Self {
-        BitFlags { val: T::DEFAULT, marker: PhantomData }
+        BitFlags {
+            val: T::DEFAULT,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -443,7 +447,10 @@ where
     /// any flag.
     #[inline(always)]
     pub unsafe fn from_bits_unchecked(val: T::Numeric) -> Self {
-        BitFlags { val, marker: PhantomData }
+        BitFlags {
+            val,
+            marker: PhantomData,
+        }
     }
 
     /// Turn a `T` into a `BitFlags<T>`. Also available as `flag.into()`.
@@ -510,11 +517,17 @@ where
 
     /// An empty `BitFlags`. Equivalent to [`empty()`][BitFlags::empty],
     /// but works in a const context.
-    pub const EMPTY: Self = BitFlags { val: T::EMPTY, marker: PhantomData };
+    pub const EMPTY: Self = BitFlags {
+        val: T::EMPTY,
+        marker: PhantomData,
+    };
 
     /// A `BitFlags` with all flags set. Equivalent to [`all()`][BitFlags::all],
     /// but works in a const context.
-    pub const ALL: Self = BitFlags { val: T::ALL_BITS, marker: PhantomData };
+    pub const ALL: Self = BitFlags {
+        val: T::ALL_BITS,
+        marker: PhantomData,
+    };
 
     /// A [`ConstToken`] for this type of flag.
     pub const CONST_TOKEN: ConstToken<T, T::Numeric> = ConstToken(Self::ALL);
@@ -584,7 +597,10 @@ where
 
     /// Returns an iterator that yields each set flag
     pub fn iter(self) -> impl Iterator<Item = T> {
-        T::FLAG_LIST.iter().cloned().filter(move |&flag| self.contains(flag))
+        T::FLAG_LIST
+            .iter()
+            .cloned()
+            .filter(move |&flag| self.contains(flag))
     }
 }
 
@@ -822,24 +838,25 @@ where
 impl<T, B> FromIterator<B> for BitFlags<T>
 where
     T: BitFlag,
-    B: Into<BitFlags<T>>
+    B: Into<BitFlags<T>>,
 {
     fn from_iter<I>(it: I) -> BitFlags<T>
     where
-        I: IntoIterator<Item = B>
+        I: IntoIterator<Item = B>,
     {
-        it.into_iter().fold(BitFlags::empty(), |acc, flag| acc | flag)
+        it.into_iter()
+            .fold(BitFlags::empty(), |acc, flag| acc | flag)
     }
 }
 
 impl<T, B> Extend<B> for BitFlags<T>
 where
     T: BitFlag,
-    B: Into<BitFlags<T>>
+    B: Into<BitFlags<T>>,
 {
     fn extend<I>(&mut self, it: I)
     where
-        I: IntoIterator<Item = B>
+        I: IntoIterator<Item = B>,
     {
         *self = it.into_iter().fold(*self, |acc, flag| acc | flag)
     }
@@ -847,9 +864,9 @@ where
 
 #[cfg(feature = "serde")]
 mod impl_serde {
-    use serde::{Serialize, Deserialize};
+    use super::{BitFlag, BitFlags};
     use serde::de::{Error, Unexpected};
-    use super::{BitFlags, BitFlag};
+    use serde::{Deserialize, Serialize};
 
     impl<'a, T> Deserialize<'a> for BitFlags<T>
     where
@@ -858,11 +875,12 @@ mod impl_serde {
     {
         fn deserialize<D: serde::Deserializer<'a>>(d: D) -> Result<Self, D::Error> {
             let val = T::Numeric::deserialize(d)?;
-            Self::from_bits(val)
-                .map_err(|_| D::Error::invalid_value(
+            Self::from_bits(val).map_err(|_| {
+                D::Error::invalid_value(
                     Unexpected::Unsigned(val.into()),
-                    &"valid bit representation"
-                ))
+                    &"valid bit representation",
+                )
+            })
         }
     }
 
