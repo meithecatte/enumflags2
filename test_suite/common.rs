@@ -71,8 +71,7 @@ fn test_foo() {
     }
     assert_eq!((Test::A ^ Test::B), Test::A | Test::B);
 
-    // TODO add after it being implemented
-    //assert_eq!(BitFlags::<Default6>::default(), Default6::B | Default6::C);
+    assert_eq!(BitFlags::<Default6>::default(), Default6::B | Default6::C);
 }
 
 #[test]

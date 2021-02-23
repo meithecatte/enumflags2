@@ -174,6 +174,9 @@ pub mod _internal {
         /// A value with no bits set.
         const EMPTY: Self::Numeric;
 
+        /// A value with no bits set.
+        const DEFAULT: Self::Numeric;
+
         /// A value with all flag bits set.
         const ALL_BITS: Self::Numeric;
 
@@ -364,7 +367,7 @@ where
 {
     #[inline(always)]
     fn default() -> Self {
-        Self::empty()
+        BitFlags { val: T::DEFAULT, marker: PhantomData }
     }
 }
 
