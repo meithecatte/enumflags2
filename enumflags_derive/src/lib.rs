@@ -25,7 +25,7 @@ pub fn bitflags_internal(
     attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let defaults = if attr.is_empty() { None } else {parse_defaults(attr)};
+    let defaults = if attr.is_empty() { vec![] } else {parse_defaults(attr)};
     let ast = parse_macro_input!(input as Item);
     let output = match ast {
         Item::Enum(ref item_enum) => gen_enumflags(item_enum, defaults),
@@ -42,7 +42,7 @@ pub fn bitflags_internal(
     }).into()
 }
 
-fn parse_defaults(attr: proc_macro::TokenStream) -> Option<Vec<proc_macro::Ident>> {
+fn parse_defaults(attr: proc_macro::TokenStream) -> Vec<proc_macro::Ident> {
     let mut attr = attr.into_iter();
     // this unwrap is fine, because it must contains at least one element, because it is not empty
     let default = attr.next().unwrap();
@@ -94,7 +94,7 @@ fn parse_defaults(attr: proc_macro::TokenStream) -> Option<Vec<proc_macro::Ident
                 panic!("default must be followed by '=' \
                 and at least one variant separated by '|'");
             }
-            Some(defaults)
+            defaults
         },
         _ => {
             panic!("only default parameter allowed right now");
@@ -252,7 +252,7 @@ fn check_flag(
     }
 }
 
-fn gen_enumflags(ast: &ItemEnum, defaults: Option<Vec<proc_macro::Ident>>)
+fn gen_enumflags(ast: &ItemEnum, defaults: Vec<proc_macro::Ident>)
     -> Result<TokenStream, syn::Error>
 {
     let ident = &ast.ident;
@@ -282,31 +282,25 @@ fn gen_enumflags(ast: &ItemEnum, defaults: Option<Vec<proc_macro::Ident>>)
 
     let std_path = quote_spanned!(span => ::enumflags2::_internal::core);
 
-    let default = match defaults {
-        None => 0,
-        Some(defaults) => {
-            let mut default = 0u128;
-            for d in defaults {
-                match ast.variants
-                    .iter()
-                    .find(|v| v.ident.to_string() == d.to_string()) {
-                    None => panic!("{:?} is not valid varian of {:?}", d, ast.ident),
-                    Some(v) => {
-                        if let Some(ref expr) = v.discriminant {
-                            if let Some(n) = fold_expr(&expr.1) {
-                                default |= n
-                            } else {
-                                unimplemented!("Deferred flag value not yet supported as default");
-                            }
-                        } else {
-                            unimplemented!("Inferred flag value not yet supported as default");
-                        }
+    let mut default = 0u128;
+    for d in defaults {
+        match ast.variants
+            .iter()
+            .find(|v| v.ident == d.to_string()) {
+            None => panic!("{:?} is not valid varian of {:?}", d, ast.ident),
+            Some(v) => {
+                if let Some(ref expr) = v.discriminant {
+                    if let Some(n) = fold_expr(&expr.1) {
+                        default |= n
+                    } else {
+                        unimplemented!("Deferred flag value not yet supported as default");
                     }
+                } else {
+                    unimplemented!("Inferred flag value not yet supported as default");
                 }
             }
-            default
         }
-    };
+    }
     Ok(quote_spanned! {
         span =>
             #ast
