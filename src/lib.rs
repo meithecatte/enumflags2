@@ -701,6 +701,7 @@ impl<T, N: PartialEq> cmp::PartialEq for BitFlags<T, N> {
     }
 }
 
+// Clippy complains when Hash is derived while PartialEq is implemented manually
 impl<T, N: core::hash::Hash> core::hash::Hash for BitFlags<T, N> {
     #[inline(always)]
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
