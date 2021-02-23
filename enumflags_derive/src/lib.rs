@@ -4,7 +4,7 @@ extern crate proc_macro;
 extern crate quote;
 
 use std::convert::TryFrom;
-use syn::{Ident, Item, ItemEnum, spanned::Spanned, parse_macro_input};
+use syn::{Token, Ident, Item, ItemEnum, spanned::Spanned, parse_macro_input, parse::{Parse, ParseStream}};
 use proc_macro2::{TokenStream, Span};
 
 struct Flag {
@@ -19,14 +19,41 @@ enum FlagValue {
     Inferred,
 }
 
+struct Parameters {
+    default: Vec<Ident>,
+}
+
+impl Parse for Parameters {
+    fn parse(input: ParseStream) -> syn::parse::Result<Self> {
+        if input.is_empty() {
+            return Ok(Parameters {
+                default: vec![],
+            });
+        }
+
+        input.parse::<Token![default]>()?;
+        input.parse::<Token![=]>()?;
+        let mut default = vec![input.parse()?];
+        while !input.is_empty() {
+            input.parse::<Token![|]>()?;
+            default.push(input.parse()?);
+        }
+
+        Ok(Parameters {
+            default
+        })
+    }
+}
+
 #[proc_macro_attribute]
 pub fn bitflags_internal(
-    _attr: proc_macro::TokenStream,
+    attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
+    let Parameters { default } = parse_macro_input!(attr as Parameters);
     let ast = parse_macro_input!(input as Item);
     let output = match ast {
-        Item::Enum(ref item_enum) => gen_enumflags(item_enum),
+        Item::Enum(ref item_enum) => gen_enumflags(item_enum, default),
         _ => Err(syn::Error::new_spanned(&ast,
                 "#[bitflags] requires an enum")),
     };
@@ -190,7 +217,7 @@ fn check_flag(
     }
 }
 
-fn gen_enumflags(ast: &ItemEnum)
+fn gen_enumflags(ast: &ItemEnum, default: Vec<Ident>)
     -> Result<TokenStream, syn::Error>
 {
     let ident = &ast.ident;
@@ -263,6 +290,9 @@ fn gen_enumflags(ast: &ItemEnum)
                 type Numeric = #ty;
 
                 const EMPTY: Self::Numeric = 0;
+
+                const DEFAULT: Self::Numeric = 
+                    0 #(| (#repeated_name::#default as #ty))*;
 
                 const ALL_BITS: Self::Numeric =
                     0 #(| (#repeated_name::#variant_names as #ty))*;
