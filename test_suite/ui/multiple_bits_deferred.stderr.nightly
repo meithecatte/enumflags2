@@ -1,5 +1,0 @@
-error[E0277]: the trait bound `AssertionFailed: ExactlyOneBitSet` is not satisfied
- --> $DIR/multiple_bits_deferred.rs:7:5
-  |
-7 |     Three = THREE,
-  |     ^^^^^^^^^^^^^ the trait `ExactlyOneBitSet` is not implemented for `AssertionFailed`
