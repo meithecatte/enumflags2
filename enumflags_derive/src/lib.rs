@@ -226,9 +226,7 @@ fn check_flag(type_name: &Ident, flag: &Flag, bits: u8) -> Result<Option<TokenSt
                 #[doc(hidden)]
                 const #assertion_name:
                     <<[(); (
-                        (#type_name::#variant_name as u128).wrapping_sub(1) &
-                        (#type_name::#variant_name as u128) == 0 &&
-                        (#type_name::#variant_name as u128) != 0
+                        (#type_name::#variant_name as u128).is_power_of_two()
                     ) as usize] as enumflags2::_internal::AssertionHelper>
                         ::Status as enumflags2::_internal::ExactlyOneBitSet>::X
                     = ();
