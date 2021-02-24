@@ -13,7 +13,7 @@
 //! enum Test {
 //!     A = 0b0001,
 //!     B = 0b0010,
-//!     C = 0b0100,
+//!     C, // unspecified variants pick unused bits automatically
 //!     D = 0b1000,
 //! }
 //!
@@ -258,6 +258,11 @@ pub mod _internal {
 
     impl AssertionHelper for [(); 0] {
         type Status = AssertionFailed;
+    }
+
+    pub const fn next_bit(x: u128) -> u128 {
+        // trailing_ones is beyond our MSRV
+        1 << (!x).trailing_zeros()
     }
 }
 

@@ -20,6 +20,7 @@ enumflags2 = "^0.6"
 ## Features
 
 - [x] Uses enums to represent individual flags&mdash;a set of flags is a separate type from a single flag.
+- [x] Automatically chooses a free bit when you don't specify.
 - [x] Detects incorrect BitFlags at compile time.
 - [x] Has a similar API compared to the popular [bitflags](https://crates.io/crates/bitflags) crate.
 - [x] Does not expose the generated types explicity. The user interacts exclusively with `struct BitFlags<Enum>;`.
@@ -37,7 +38,7 @@ use enumflags2::{bitflags, make_bitflags, BitFlags};
 enum Test {
     A = 0b0001,
     B = 0b0010,
-    C = 0b0100,
+    C, // unspecified variants pick unused bits automatically
     D = 0b1000,
 }
 

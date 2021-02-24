@@ -1,5 +1,0 @@
-error: Please add an explicit discriminant
- --> $DIR/missing_disciminant.rs:5:5
-  |
-5 |     OhNoTheresNoDiscriminant,
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^

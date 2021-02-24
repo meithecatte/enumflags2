@@ -19,7 +19,7 @@ enum Test1 {
     E = 1 << 34,
 }
 
-#[enumflags2::bitflags(default = B | C)]
+#[bitflags(default = B | C)]
 #[derive(Copy, Clone, Debug)]
 #[repr(u8)]
 enum Default6 {
@@ -128,4 +128,35 @@ fn module() {
             D = 1 << 3,
         }
     }
+}
+
+#[test]
+fn inferred_values() {
+    #[bitflags]
+    #[derive(Copy, Clone, Debug)]
+    #[repr(u8)]
+    enum Inferred {
+        Infer2,
+        SpecifiedA = 1,
+        Infer8,
+        SpecifiedB = 4,
+    }
+
+    assert_eq!(Inferred::Infer2 as u8, 2);
+    assert_eq!(Inferred::Infer8 as u8, 8);
+
+    #[bitflags]
+    #[derive(Copy, Clone, Debug)]
+    #[repr(u8)]
+    enum OnlyInferred {
+        Infer1,
+        Infer2,
+        Infer4,
+        Infer8,
+    }
+
+    assert_eq!(OnlyInferred::Infer1 as u8, 1);
+    assert_eq!(OnlyInferred::Infer2 as u8, 2);
+    assert_eq!(OnlyInferred::Infer4 as u8, 4);
+    assert_eq!(OnlyInferred::Infer8 as u8, 8);
 }
