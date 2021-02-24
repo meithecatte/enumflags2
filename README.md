@@ -9,14 +9,6 @@
 with `#[bitflags]`, and `BitFlags<YourEnum>` will be able to hold arbitrary combinations
 of your enum within the space of a single integer.
 
-## Usage
-
-In your `Cargo.toml`:
-```Toml
-[dependencies]
-enumflags2 = "^0.6"
-```
-
 ## Features
 
 - [x] Uses enums to represent individual flags&mdash;a set of flags is a separate type from a single flag.
