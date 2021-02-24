@@ -25,6 +25,8 @@ enum FlagValue<'a> {
 }
 
 impl FlagValue<'_> {
+    // matches! is beyond our MSRV
+    #[allow(clippy::match_like_matches_macro)]
     fn is_inferred(&self) -> bool {
         match self {
             FlagValue::Inferred(_) => true,
@@ -148,18 +150,15 @@ fn inferred_value(type_name: &Ident, previous_variants: &[Ident], repr: &Ident) 
     syn::parse2(tokens).expect("couldn't parse inferred value")
 }
 
-fn infer_values<'a>(flags: &mut [Flag], type_name: &Ident, repr: &Ident) {
+fn infer_values(flags: &mut [Flag], type_name: &Ident, repr: &Ident) {
     let mut previous_variants: Vec<Ident> = flags.iter()
         .filter(|flag| !flag.value.is_inferred())
         .map(|flag| flag.name.clone()).collect();
 
     for flag in flags {
-        match flag.value {
-            FlagValue::Inferred(ref mut variant) => {
-                variant.discriminant = Some((<Token![=]>::default(), inferred_value(type_name, &previous_variants, repr)));
-                previous_variants.push(flag.name.clone());
-            }
-            _ => {}
+        if let FlagValue::Inferred(ref mut variant) = flag.value {
+            variant.discriminant = Some((<Token![=]>::default(), inferred_value(type_name, &previous_variants, repr)));
+            previous_variants.push(flag.name.clone());
         }
     }
 }
