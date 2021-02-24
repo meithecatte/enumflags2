@@ -12,12 +12,14 @@ use syn::{
     Ident, Item, ItemEnum, Token,
 };
 
+#[derive(Debug)]
 struct Flag {
     name: Ident,
     span: Span,
     value: FlagValue,
 }
 
+#[derive(Debug)]
 enum FlagValue {
     Literal(u128),
     Deferred,
@@ -87,6 +89,9 @@ fn fold_expr(expr: &syn::Expr) -> Option<u128> {
                 syn::BinOp::Shl(_) => u32::try_from(r).ok().and_then(|r| l.checked_shl(r)),
                 _ => None,
             }
+        }
+        Expr::Paren(syn::ExprParen { expr, .. }) | Expr::Group(syn::ExprGroup { expr, .. }) => {
+            fold_expr(&expr)
         }
         _ => None,
     }
@@ -187,7 +192,7 @@ fn type_bits(ty: &Ident) -> Result<u8, syn::Error> {
 }
 
 /// Returns deferred checks
-fn check_flag(type_name: &Ident, flag: &Flag) -> Result<Option<TokenStream>, syn::Error> {
+fn check_flag(type_name: &Ident, flag: &Flag, bits: u8) -> Result<Option<TokenStream>, syn::Error> {
     use FlagValue::*;
     match flag.value {
         Literal(n) => {
@@ -195,6 +200,11 @@ fn check_flag(type_name: &Ident, flag: &Flag) -> Result<Option<TokenStream>, syn
                 Err(syn::Error::new(
                     flag.span,
                     "Flags must have exactly one set bit",
+                ))
+            } else if bits < 128 && n >= 1 << bits {
+                Err(syn::Error::new(
+                    flag.span,
+                    format!("Flag value out of range for u{}", bits),
                 ))
             } else {
                 Ok(None)
@@ -235,16 +245,16 @@ fn gen_enumflags(ast: &ItemEnum, default: Vec<Ident>) -> Result<TokenStream, syn
     let variant_names = ast.variants.iter().map(|v| &v.ident).collect::<Vec<_>>();
     let repeated_name = vec![&ident; ast.variants.len()];
 
-    let variants = collect_flags(ast.variants.iter())?;
-    let deferred = variants
-        .iter()
-        .flat_map(|variant| check_flag(ident, variant).transpose())
-        .collect::<Result<Vec<_>, _>>()?;
-
     let ty = extract_repr(&ast.attrs)?
         .ok_or_else(|| syn::Error::new_spanned(&ident,
                         "repr attribute missing. Add #[repr(u64)] or a similar attribute to specify the size of the bitfield."))?;
     let bits = type_bits(&ty)?;
+
+    let variants = collect_flags(ast.variants.iter())?;
+    let deferred = variants
+        .iter()
+        .flat_map(|variant| check_flag(ident, variant, bits).transpose())
+        .collect::<Result<Vec<_>, _>>()?;
 
     if (bits as usize) < variants.len() {
         return Err(syn::Error::new_spanned(

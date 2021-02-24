@@ -1,5 +1,5 @@
 error: Please add an explicit discriminant
- --> $DIR/missing_disciminant.rs:4:5
+ --> $DIR/missing_disciminant.rs:5:5
   |
-4 |     OhNoTheresNoDiscriminant,
+5 |     OhNoTheresNoDiscriminant,
   |     ^^^^^^^^^^^^^^^^^^^^^^^^
