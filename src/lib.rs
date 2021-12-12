@@ -601,7 +601,7 @@ where
     }
 
     /// Returns an iterator that yields each set flag
-    pub fn iter(self) -> impl Iterator<Item = T> {
+    pub fn iter(self) -> impl Iterator<Item = T> + Clone {
         T::FLAG_LIST
             .iter()
             .cloned()
