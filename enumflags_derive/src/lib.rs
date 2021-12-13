@@ -99,7 +99,7 @@ fn fold_expr(expr: &syn::Expr) -> Option<u128> {
             }
         }
         Expr::Paren(syn::ExprParen { expr, .. }) | Expr::Group(syn::ExprGroup { expr, .. }) => {
-            fold_expr(&expr)
+            fold_expr(expr)
         }
         _ => None,
     }
