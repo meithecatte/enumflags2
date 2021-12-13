@@ -87,6 +87,9 @@ fn iterator() {
 
     for &(bitflag, expected) in tests {
         assert!(bitflag.iter().zip(expected.iter().cloned()).all(|(a, b)| a == b));
+        // If cloned, the iterator will yield the same elements.
+        let it = bitflag.iter();
+        assert!(it.clone().zip(it).all(|(a, b)| a == b));
     }
 }
 
