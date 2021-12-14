@@ -9,6 +9,7 @@ readme = "README.md"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
 documentation = "https://docs.rs/enumflags2"
 edition = "2018"
+rust-version = "1.41.1"
 
 [dependencies.enumflags2_derive]
 version = "=0.7.0"

@@ -7,6 +7,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/NieDzejkob/enumflags2"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
 edition = "2018"
+rust-version = "1.41.1"
 
 [lib]
 proc-macro = true
