@@ -389,7 +389,7 @@ macro_rules! make_bitflags {
 }
 
 /// The default value returned is one with all flags unset, i. e. [`empty`][Self::empty],
-/// unless customized.
+/// unless [customized](index.html#customizing-default).
 impl<T> Default for BitFlags<T>
 where
     T: BitFlag,
