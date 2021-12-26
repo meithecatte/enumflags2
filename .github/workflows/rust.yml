@@ -33,4 +33,4 @@ jobs:
         toolchain: nightly
         override: true
         components: clippy
-    - run: cargo clippy -- -D warnings
+    - run: cargo clippy --all --all-targets -- -D warnings

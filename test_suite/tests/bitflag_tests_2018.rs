@@ -1,3 +1,8 @@
-use enumflags2::bitflags;
+// "an inner attribute is not permitted in this context" :/
+#[deny(clippy::all, clippy::pedantic, clippy::nursery)]
+mod everything {
 
-include!("../common.rs");
+    use enumflags2::bitflags;
+
+    include!("../common.rs");
+}

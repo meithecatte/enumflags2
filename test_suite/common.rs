@@ -86,7 +86,7 @@ fn iterator() {
     ];
 
     for &(bitflag, expected) in tests {
-        assert!(bitflag.iter().zip(expected.iter().cloned()).all(|(a, b)| a == b));
+        assert!(bitflag.iter().zip(expected.iter().copied()).all(|(a, b)| a == b));
         // If cloned, the iterator will yield the same elements.
         let it = bitflag.iter();
         assert!(it.clone().zip(it).all(|(a, b)| a == b));
@@ -109,7 +109,7 @@ fn assign_ops() {
 }
 
 #[test]
-fn fn_derive() {
+const fn fn_derive() {
     #[bitflags]
     #[derive(Copy, Clone, Debug)]
     #[repr(u8)]
@@ -119,7 +119,7 @@ fn fn_derive() {
 }
 
 #[test]
-fn module() {
+const fn module() {
     mod some_modules {
         #[enumflags2::bitflags]
         #[derive(Copy, Clone, Debug)]
@@ -145,9 +145,6 @@ fn inferred_values() {
         SpecifiedB = 4,
     }
 
-    assert_eq!(Inferred::Infer2 as u8, 2);
-    assert_eq!(Inferred::Infer8 as u8, 8);
-
     #[bitflags]
     #[derive(Copy, Clone, Debug)]
     #[repr(u8)]
@@ -157,6 +154,9 @@ fn inferred_values() {
         Infer4,
         Infer8,
     }
+
+    assert_eq!(Inferred::Infer2 as u8, 2);
+    assert_eq!(Inferred::Infer8 as u8, 8);
 
     assert_eq!(OnlyInferred::Infer1 as u8, 1);
     assert_eq!(OnlyInferred::Infer2 as u8, 2);
