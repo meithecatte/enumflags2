@@ -349,8 +349,8 @@ pub use crate::fallible::FromBitsError;
 /// ```
 ///
 /// The types substituted for `T` and `N` must always match, creating a
-/// `BitFlags` value where that isn't the case is considered to be impossible
-/// without unsafe code.
+/// `BitFlags` value where that isn't the case is only possible with
+/// incorrect unsafe code.
 #[derive(Copy, Clone, Eq)]
 #[repr(transparent)]
 pub struct BitFlags<T, N = <T as _internal::RawBitFlags>::Numeric> {
