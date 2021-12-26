@@ -295,14 +295,13 @@ fn gen_enumflags(ast: &mut ItemEnum, default: Vec<Ident>) -> Result<TokenStream,
 
     let std_path = quote_spanned!(span => ::enumflags2::_internal::core);
     let variant_names = ast.variants.iter().map(|v| &v.ident).collect::<Vec<_>>();
-    let repeated_name = vec![&ident; ast.variants.len()];
 
     Ok(quote_spanned! {
         span =>
             #ast
             #(#deferred)*
             impl #std_path::ops::Not for #ident {
-                type Output = ::enumflags2::BitFlags<#ident>;
+                type Output = ::enumflags2::BitFlags<Self>;
                 #[inline(always)]
                 fn not(self) -> Self::Output {
                     use ::enumflags2::{BitFlags, _internal::RawBitFlags};
@@ -311,7 +310,7 @@ fn gen_enumflags(ast: &mut ItemEnum, default: Vec<Ident>) -> Result<TokenStream,
             }
 
             impl #std_path::ops::BitOr for #ident {
-                type Output = ::enumflags2::BitFlags<#ident>;
+                type Output = ::enumflags2::BitFlags<Self>;
                 #[inline(always)]
                 fn bitor(self, other: Self) -> Self::Output {
                     use ::enumflags2::{BitFlags, _internal::RawBitFlags};
@@ -320,7 +319,7 @@ fn gen_enumflags(ast: &mut ItemEnum, default: Vec<Ident>) -> Result<TokenStream,
             }
 
             impl #std_path::ops::BitAnd for #ident {
-                type Output = ::enumflags2::BitFlags<#ident>;
+                type Output = ::enumflags2::BitFlags<Self>;
                 #[inline(always)]
                 fn bitand(self, other: Self) -> Self::Output {
                     use ::enumflags2::{BitFlags, _internal::RawBitFlags};
@@ -329,7 +328,7 @@ fn gen_enumflags(ast: &mut ItemEnum, default: Vec<Ident>) -> Result<TokenStream,
             }
 
             impl #std_path::ops::BitXor for #ident {
-                type Output = ::enumflags2::BitFlags<#ident>;
+                type Output = ::enumflags2::BitFlags<Self>;
                 #[inline(always)]
                 fn bitxor(self, other: Self) -> Self::Output {
                     #std_path::convert::Into::<Self::Output>::into(self) ^ #std_path::convert::Into::<Self::Output>::into(other)
@@ -342,13 +341,13 @@ fn gen_enumflags(ast: &mut ItemEnum, default: Vec<Ident>) -> Result<TokenStream,
                 const EMPTY: Self::Numeric = 0;
 
                 const DEFAULT: Self::Numeric =
-                    0 #(| (#repeated_name::#default as #repr))*;
+                    0 #(| (Self::#default as #repr))*;
 
                 const ALL_BITS: Self::Numeric =
-                    0 #(| (#repeated_name::#variant_names as #repr))*;
+                    0 #(| (Self::#variant_names as #repr))*;
 
                 const FLAG_LIST: &'static [Self] =
-                    &[#(#repeated_name::#variant_names),*];
+                    &[#(Self::#variant_names),*];
 
                 const BITFLAGS_TYPE_NAME : &'static str =
                     concat!("BitFlags<", stringify!(#ident), ">");
