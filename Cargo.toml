@@ -1,6 +1,6 @@
 [package]
 name = "enumflags2"
-version = "0.7.2"
+version = "0.7.3"
 authors = ["maik klein <maikklein@googlemail.com>", "Jakub \"NieDżejkob\" Kądziołka <kuba@kadziolka.net>"]
 description = "Enum-based bit flags"
 license = "MIT OR Apache-2.0"
@@ -12,7 +12,7 @@ edition = "2018"
 rust-version = "1.41.1"
 
 [dependencies.enumflags2_derive]
-version = "=0.7.2"
+version = "=0.7.3"
 path = "enumflags_derive"
 
 [dependencies.serde]
