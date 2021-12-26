@@ -146,6 +146,7 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     /// assert_eq!(empty.contains(MyFlag::Two), false);
     /// assert_eq!(empty.contains(MyFlag::Three), false);
     /// ```
+    #[inline]
     fn empty() -> BitFlags<Self> {
         BitFlags::empty()
     }
@@ -174,6 +175,7 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     /// assert_eq!(empty.contains(MyFlag::Two), true);
     /// assert_eq!(empty.contains(MyFlag::Three), true);
     /// ```
+    #[inline]
     fn all() -> BitFlags<Self> {
         BitFlags::all()
     }
@@ -421,6 +423,7 @@ where
 {
     /// Returns a `BitFlags<T>` if the raw value provided does not contain
     /// any illegal flags.
+    #[inline]
     pub fn from_bits(bits: T::Numeric) -> Result<Self, FromBitsError<T>> {
         let flags = Self::from_bits_truncate(bits);
         if flags.bits() == bits {
@@ -435,6 +438,7 @@ where
 
     /// Create a `BitFlags<T>` from an underlying bitwise value. If any
     /// invalid bits are set, ignore them.
+    #[must_use]
     #[inline(always)]
     pub fn from_bits_truncate(bits: T::Numeric) -> Self {
         unsafe { BitFlags::from_bits_unchecked(bits & T::ALL_BITS) }
@@ -450,6 +454,7 @@ where
     ///
     /// The argument must not have set bits at positions not corresponding to
     /// any flag.
+    #[must_use]
     #[inline(always)]
     pub unsafe fn from_bits_unchecked(val: T::Numeric) -> Self {
         BitFlags {
@@ -459,6 +464,7 @@ where
     }
 
     /// Turn a `T` into a `BitFlags<T>`. Also available as `flag.into()`.
+    #[must_use]
     #[inline(always)]
     pub fn from_flag(flag: T) -> Self {
         unsafe { Self::from_bits_unchecked(flag.bits()) }
@@ -601,6 +607,7 @@ where
     }
 
     /// Returns an iterator that yields each set flag
+    #[inline]
     pub fn iter(self) -> impl Iterator<Item = T> + Clone {
         T::FLAG_LIST
             .iter()
@@ -624,6 +631,7 @@ for_each_uint! { $ty $hide_docs =>
         ///
         /// The argument must not have set bits at positions not corresponding to
         /// any flag.
+        #[must_use]
         #[inline(always)]
         $(#[$hide_docs])?
         pub const unsafe fn from_bits_unchecked_c(
@@ -654,6 +662,7 @@ for_each_uint! { $ty $hide_docs =>
         ///     BitFlags::<MyFlag>::from_bits_truncate_c(0b10101010, BitFlags::CONST_TOKEN);
         /// assert_eq!(FLAGS, MyFlag::Two);
         /// ```
+        #[must_use]
         #[inline(always)]
         $(#[$hide_docs])?
         pub const fn from_bits_truncate_c(
@@ -716,6 +725,7 @@ for_each_uint! { $ty $hide_docs =>
         /// const NEGATED: BitFlags<MyFlag> = FLAGS.not_c(BitFlags::CONST_TOKEN);
         /// assert_eq!(NEGATED, MyFlag::Three);
         /// ```
+        #[must_use]
         #[inline(always)]
         $(#[$hide_docs])?
         pub const fn not_c(self, const_token: ConstToken<T, $ty>) -> Self {
@@ -845,6 +855,7 @@ where
     T: BitFlag,
     B: Into<BitFlags<T>>,
 {
+    #[inline]
     fn from_iter<I>(it: I) -> BitFlags<T>
     where
         I: IntoIterator<Item = B>,
@@ -859,6 +870,7 @@ where
     T: BitFlag,
     B: Into<BitFlags<T>>,
 {
+    #[inline]
     fn extend<I>(&mut self, it: I)
     where
         I: IntoIterator<Item = B>,
