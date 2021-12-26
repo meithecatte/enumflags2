@@ -23,14 +23,6 @@ optional = true
 [features]
 std = []
 
-[dev-dependencies]
-criterion = "0.3"
-
-[[bench]]
-name = "from_iterator"
-harness = false
-path = "benches/from_iterator.rs"
-
 [workspace]
 members = [
     "enumflags_derive",
