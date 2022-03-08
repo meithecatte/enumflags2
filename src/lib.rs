@@ -230,10 +230,16 @@ pub mod _internal {
         + Copy
         + Clone
     {
+        #[doc(hidden)]
+        fn is_power_of_two(self) -> bool;
     }
 
     for_each_uint! { $ty $hide_docs =>
-        impl BitFlagNum for $ty {}
+        impl BitFlagNum for $ty {
+            fn is_power_of_two(self) -> bool {
+                <$ty>::is_power_of_two(self)
+            }
+        }
     }
 
     // Re-export libcore so the macro doesn't inject "extern crate" downstream.
@@ -267,6 +273,8 @@ pub mod _internal {
         1 << (!x).trailing_zeros()
     }
 }
+
+use _internal::BitFlagNum;
 
 // Internal debug formatting implementations
 mod formatting;
@@ -553,6 +561,16 @@ where
     #[inline(always)]
     pub fn is_empty(self) -> bool {
         self.val == T::EMPTY
+    }
+
+    /// Returns the flag that is set if there is exactly one.
+    #[inline(always)]
+    pub fn to_flag(self) -> Option<T> {
+        if self.val.is_power_of_two() {
+            Some(unsafe { core::mem::transmute_copy(&self.val) })
+        } else {
+            None
+        }
     }
 
     /// Returns the underlying bitwise value.
