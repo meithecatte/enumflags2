@@ -91,7 +91,7 @@
 #![warn(missing_docs)]
 #![cfg_attr(all(not(test), not(feature = "std")), no_std)]
 
-use core::iter::FromIterator;
+use core::iter::{FromIterator, FusedIterator};
 use core::marker::PhantomData;
 use core::{cmp, ops};
 
@@ -232,12 +232,17 @@ pub mod _internal {
     {
         #[doc(hidden)]
         fn is_power_of_two(self) -> bool;
+        #[doc(hidden)]
+        fn count_ones(self) -> u32;
     }
 
     for_each_uint! { $ty $hide_docs =>
         impl BitFlagNum for $ty {
             fn is_power_of_two(self) -> bool {
                 <$ty>::is_power_of_two(self)
+            }
+            fn count_ones(self) -> u32 {
+                <$ty>::count_ones(self)
             }
         }
     }
@@ -563,6 +568,12 @@ where
         self.val == T::EMPTY
     }
 
+    /// Returns the number of flags set.
+    #[inline(always)]
+    pub fn len(self) -> usize {
+        self.val.count_ones() as usize
+    }
+
     /// Returns the flag that is set if there is exactly one.
     #[inline(always)]
     pub fn to_flag(self) -> Option<T> {
@@ -626,13 +637,64 @@ where
 
     /// Returns an iterator that yields each set flag
     #[inline]
-    pub fn iter(self) -> impl Iterator<Item = T> + Clone {
-        T::FLAG_LIST
-            .iter()
-            .cloned()
-            .filter(move |&flag| self.contains(flag))
+    pub fn iter(self) -> Iter<T> {
+        Iter {
+            rest: self,
+            it: T::FLAG_LIST.iter(),
+        }
     }
 }
+
+impl<T: BitFlag> IntoIterator for BitFlags<T> {
+    type IntoIter = Iter<T>;
+    type Item = T;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+/// Iterator that yields each set flag.
+#[derive(Clone, Debug)]
+pub struct Iter<T: BitFlag> {
+    rest: BitFlags<T>,
+    it: core::slice::Iter<'static, T>,
+}
+
+impl<T> Iterator for Iter<T>
+where
+    T: BitFlag,
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        for &flag in &mut self.it {
+            let yes = self.rest.contains(flag);
+            self.rest.remove(flag);
+            if yes {
+                return Some(flag);
+            }
+        }
+
+        None
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let l = self.rest.len();
+        (l, Some(l))
+    }
+}
+
+impl<T> ExactSizeIterator for Iter<T>
+where
+    T: BitFlag,
+{
+    fn len(&self) -> usize {
+        self.rest.len()
+    }
+}
+
+impl<T: BitFlag> FusedIterator for Iter<T> {}
 
 for_each_uint! { $ty $hide_docs =>
     impl<T> BitFlags<T, $ty> {

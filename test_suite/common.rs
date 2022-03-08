@@ -90,6 +90,14 @@ fn test_to_flag() {
 }
 
 #[test]
+fn test_len() {
+    use enumflags2::BitFlags;
+    assert_eq!(BitFlags::<Test>::empty().len(), 0);
+    assert_eq!(BitFlags::<Test>::all().len(), 4);
+    assert_eq!((Test::A | Test::D).len(), 2);
+}
+
+#[test]
 fn iterator() {
     use enumflags2::BitFlags;
 
@@ -105,6 +113,14 @@ fn iterator() {
         // If cloned, the iterator will yield the same elements.
         let it = bitflag.iter();
         assert!(it.clone().zip(it).all(|(a, b)| a == b));
+        // The ExactLenIterator implementation should always yield the
+        // correct remaining length.
+        let mut it = bitflag.iter();
+        for rest in (0..=expected.len()).rev() {
+            assert_eq!(it.len(), rest);
+            assert_eq!(it.size_hint(), (rest, Some(rest)));
+            it.next();
+        }
     }
 }
 
