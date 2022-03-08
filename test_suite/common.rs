@@ -30,15 +30,13 @@ enum Default6 {
 }
 
 #[test]
-fn test_foo() {
+fn test_ctors() {
     use enumflags2::BitFlags;
     assert_eq!(
         BitFlags::<Test>::all(),
         Test::A | Test::B | Test::C | Test::D
     );
     assert_eq!(BitFlags::<Test>::all() & Test::A, Test::A);
-    assert_eq!(!Test::A, Test::B | Test::C | Test::D);
-    assert_eq!((Test::A | Test::C) ^ (Test::C | Test::B), Test::A | Test::B);
     assert_eq!(BitFlags::<Test>::from_bits_truncate(4), Test::C);
     assert_eq!(BitFlags::<Test>::from_bits_truncate(5), Test::A | Test::C);
     assert_eq!(
@@ -51,28 +49,41 @@ fn test_foo() {
         BitFlags::<Test>::from_bits(15).unwrap(),
         BitFlags::<Test>::all()
     );
-    {
-        let mut b = Test::A | Test::B;
-        b.insert(Test::C);
-        assert_eq!(b, Test::A | Test::B | Test::C);
-    }
+    assert_eq!((Test::A | Test::B).bits(), 3);
+    assert_eq!((!(Test::A | Test::B)).bits(), 12);
+    assert_eq!(BitFlags::<Test>::all().bits(), 15);
+    assert_eq!(BitFlags::<Default6>::default(), Default6::B | Default6::C);
+}
+
+#[test]
+fn test_ops() {
+    assert_eq!(!Test::A, Test::B | Test::C | Test::D);
+    assert_eq!((Test::A | Test::C) ^ (Test::C | Test::B), Test::A | Test::B);
     assert!((Test::A | Test::B).intersects(Test::B));
     assert!(!(Test::A | Test::B).intersects(Test::C));
     assert!((Test::A | Test::B | Test::C).contains(Test::A | Test::B));
     assert!(!(Test::A | Test::B | Test::C).contains(Test::A | Test::D));
     assert_eq!(!(Test::A | Test::B), Test::C | Test::D);
-    assert_eq!((Test::A | Test::B).bits(), 3);
-    assert_eq!((!(Test::A | Test::B)).bits(), 12);
-    assert_eq!(BitFlags::<Test>::all().bits(), 15);
+    assert_eq!((Test::A ^ Test::B), Test::A | Test::B);
+}
+
+#[test]
+fn test_mutation() {
+    {
+        let mut b = Test::A | Test::B;
+        b.insert(Test::C);
+        assert_eq!(b, Test::A | Test::B | Test::C);
+    }
     {
         let mut b = Test::A | Test::B | Test::C;
         b.remove(Test::B);
         assert_eq!(b, Test::A | Test::C);
     }
-    assert_eq!((Test::A ^ Test::B), Test::A | Test::B);
+}
 
-    assert_eq!(BitFlags::<Default6>::default(), Default6::B | Default6::C);
-
+#[test]
+fn test_to_flag() {
+    use enumflags2::BitFlags;
     assert_eq!(BitFlags::<Test>::empty().to_flag(), None);
     assert_eq!(BitFlags::<Test>::from(Test::B).to_flag(), Some(Test::B));
     assert_eq!((Test::A | Test::C).to_flag(), None);
