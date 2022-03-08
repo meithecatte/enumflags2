@@ -72,6 +72,10 @@ fn test_foo() {
     assert_eq!((Test::A ^ Test::B), Test::A | Test::B);
 
     assert_eq!(BitFlags::<Default6>::default(), Default6::B | Default6::C);
+
+    assert_eq!(BitFlags::<Test>::empty().to_flag(), None);
+    assert_eq!(BitFlags::<Test>::from(Test::B).to_flag(), Some(Test::B));
+    assert_eq!((Test::A | Test::C).to_flag(), None);
 }
 
 #[test]
