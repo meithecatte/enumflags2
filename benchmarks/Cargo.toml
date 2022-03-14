@@ -1,0 +1,15 @@
+[package]
+name = "enumflags-benchmarks"
+version = "0.0.0"
+publish = false
+
+[dependencies.enumflags2]
+path = "../"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "from_iterator"
+harness = false
+path = "from_iterator.rs"
