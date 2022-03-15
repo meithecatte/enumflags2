@@ -216,13 +216,14 @@ pub mod _internal {
 
     use ::core::cmp::PartialOrd;
     use ::core::fmt;
-    use ::core::ops::{BitAnd, BitOr, BitXor, Not};
+    use ::core::ops::{BitAnd, BitOr, BitXor, Not, Sub};
 
     pub trait BitFlagNum:
         Default
         + BitOr<Self, Output = Self>
         + BitAnd<Self, Output = Self>
         + BitXor<Self, Output = Self>
+        + Sub<Self, Output = Self>
         + Not<Output = Self>
         + PartialOrd<Self>
         + fmt::Debug
@@ -230,19 +231,27 @@ pub mod _internal {
         + Copy
         + Clone
     {
-        #[doc(hidden)]
+        const ONE: Self;
+
         fn is_power_of_two(self) -> bool;
-        #[doc(hidden)]
         fn count_ones(self) -> u32;
+        fn wrapping_neg(self) -> Self;
     }
 
     for_each_uint! { $ty $hide_docs =>
         impl BitFlagNum for $ty {
+            const ONE: Self = 1;
+
             fn is_power_of_two(self) -> bool {
                 <$ty>::is_power_of_two(self)
             }
+
             fn count_ones(self) -> u32 {
                 <$ty>::count_ones(self)
+            }
+
+            fn wrapping_neg(self) -> Self {
+                <$ty>::wrapping_neg(self)
             }
         }
     }
@@ -640,7 +649,6 @@ where
     pub fn iter(self) -> Iter<T> {
         Iter {
             rest: self,
-            it: T::FLAG_LIST.iter(),
         }
     }
 }
@@ -658,7 +666,6 @@ impl<T: BitFlag> IntoIterator for BitFlags<T> {
 #[derive(Clone, Debug)]
 pub struct Iter<T: BitFlag> {
     rest: BitFlags<T>,
-    it: core::slice::Iter<'static, T>,
 }
 
 impl<T> Iterator for Iter<T>
@@ -668,15 +675,15 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        for &flag in &mut self.it {
-            let yes = self.rest.contains(flag);
+        if self.rest.is_empty() {
+            None
+        } else {
+            let bits = self.rest.bits();
+            let flag: T::Numeric = bits & bits.wrapping_neg();
+            let flag: T = unsafe { core::mem::transmute_copy(&flag) };
             self.rest.remove(flag);
-            if yes {
-                return Some(flag);
-            }
+            Some(flag)
         }
-
-        None
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
