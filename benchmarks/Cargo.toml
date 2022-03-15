@@ -14,3 +14,8 @@ criterion = "0.3"
 name = "from_iterator"
 harness = false
 path = "from_iterator.rs"
+
+[[bench]]
+name = "iterator"
+harness = false
+path = "iterator.rs"
