@@ -678,11 +678,13 @@ where
         if self.rest.is_empty() {
             None
         } else {
-            let bits = self.rest.bits();
-            let flag: T::Numeric = bits & bits.wrapping_neg();
-            let flag: T = unsafe { core::mem::transmute_copy(&flag) };
-            self.rest.remove(flag);
-            Some(flag)
+            unsafe {
+                let bits = self.rest.bits();
+                let flag: T::Numeric = bits & bits.wrapping_neg();
+                let flag: T = core::mem::transmute_copy(&flag);
+                self.rest = BitFlags::from_bits_unchecked(bits & (bits - BitFlagNum::ONE));
+                Some(flag)
+            }
         }
     }
 
