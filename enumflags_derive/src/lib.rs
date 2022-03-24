@@ -293,45 +293,46 @@ fn gen_enumflags(ast: &mut ItemEnum, default: Vec<Ident>) -> Result<TokenStream,
         ));
     }
 
-    let std_path = quote_spanned!(span => ::enumflags2::_internal::core);
+    let std = quote_spanned!(span => ::enumflags2::_internal::core);
     let variant_names = ast.variants.iter().map(|v| &v.ident).collect::<Vec<_>>();
 
     Ok(quote_spanned! {
         span =>
             #ast
             #(#deferred)*
-            impl #std_path::ops::Not for #ident {
+            impl #std::ops::Not for #ident {
                 type Output = ::enumflags2::BitFlags<Self>;
                 #[inline(always)]
                 fn not(self) -> Self::Output {
-                    use ::enumflags2::{BitFlags, _internal::RawBitFlags};
-                    unsafe { BitFlags::from_bits_unchecked(self.bits()).not() }
+                    use ::enumflags2::BitFlags;
+                    BitFlags::from_flag(self).not()
                 }
             }
 
-            impl #std_path::ops::BitOr for #ident {
+            impl #std::ops::BitOr for #ident {
                 type Output = ::enumflags2::BitFlags<Self>;
                 #[inline(always)]
                 fn bitor(self, other: Self) -> Self::Output {
-                    use ::enumflags2::{BitFlags, _internal::RawBitFlags};
-                    unsafe { BitFlags::from_bits_unchecked(self.bits() | other.bits())}
+                    use ::enumflags2::BitFlags;
+                    BitFlags::from_flag(self) | other
                 }
             }
 
-            impl #std_path::ops::BitAnd for #ident {
+            impl #std::ops::BitAnd for #ident {
                 type Output = ::enumflags2::BitFlags<Self>;
                 #[inline(always)]
                 fn bitand(self, other: Self) -> Self::Output {
-                    use ::enumflags2::{BitFlags, _internal::RawBitFlags};
-                    unsafe { BitFlags::from_bits_unchecked(self.bits() & other.bits())}
+                    use ::enumflags2::BitFlags;
+                    BitFlags::from_flag(self) & other
                 }
             }
 
-            impl #std_path::ops::BitXor for #ident {
+            impl #std::ops::BitXor for #ident {
                 type Output = ::enumflags2::BitFlags<Self>;
                 #[inline(always)]
                 fn bitxor(self, other: Self) -> Self::Output {
-                    #std_path::convert::Into::<Self::Output>::into(self) ^ #std_path::convert::Into::<Self::Output>::into(other)
+                    use ::enumflags2::BitFlags;
+                    BitFlags::from_flag(self) ^ other
                 }
             }
 
