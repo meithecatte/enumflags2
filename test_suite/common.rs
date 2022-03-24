@@ -82,11 +82,11 @@ fn test_mutation() {
 }
 
 #[test]
-fn test_to_flag() {
+fn test_exactly_one() {
     use enumflags2::BitFlags;
-    assert_eq!(BitFlags::<Test>::empty().to_flag(), None);
-    assert_eq!(BitFlags::<Test>::from(Test::B).to_flag(), Some(Test::B));
-    assert_eq!((Test::A | Test::C).to_flag(), None);
+    assert_eq!(BitFlags::<Test>::empty().exactly_one(), None);
+    assert_eq!(BitFlags::<Test>::from(Test::B).exactly_one(), Some(Test::B));
+    assert_eq!((Test::A | Test::C).exactly_one(), None);
 }
 
 #[test]
