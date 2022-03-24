@@ -475,8 +475,7 @@ where
     ///
     /// # Safety
     ///
-    /// The argument must not have set bits at positions not corresponding to
-    /// any flag.
+    /// All bits set in `val` must correspond to a value of the enum.
     #[must_use]
     #[inline(always)]
     pub unsafe fn from_bits_unchecked(val: T::Numeric) -> Self {
@@ -728,8 +727,7 @@ for_each_uint! { $ty $hide_docs =>
         ///
         /// # Safety
         ///
-        /// The argument must not have set bits at positions not corresponding to
-        /// any flag.
+        /// All bits set in `val` must correspond to a value of the enum.
         #[must_use]
         #[inline(always)]
         $(#[$hide_docs])?
