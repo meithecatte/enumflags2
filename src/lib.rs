@@ -583,9 +583,11 @@ where
         self.val.count_ones() as usize
     }
 
-    /// Returns the flag that is set if there is exactly one.
+    /// If exactly one flag is set, the flag is returned. Otherwise, returns `None`.
+    ///
+    /// See also [`Itertools::exactly_one`](https://docs.rs/itertools/latest/itertools/trait.Itertools.html#method.exactly_one).
     #[inline(always)]
-    pub fn to_flag(self) -> Option<T> {
+    pub fn exactly_one(self) -> Option<T> {
         if self.val.is_power_of_two() {
             Some(unsafe { core::mem::transmute_copy(&self.val) })
         } else {
