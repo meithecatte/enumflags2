@@ -9,8 +9,7 @@ where
         let name = T::BITFLAGS_TYPE_NAME;
         let bits = DebugBinaryFormatter(&self.val);
         let iter = if !self.is_empty() {
-            let iter = T::FLAG_LIST.iter().filter(|&&flag| self.contains(flag));
-            Some(FlagFormatter(iter))
+            Some(FlagFormatter(self.iter()))
         } else {
             None
         };
