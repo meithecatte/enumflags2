@@ -202,9 +202,6 @@ pub mod _internal {
         /// A value with all flag bits set.
         const ALL_BITS: Self::Numeric;
 
-        /// A slice that contains each variant exactly one.
-        const FLAG_LIST: &'static [Self];
-
         /// The name of the type for debug formatting purposes.
         ///
         /// This is typically `BitFlags<EnumName>`

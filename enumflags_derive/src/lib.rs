@@ -346,9 +346,6 @@ fn gen_enumflags(ast: &mut ItemEnum, default: Vec<Ident>) -> Result<TokenStream,
                 const ALL_BITS: Self::Numeric =
                     0 #(| (Self::#variant_names as #repr))*;
 
-                const FLAG_LIST: &'static [Self] =
-                    &[#(Self::#variant_names),*];
-
                 const BITFLAGS_TYPE_NAME : &'static str =
                     concat!("BitFlags<", stringify!(#ident), ">");
 
