@@ -401,6 +401,8 @@ macro_rules! make_bitflags {
             $(
                 n |= $enum::$variant as <$enum as $crate::_internal::RawBitFlags>::Numeric;
             )*
+            // SAFETY: The value has been created from numeric values of the underlying
+            // enum, so only valid bits are set.
             unsafe { $crate::BitFlags::<$enum>::from_bits_unchecked_c(
                     n, $crate::BitFlags::CONST_TOKEN) }
         }
@@ -460,6 +462,8 @@ where
     #[must_use]
     #[inline(always)]
     pub fn from_bits_truncate(bits: T::Numeric) -> Self {
+        // SAFETY: We're truncating out all the invalid bits, so the remaining
+        // ones must be valid.
         unsafe { BitFlags::from_bits_unchecked(bits & T::ALL_BITS) }
     }
 
@@ -486,6 +490,7 @@ where
     #[must_use]
     #[inline(always)]
     pub fn from_flag(flag: T) -> Self {
+        // SAFETY: A value of the underlying enum is valid by definition.
         unsafe { Self::from_bits_unchecked(flag.bits()) }
     }
 
@@ -586,6 +591,8 @@ where
     #[inline(always)]
     pub fn exactly_one(self) -> Option<T> {
         if self.val.is_power_of_two() {
+            // SAFETY: By the invariant of the BitFlags type, all bits are valid
+            // in isolation for the underlying enum.
             Some(unsafe { core::mem::transmute_copy(&self.val) })
         } else {
             None
@@ -677,6 +684,10 @@ where
         if self.rest.is_empty() {
             None
         } else {
+            // SAFETY: `flag` will be a single bit, because
+            // x & -x = x & (~x + 1), and the increment causes only one 0 -> 1 transition.
+            // The invariant of `from_bits_unchecked` is satisfied, because bits & x
+            // is a subset of bits, which we know are the valid bits.
             unsafe {
                 let bits = self.rest.bits();
                 let flag: T::Numeric = bits & bits.wrapping_neg();
@@ -867,6 +878,8 @@ where
     type Output = BitFlags<T>;
     #[inline(always)]
     fn bitor(self, other: B) -> BitFlags<T> {
+        // SAFETY: The two operands are known to be composed of valid bits,
+        // and 0 | 0 = 0 in the columns of the invalid bits.
         unsafe { BitFlags::from_bits_unchecked(self.bits() | other.into().bits()) }
     }
 }
@@ -879,6 +892,8 @@ where
     type Output = BitFlags<T>;
     #[inline(always)]
     fn bitand(self, other: B) -> BitFlags<T> {
+        // SAFETY: The two operands are known to be composed of valid bits,
+        // and 0 & 0 = 0 in the columns of the invalid bits.
         unsafe { BitFlags::from_bits_unchecked(self.bits() & other.into().bits()) }
     }
 }
@@ -891,6 +906,8 @@ where
     type Output = BitFlags<T>;
     #[inline(always)]
     fn bitxor(self, other: B) -> BitFlags<T> {
+        // SAFETY: The two operands are known to be composed of valid bits,
+        // and 0 ^ 0 = 0 in the columns of the invalid bits.
         unsafe { BitFlags::from_bits_unchecked(self.bits() ^ other.into().bits()) }
     }
 }
@@ -934,7 +951,7 @@ where
     type Output = BitFlags<T>;
     #[inline(always)]
     fn not(self) -> BitFlags<T> {
-        unsafe { BitFlags::from_bits_unchecked(!self.bits() & T::ALL_BITS) }
+        BitFlags::from_bits_truncate(!self.bits())
     }
 }
 
