@@ -336,7 +336,7 @@ fn gen_enumflags(ast: &mut ItemEnum, default: Vec<Ident>) -> Result<TokenStream,
                 }
             }
 
-            impl ::enumflags2::_internal::RawBitFlags for #ident {
+            unsafe impl ::enumflags2::_internal::RawBitFlags for #ident {
                 type Numeric = #repr;
 
                 const EMPTY: Self::Numeric = 0;

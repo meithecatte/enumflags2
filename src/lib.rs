@@ -188,7 +188,7 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
 pub mod _internal {
     /// A trait automatically implemented by `#[bitflags]` to make the enum
     /// a valid type parameter for `BitFlags<T>`.
-    pub trait RawBitFlags: Copy + Clone + 'static {
+    pub unsafe trait RawBitFlags: Copy + Clone + 'static {
         /// The underlying integer type.
         type Numeric: BitFlagNum;
 
