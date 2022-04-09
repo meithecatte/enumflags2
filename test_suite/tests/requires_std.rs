@@ -19,6 +19,11 @@ fn debug_format() {
     );
 
     assert_eq!(
+        format!("{:?}", BitFlags::from_flag(Test::B)),
+        "BitFlags<Test>(0b10, B)"
+    );
+
+    assert_eq!(
         format!("{:04x?}", BitFlags::<Test>::all()),
         "BitFlags<Test>(0x0f, A | B | C | D)"
     );
@@ -53,6 +58,28 @@ fn debug_format_alternate() {
         "BitFlags<Test> {
     bits: 0b0,
 }",
+    );
+}
+
+#[test]
+fn display_format() {
+    use enumflags2::BitFlags;
+
+    // Assert that our Debug output format meets expectations
+
+    assert_eq!(
+        format!("{}", BitFlags::<Test>::all()),
+        "A | B | C | D"
+    );
+
+    assert_eq!(
+        format!("{}", BitFlags::<Test>::empty()),
+        "<empty>"
+    );
+
+    assert_eq!(
+        format!("{}", BitFlags::from_flag(Test::B)),
+        "B"
     );
 }
 

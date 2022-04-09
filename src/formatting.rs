@@ -34,6 +34,15 @@ where
     }
 }
 
+impl<T> fmt::Display for BitFlags<T>
+where
+    T: BitFlag + fmt::Debug,
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&FlagFormatter(self.iter()), fmt)
+    }
+}
+
 impl<T> fmt::Binary for BitFlags<T>
 where
     T: BitFlag,
@@ -88,9 +97,7 @@ impl<T: Debug, I: Clone + Iterator<Item = T>> Debug for FlagFormatter<I> {
             }
             Ok(())
         } else {
-            // convention would print "<empty>" or similar here, but this is an
-            // internal API that is never called that way, so just do nothing.
-            Ok(())
+            fmt.write_str("<empty>")
         }
     }
 }
@@ -132,7 +139,7 @@ fn flag_formatter() {
         };
     }
 
-    assert_fmt!("{:?}", iter::empty::<u8>(), "");
+    assert_fmt!("{:?}", iter::empty::<u8>(), "<empty>");
     assert_fmt!("{:?}", iter::once(1), "1");
     assert_fmt!("{:?}", [1, 2].iter(), "1 | 2");
     assert_fmt!("{:?}", [1, 2, 10].iter(), "1 | 2 | 10");

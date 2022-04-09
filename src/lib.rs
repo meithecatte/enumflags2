@@ -24,12 +24,11 @@
 //!
 //! // The debug output lets you inspect both the numeric value and
 //! // the actual flags:
+//! assert_eq!(format!("{:?}", a_b), "BitFlags<Test>(0b11, A | B)");
 //!
-//! // BitFlags<Test>(0b11, [A, B])
-//! println!("{:?}", a_b);
-//!
-//! // BitFlags<Test>(0b1, [A])
-//! println!("{:?}", a_b & a_c);
+//! // But if you'd rather see only one of those, that's available too:
+//! assert_eq!(format!("{}", a_b), "A | B");
+//! assert_eq!(format!("{:04b}", a_b), "0011");
 //!
 //! // Iterate over the flags like a normal set
 //! assert_eq!(a_b.iter().collect::<Vec<_>>(), &[Test::A, Test::B]);
