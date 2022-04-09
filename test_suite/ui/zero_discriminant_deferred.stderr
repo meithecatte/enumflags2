@@ -1,11 +1,15 @@
 error[E0277]: the trait bound `AssertionFailed: ExactlyOneBitSet` is not satisfied
- --> $DIR/zero_discriminant_deferred.rs:7:5
+ --> ui/zero_discriminant_deferred.rs:7:5
   |
 7 |     Zero = ZERO,
   |     ^^^^^^^^^^^ the trait `ExactlyOneBitSet` is not implemented for `AssertionFailed`
+  |
+  = help: the trait `ExactlyOneBitSet` is implemented for `AssertionSucceeded`
 
 error[E0277]: the trait bound `AssertionFailed: ExactlyOneBitSet` is not satisfied
-  --> $DIR/zero_discriminant_deferred.rs:14:5
+  --> ui/zero_discriminant_deferred.rs:14:5
    |
 14 |     Overflown = (ZERO + 2) << 7,
    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `ExactlyOneBitSet` is not implemented for `AssertionFailed`
+   |
+   = help: the trait `ExactlyOneBitSet` is implemented for `AssertionSucceeded`
