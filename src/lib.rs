@@ -205,6 +205,10 @@ pub mod _internal {
         const DEFAULT: Self::Numeric;
 
         /// A value with all flag bits set.
+        const ALL_FLAGS: Self::Numeric;
+
+        /// A value with all legal bits set. This might be a superset of `ALL_FLAGS`
+        /// if `#[bitflags(allow_reserved_bits)]` has been used.
         const ALL_BITS: Self::Numeric;
 
         /// The name of the type for debug formatting purposes.
@@ -448,7 +452,7 @@ where
     T: BitFlag,
 {
     /// Returns a `BitFlags<T>` if the raw value provided does not contain
-    /// any illegal flags.
+    /// any invalid flags.
     #[inline]
     pub fn from_bits(bits: T::Numeric) -> Result<Self, FromBitsError<T>> {
         let flags = Self::from_bits_truncate(bits);
@@ -463,13 +467,13 @@ where
     }
 
     /// Create a `BitFlags<T>` from an underlying bitwise value. If any
-    /// invalid bits are set, ignore them.
+    /// invalid or reserved bits are set, remove them.
     #[must_use]
     #[inline(always)]
     pub fn from_bits_truncate(bits: T::Numeric) -> Self {
         // SAFETY: We're truncating out all the invalid bits, so the remaining
         // ones must be valid.
-        unsafe { BitFlags::from_bits_unchecked(bits & T::ALL_BITS) }
+        unsafe { BitFlags::from_bits_unchecked(bits & T::ALL_FLAGS) }
     }
 
     /// Create a new BitFlags unsafely, without checking if the bits form
@@ -564,7 +568,7 @@ where
     /// A `BitFlags` with all flags set. Equivalent to [`all()`][BitFlags::all],
     /// but works in a const context.
     pub const ALL: Self = BitFlags {
-        val: T::ALL_BITS,
+        val: T::ALL_FLAGS,
         marker: PhantomData,
     };
 
@@ -574,7 +578,13 @@ where
     /// Returns true if all flags are set
     #[inline(always)]
     pub fn is_all(self) -> bool {
-        self.val == T::ALL_BITS
+        // This if will get const-propagated away, making the code take advantage
+        // of the type invariant.
+        if T::ALL_FLAGS == T::ALL_BITS {
+            self.val == T::ALL_FLAGS
+        } else {
+            self.val & T::ALL_FLAGS == T::ALL_FLAGS
+        }
     }
 
     /// Returns true if no flag is set

@@ -9,6 +9,7 @@ use syn::{
     parse::{Parse, ParseStream},
     parse_macro_input,
     spanned::Spanned,
+    punctuated::Punctuated,
     Expr, Ident, Item, ItemEnum, Token, Variant,
 };
 
@@ -37,23 +38,65 @@ impl FlagValue<'_> {
 
 struct Parameters {
     default: Vec<Ident>,
+    allow_reserved_bits: bool,
+}
+
+enum Parameter {
+    Default(Ident, Vec<Ident>),
+    AllowReservedBits(Ident),
+}
+
+impl Parse for Parameter {
+    fn parse(input: ParseStream) -> syn::parse::Result<Self> {
+        let param_name = input.parse::<Ident>()?;
+        if param_name == "default" {
+            input.parse::<Token![=]>()?;
+            let mut default = vec![input.parse()?];
+            while !input.is_empty() {
+                input.parse::<Token![|]>()?;
+                default.push(input.parse()?);
+            }
+
+            Ok(Parameter::Default(param_name, default))
+        } else if param_name == "allow_reserved_bits" {
+            Ok(Parameter::AllowReservedBits(param_name))
+        } else {
+            Err(syn::Error::new_spanned(&param_name,
+                format_args!("unknown parameter name `{}` (expected `default` or `allow_reserved_bits`)", param_name)))
+        }
+    }
 }
 
 impl Parse for Parameters {
     fn parse(input: ParseStream) -> syn::parse::Result<Self> {
-        if input.is_empty() {
-            return Ok(Parameters { default: vec![] });
+        let params = Punctuated::<Parameter, Token![,]>::parse_terminated(input)?;
+
+        let mut default = None;
+        let mut allow_reserved_bits = None;
+
+        for param in params {
+            match param {
+                Parameter::Default(ident, flags) => {
+                    if default.is_some() {
+                        return Err(syn::Error::new_spanned(ident, "duplicate `default` parameter"));
+                    } else {
+                        default = Some(flags);
+                    }
+                }
+                Parameter::AllowReservedBits(ident) => {
+                    if allow_reserved_bits.is_some() {
+                        return Err(syn::Error::new_spanned(ident, "duplicate `allow_reserved_bits` parameter"));
+                    } else {
+                        allow_reserved_bits = Some(true);
+                    }
+                }
+            }
         }
 
-        input.parse::<Token![default]>()?;
-        input.parse::<Token![=]>()?;
-        let mut default = vec![input.parse()?];
-        while !input.is_empty() {
-            input.parse::<Token![|]>()?;
-            default.push(input.parse()?);
-        }
-
-        Ok(Parameters { default })
+        Ok(Parameters {
+            default: default.unwrap_or_default(),
+            allow_reserved_bits: allow_reserved_bits.unwrap_or(false),
+        })
     }
 }
 
@@ -62,7 +105,8 @@ pub fn bitflags_internal(
     attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let Parameters { default } = parse_macro_input!(attr as Parameters);
+    let Parameters { default, allow_reserved_bits } = parse_macro_input!(attr as Parameters);
+    let _ = allow_reserved_bits;
     let mut ast = parse_macro_input!(input as Item);
     let output = match ast {
         Item::Enum(ref mut item_enum) => gen_enumflags(item_enum, default),

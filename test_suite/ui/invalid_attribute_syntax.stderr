@@ -1,11 +1,11 @@
 error: expected `|`
- --> $DIR/invalid_attribute_syntax.rs:3:24
+ --> ui/invalid_attribute_syntax.rs:3:24
   |
 3 | #[bitflags(default = A + B)]
   |                        ^
 
 error: unexpected end of input, expected identifier
- --> $DIR/invalid_attribute_syntax.rs:9:1
+ --> ui/invalid_attribute_syntax.rs:9:1
   |
 9 | #[bitflags(default = A |)]
   | ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -13,7 +13,7 @@ error: unexpected end of input, expected identifier
   = note: this error originates in the attribute macro `bitflags` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: unexpected end of input, expected identifier
-  --> $DIR/invalid_attribute_syntax.rs:15:1
+  --> ui/invalid_attribute_syntax.rs:15:1
    |
 15 | #[bitflags(default =)]
    | ^^^^^^^^^^^^^^^^^^^^^^
@@ -21,15 +21,15 @@ error: unexpected end of input, expected identifier
    = note: this error originates in the attribute macro `bitflags` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: expected `=`
-  --> $DIR/invalid_attribute_syntax.rs:21:1
+  --> ui/invalid_attribute_syntax.rs:21:1
    |
 21 | #[bitflags(default)]
    | ^^^^^^^^^^^^^^^^^^^^
    |
    = note: this error originates in the attribute macro `bitflags` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error: expected `default`
-  --> $DIR/invalid_attribute_syntax.rs:27:12
+error: unknown parameter name `yes` (expected `default` or `allow_reserved_bits`)
+  --> ui/invalid_attribute_syntax.rs:27:12
    |
 27 | #[bitflags(yes)]
    |            ^^^
