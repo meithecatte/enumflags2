@@ -1,5 +1,5 @@
 error[E0599]: no variant or associated item named `C` found for enum `Test` in the current scope
- --> $DIR/invalid_name_in_default.rs:3:26
+ --> ui/invalid_name_in_default.rs:3:26
   |
 3 | #[bitflags(default = A | C)]
   |                          ^
@@ -8,4 +8,4 @@ error[E0599]: no variant or associated item named `C` found for enum `Test` in t
   |                          help: there is a variant with a similar name: `A`
 ...
 6 | enum Test {
-  | --------- variant or associated item `C` not found here
+  | --------- variant or associated item `C` not found for this enum
