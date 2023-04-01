@@ -25,13 +25,8 @@ enum FlagValue<'a> {
 }
 
 impl FlagValue<'_> {
-    // matches! is beyond our MSRV
-    #[allow(clippy::match_like_matches_macro)]
     fn is_inferred(&self) -> bool {
-        match self {
-            FlagValue::Inferred(_) => true,
-            _ => false,
-        }
+        matches!(self, FlagValue::Inferred(_))
     }
 }
 
@@ -110,15 +105,11 @@ fn collect_flags<'a>(
 ) -> Result<Vec<Flag<'a>>, syn::Error> {
     variants
         .map(|variant| {
-            // MSRV: Would this be cleaner with `matches!`?
-            match variant.fields {
-                syn::Fields::Unit => (),
-                _ => {
-                    return Err(syn::Error::new_spanned(
-                        &variant.fields,
-                        "Bitflag variants cannot contain additional data",
-                    ))
-                }
+            if !matches!(variant.fields, syn::Fields::Unit) {
+                return Err(syn::Error::new_spanned(
+                    &variant.fields,
+                    "Bitflag variants cannot contain additional data",
+                ));
             }
 
             let name = variant.ident.clone();
@@ -244,15 +235,8 @@ fn check_flag(type_name: &Ident, flag: &Flag, bits: u8) -> Result<Option<TokenSt
         Inferred(_) => Ok(None),
         Deferred => {
             let variant_name = &flag.name;
-            // MSRV: Use an unnamed constant (`const _: ...`).
-            let assertion_name = syn::Ident::new(
-                &format!("__enumflags_assertion_{}_{}", type_name, flag.name),
-                Span::call_site(),
-            ); // call_site because def_site is unstable
-
             Ok(Some(quote_spanned!(flag.span =>
-                #[doc(hidden)]
-                const #assertion_name:
+                const _:
                     <<[(); (
                         (#type_name::#variant_name as u128).is_power_of_two()
                     ) as usize] as enumflags2::_internal::AssertionHelper>

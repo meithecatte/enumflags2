@@ -285,7 +285,7 @@ pub mod _internal {
 
     pub const fn next_bit(x: u128) -> u128 {
         // trailing_ones is beyond our MSRV
-        1 << (!x).trailing_zeros()
+        1 << x.trailing_ones()
     }
 }
 
