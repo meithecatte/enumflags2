@@ -171,23 +171,18 @@ fn infer_values(flags: &mut [Flag], type_name: &Ident, repr: &Ident) {
 /// Given a list of attributes, find the `repr`, if any, and return the integer
 /// type specified.
 fn extract_repr(attrs: &[syn::Attribute]) -> Result<Option<Ident>, syn::Error> {
-    use syn::{Meta, NestedMeta};
-    attrs
-        .iter()
-        .find_map(|attr| match attr.parse_meta() {
-            Err(why) => Some(Err(syn::Error::new_spanned(
-                attr,
-                format!("Couldn't parse attribute: {}", why),
-            ))),
-            Ok(Meta::List(ref meta)) if meta.path.is_ident("repr") => {
-                meta.nested.iter().find_map(|mi| match mi {
-                    NestedMeta::Meta(Meta::Path(path)) => path.get_ident().cloned().map(Ok),
-                    _ => None,
-                })
-            }
-            Ok(_) => None,
-        })
-        .transpose()
+    let mut res = None;
+    for attr in attrs {
+        if attr.path().is_ident("repr") {
+            attr.parse_nested_meta(|meta| {
+                if let Some(ident) = meta.path.get_ident() {
+                    res = Some(ident.clone());
+                }
+                Ok(())
+            })?;
+        }
+    }
+    Ok(res)
 }
 
 /// Check the repr and return the number of bits available
