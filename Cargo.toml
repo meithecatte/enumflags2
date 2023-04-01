@@ -1,10 +1,10 @@
 [package]
 name = "enumflags2"
 version = "0.7.5"
-authors = ["maik klein <maikklein@googlemail.com>", "Jakub \"NieDżejkob\" Kądziołka <kuba@kadziolka.net>"]
+authors = ["maik klein <maikklein@googlemail.com>", "Maja Kądziołka <maya@compilercrim.es>"]
 description = "Enum-based bit flags"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/NieDzejkob/enumflags2"
+repository = "https://github.com/meithecatte/enumflags2"
 readme = "README.md"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
 documentation = "https://docs.rs/enumflags2"
