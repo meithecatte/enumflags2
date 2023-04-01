@@ -269,7 +269,7 @@ fn gen_enumflags(ast: &mut ItemEnum, default: Vec<Ident>) -> Result<TokenStream,
     let span = Span::call_site();
 
     let repr = extract_repr(&ast.attrs)?
-        .ok_or_else(|| syn::Error::new_spanned(&ident,
+        .ok_or_else(|| syn::Error::new_spanned(ident,
                         "repr attribute missing. Add #[repr(u64)] or a similar attribute to specify the size of the bitfield."))?;
     let bits = type_bits(&repr)?;
 
