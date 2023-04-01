@@ -1,7 +1,9 @@
-error[E0081]: discriminant value `1` already exists
- --> $DIR/overlapping_flags.rs:6:23
+error[E0081]: discriminant value `1` assigned more than once
+ --> ui/overlapping_flags.rs:4:1
   |
+4 | enum Foo {
+  | ^^^^^^^^
 5 |     SomeFlag = 1 << 0,
-  |                ------ first use of `1`
+  |                ------ `1` assigned here
 6 |     OverlappingFlag = 1 << 0,
-  |                       ^^^^^^ enum already has `1`
+  |                       ------ `1` assigned here

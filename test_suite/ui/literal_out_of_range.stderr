@@ -1,9 +1,9 @@
 error: literal out of range for `u64`
- --> $DIR/literal_out_of_range.rs:5:17
+ --> ui/literal_out_of_range.rs:5:17
   |
 5 |     BigNumber = 0xdeadbeefcafebabe1337,
   |                 ^^^^^^^^^^^^^^^^^^^^^^
   |
-  = note: `#[deny(overflowing_literals)]` on by default
   = note: the literal `0xdeadbeefcafebabe1337` (decimal `1051570404360395033547575`) does not fit into the type `u64` and will become `13758438582043677495u64`
   = help: consider using the type `u128` instead
+  = note: `#[deny(overflowing_literals)]` on by default
