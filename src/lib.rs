@@ -402,7 +402,10 @@ macro_rules! make_bitflags {
         {
             let mut n = 0;
             $(
-                n |= $enum::$variant as <$enum as $crate::_internal::RawBitFlags>::Numeric;
+                {
+                    let flag: $enum = $enum::$variant;
+                    n |= flag as <$enum as $crate::_internal::RawBitFlags>::Numeric;
+                }
             )*
             // SAFETY: The value has been created from numeric values of the underlying
             // enum, so only valid bits are set.
