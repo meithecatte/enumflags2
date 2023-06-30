@@ -22,6 +22,9 @@ for_each_uint! { $ty $hide_docs =>
 /// and the [`TryFrom`] implementation`
 /// for invalid values.
 ///
+/// Note that the implementation of [`std::error::Error`]
+/// for this type is gated on the `std` feature flag.
+///
 /// ```
 /// # use std::convert::TryInto;
 /// # use enumflags2::{bitflags, BitFlags};
