@@ -655,12 +655,20 @@ where
         *self &= !other.into();
     }
 
+    /// Inserts if `cond` holds, else removes
+    #[inline(always)]
+    pub fn set<B: Into<BitFlags<T>>>(&mut self, other: B, cond: bool) {
+        if cond {
+            self.insert(other);
+        } else {
+            self.remove(other);
+        }
+    }
+
     /// Returns an iterator that yields each set flag
     #[inline]
     pub fn iter(self) -> Iter<T> {
-        Iter {
-            rest: self,
-        }
+        Iter { rest: self }
     }
 }
 
