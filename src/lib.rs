@@ -656,6 +656,25 @@ where
     }
 
     /// Inserts if `cond` holds, else removes
+    ///
+    /// ```
+    /// # use enumflags2::bitflags;
+    /// #[derive(Clone, Copy, PartialEq, Debug)]
+    /// #[bitflags]
+    /// #[repr(u8)]
+    /// enum MyFlag {
+    ///     A = 1 << 0,
+    ///     B = 1 << 1,
+    ///     C = 1 << 2,
+    /// }
+    ///
+    /// let mut state = MyFlag::A | MyFlag::C;
+    /// state.set(MyFlag::A | MyFlag::B, 3 > 5);
+    ///
+    /// // Because the condition was false, both
+    /// // `A` and `B` are removed from the set
+    /// assert_eq!(state, MyFlag::C);
+    /// ```
     #[inline(always)]
     pub fn set<B: Into<BitFlags<T>>>(&mut self, other: B, cond: bool) {
         if cond {
