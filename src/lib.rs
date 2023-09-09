@@ -669,7 +669,7 @@ where
     /// }
     ///
     /// let mut state = MyFlag::A | MyFlag::C;
-    /// state.set(MyFlag::A | MyFlag::B, 3 > 5);
+    /// state.set(MyFlag::A | MyFlag::B, false);
     ///
     /// // Because the condition was false, both
     /// // `A` and `B` are removed from the set
