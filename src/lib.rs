@@ -659,8 +659,8 @@ where
     ///
     /// ```
     /// # use enumflags2::bitflags;
-    /// #[derive(Clone, Copy, PartialEq, Debug)]
     /// #[bitflags]
+    /// #[derive(Clone, Copy, PartialEq, Debug)]
     /// #[repr(u8)]
     /// enum MyFlag {
     ///     A = 1 << 0,
