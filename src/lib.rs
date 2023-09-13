@@ -90,6 +90,7 @@
 #![warn(missing_docs)]
 #![cfg_attr(all(not(test), not(feature = "std")), no_std)]
 
+use core::hash::{Hash, Hasher};
 use core::iter::{FromIterator, FusedIterator};
 use core::marker::PhantomData;
 use core::{cmp, ops};
@@ -218,6 +219,7 @@ pub mod _internal {
     use ::core::cmp::PartialOrd;
     use ::core::fmt;
     use ::core::ops::{BitAnd, BitOr, BitXor, Not, Sub};
+    use ::core::hash::Hash;
 
     pub trait BitFlagNum:
         Default
@@ -227,6 +229,8 @@ pub mod _internal {
         + Sub<Self, Output = Self>
         + Not<Output = Self>
         + PartialOrd<Self>
+        + Ord
+        + Hash
         + fmt::Debug
         + fmt::Binary
         + Copy
@@ -373,7 +377,7 @@ pub use crate::fallible::FromBitsError;
 /// The types substituted for `T` and `N` must always match, creating a
 /// `BitFlags` value where that isn't the case is only possible with
 /// incorrect unsafe code.
-#[derive(Copy, Clone, Eq)]
+#[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct BitFlags<T, N = <T as _internal::RawBitFlags>::Numeric> {
     val: N,
@@ -876,17 +880,33 @@ for_each_uint! { $ty $hide_docs =>
     }
 }
 
-impl<T, N: PartialEq> cmp::PartialEq for BitFlags<T, N> {
+impl<T, N: PartialEq> PartialEq for BitFlags<T, N> {
     #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         self.val == other.val
     }
 }
 
-// Clippy complains when Hash is derived while PartialEq is implemented manually
-impl<T, N: core::hash::Hash> core::hash::Hash for BitFlags<T, N> {
+impl<T, N: Eq> Eq for BitFlags<T, N> {}
+
+impl<T, N: PartialOrd> PartialOrd for BitFlags<T, N> {
     #[inline(always)]
-    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        self.val.partial_cmp(&other.val)
+    }
+}
+
+impl<T, N: Ord> Ord for BitFlags<T, N> {
+    #[inline(always)]
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
+        self.val.cmp(&other.val)
+    }
+}
+
+// Clippy complains when Hash is derived while PartialEq is implemented manually
+impl<T, N: Hash> Hash for BitFlags<T, N> {
+    #[inline(always)]
+    fn hash<H: Hasher>(&self, state: &mut H) {
         self.val.hash(state)
     }
 }

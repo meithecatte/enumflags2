@@ -1,11 +1,10 @@
-use enumflags2::{bitflags, BitFlags};
+#![allow(dead_code)]
+use enumflags2::{bitflags, BitFlag, BitFlags};
 
 include!("../common.rs");
 
 #[test]
 fn debug_format() {
-    use enumflags2::BitFlags;
-
     // Assert that our Debug output format meets expectations
 
     assert_eq!(
@@ -63,8 +62,6 @@ fn debug_format_alternate() {
 
 #[test]
 fn display_format() {
-    use enumflags2::BitFlags;
-
     // Assert that our Debug output format meets expectations
 
     assert_eq!(
@@ -85,8 +82,6 @@ fn display_format() {
 
 #[test]
 fn format() {
-    use enumflags2::BitFlags;
-
     // Assert BitFlags<T> impls fmt::{Binary, Octal, LowerHex, UpperHex}
 
     assert_eq!(format!("{:b}", BitFlags::<Test>::all()), "1111");
@@ -100,18 +95,28 @@ fn format() {
 
 #[test]
 fn debug_generic() {
-    use enumflags2::{BitFlag, BitFlags};
-
     #[derive(Debug)]
     struct Debug<T: BitFlag>(BitFlags<T>);
 
     let _ = format!("{:?}", Debug(BitFlags::<Test>::all()));
 }
 
-#[test]
-fn works_in_hashmap() {
-    // Assert that BitFlags<T> implements Hash.
+fn works_in_maps() {
+    // Assert that BitFlags<T> implements Hash and Ord.
 
-    use std::collections::HashMap;
-    let _map: HashMap<BitFlags<Test>, u8> = HashMap::new();
+    use std::collections::{BTreeSet, HashSet};
+    let mut map: BTreeSet<BitFlags<Test>> = BTreeSet::new();
+    map.insert(BitFlags::empty());
+    let mut map: HashSet<BitFlags<Test>> = HashSet::new();
+    map.insert(BitFlags::empty());
+}
+
+fn works_in_maps_generic<T: BitFlag>() {
+    // Assert that BitFlags<T> implements Hash and Ord.
+
+    use std::collections::{BTreeSet, HashSet};
+    let mut map: BTreeSet<BitFlags<T>> = BTreeSet::new();
+    map.insert(BitFlags::empty());
+    let mut map: HashSet<BitFlags<T>> = HashSet::new();
+    map.insert(BitFlags::empty());
 }
