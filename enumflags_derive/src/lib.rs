@@ -60,7 +60,7 @@ pub fn bitflags_internal(
     let Parameters { default } = parse_macro_input!(attr as Parameters);
     let mut ast = parse_macro_input!(input as Item);
     let output = match ast {
-        Item::Enum(ref mut item_enum) => gen_enumflags(item_enum, default),
+        Item::Enum(ref mut item_enum) => gen_enumflags(item_enum, &default),
         _ => Err(syn::Error::new_spanned(
             &ast,
             "#[bitflags] requires an enum",
@@ -247,7 +247,7 @@ fn check_flag(type_name: &Ident, flag: &Flag, bits: u8) -> Result<Option<TokenSt
     }
 }
 
-fn gen_enumflags(ast: &mut ItemEnum, default: Vec<Ident>) -> Result<TokenStream, syn::Error> {
+fn gen_enumflags(ast: &mut ItemEnum, default: &[Ident]) -> Result<TokenStream, syn::Error> {
     let ident = &ast.ident;
 
     let span = Span::call_site();
