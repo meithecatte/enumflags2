@@ -8,26 +8,22 @@ where
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = T::BITFLAGS_TYPE_NAME;
         let bits = DebugBinaryFormatter(&self.val);
-        let iter = if !self.is_empty() {
-            Some(FlagFormatter(self.iter()))
-        } else {
-            None
-        };
+        let iter = (!self.is_empty()).then_some(FlagFormatter(self.iter()));
 
-        if !fmt.alternate() {
-            // Concise tuple formatting is a better default
-            let mut debug = fmt.debug_tuple(name);
-            debug.field(&bits);
-            if let Some(iter) = iter {
-                debug.field(&iter);
-            }
-            debug.finish()
-        } else {
+        if fmt.alternate() {
             // Pretty-printed tuples are ugly and hard to read, so use struct format
             let mut debug = fmt.debug_struct(name);
             debug.field("bits", &bits);
             if let Some(iter) = iter {
                 debug.field("flags", &iter);
+            }
+            debug.finish()
+        } else {
+            // Concise tuple formatting is a better default
+            let mut debug = fmt.debug_tuple(name);
+            debug.field(&bits);
+            if let Some(iter) = iter {
+                debug.field(&iter);
             }
             debug.finish()
         }
