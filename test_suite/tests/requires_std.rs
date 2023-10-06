@@ -64,20 +64,11 @@ fn debug_format_alternate() {
 fn display_format() {
     // Assert that our Debug output format meets expectations
 
-    assert_eq!(
-        format!("{}", BitFlags::<Test>::all()),
-        "A | B | C | D"
-    );
+    assert_eq!(format!("{}", BitFlags::<Test>::all()), "A | B | C | D");
 
-    assert_eq!(
-        format!("{}", BitFlags::<Test>::empty()),
-        "<empty>"
-    );
+    assert_eq!(format!("{}", BitFlags::<Test>::empty()), "<empty>");
 
-    assert_eq!(
-        format!("{}", BitFlags::from_flag(Test::B)),
-        "B"
-    );
+    assert_eq!(format!("{}", BitFlags::from_flag(Test::B)), "B");
 }
 
 #[test]

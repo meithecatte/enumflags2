@@ -39,4 +39,3 @@ pub fn iterators(c: &mut Criterion) {
 
 criterion_group!(benches, iterators);
 criterion_main!(benches);
-
