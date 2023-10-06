@@ -218,8 +218,8 @@ pub mod _internal {
 
     use ::core::cmp::PartialOrd;
     use ::core::fmt;
-    use ::core::ops::{BitAnd, BitOr, BitXor, Not, Sub};
     use ::core::hash::Hash;
+    use ::core::ops::{BitAnd, BitOr, BitXor, Not, Sub};
 
     pub trait BitFlagNum:
         Default
@@ -907,7 +907,7 @@ impl<T, N: Ord> Ord for BitFlags<T, N> {
 impl<T, N: Hash> Hash for BitFlags<T, N> {
     #[inline(always)]
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.val.hash(state)
+        self.val.hash(state);
     }
 }
 
@@ -1031,7 +1031,7 @@ where
     where
         I: IntoIterator<Item = B>,
     {
-        *self = it.into_iter().fold(*self, |acc, flag| acc | flag)
+        *self = it.into_iter().fold(*self, |acc, flag| acc | flag);
     }
 }
 
