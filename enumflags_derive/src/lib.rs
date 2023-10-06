@@ -260,7 +260,7 @@ fn gen_enumflags(ast: &mut ItemEnum, default: &[Ident]) -> Result<TokenStream, s
     let mut variants = collect_flags(ast.variants.iter_mut())?;
     let deferred = variants
         .iter()
-        .flat_map(|variant| check_flag(ident, variant, bits).transpose())
+        .filter_map(|variant| check_flag(ident, variant, bits).transpose())
         .collect::<Result<Vec<_>, _>>()?;
 
     infer_values(&mut variants, ident, &repr);
