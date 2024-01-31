@@ -171,11 +171,11 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     ///
     /// use enumflags2::BitFlag;
     ///
-    /// let empty = MyFlag::all();
-    /// assert!(empty.is_all());
-    /// assert_eq!(empty.contains(MyFlag::One), true);
-    /// assert_eq!(empty.contains(MyFlag::Two), true);
-    /// assert_eq!(empty.contains(MyFlag::Three), true);
+    /// let all = MyFlag::all();
+    /// assert!(all.is_all());
+    /// assert_eq!(all.contains(MyFlag::One), true);
+    /// assert_eq!(all.contains(MyFlag::Two), true);
+    /// assert_eq!(all.contains(MyFlag::Three), true);
     /// ```
     #[inline]
     fn all() -> BitFlags<Self> {
@@ -185,8 +185,8 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     /// Create a `BitFlags` if the raw value provided does not contain
     /// any illegal flags.
     ///
-    /// This is a convenience reexport of [`BitFlags::from_bits`]. It can be called 
-    /// with `MyFlag::from_bits(bits)`, thus bypassing the need for type hints in 
+    /// This is a convenience reexport of [`BitFlags::from_bits`]. It can be called
+    /// with `MyFlag::from_bits(bits)`, thus bypassing the need for type hints in
     /// some situations.
     ///
     /// ```
