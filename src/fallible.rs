@@ -19,8 +19,7 @@ for_each_uint! { $ty $hide_docs =>
 }
 
 /// The error struct used by [`BitFlags::from_bits`]
-/// and the [`TryFrom`] implementation`
-/// for invalid values.
+/// and the [`TryFrom`] implementation for invalid values.
 ///
 /// Note that the implementation of [`std::error::Error`]
 /// for this type is gated on the `std` feature flag.

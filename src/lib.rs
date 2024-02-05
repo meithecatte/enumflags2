@@ -792,7 +792,23 @@ where
         }
     }
 
-    /// Returns an iterator that yields each set flag
+    /// Iterate over the `BitFlags`.
+    ///
+    /// ```
+    /// # use enumflags2::{bitflags, make_bitflags};
+    /// # #[bitflags]
+    /// # #[derive(Clone, Copy, PartialEq, Debug)]
+    /// # #[repr(u8)]
+    /// # enum MyFlag {
+    /// #     A = 1 << 0,
+    /// #     B = 1 << 1,
+    /// #     C = 1 << 2,
+    /// # }
+    /// let flags = make_bitflags!(MyFlag::{A | C});
+    ///
+    /// flags.iter()
+    ///     .for_each(|flag| println!("{:?}", flag));
+    /// ```
     #[inline]
     pub fn iter(self) -> Iter<T> {
         Iter { rest: self }
@@ -808,7 +824,7 @@ impl<T: BitFlag> IntoIterator for BitFlags<T> {
     }
 }
 
-/// Iterator that yields each set flag.
+/// Iterator that yields each flag set in a `BitFlags`.
 #[derive(Clone, Debug)]
 pub struct Iter<T: BitFlag> {
     rest: BitFlags<T>,
