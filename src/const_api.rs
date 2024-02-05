@@ -5,6 +5,10 @@ use core::marker::PhantomData;
 ///
 /// Some `const fn`s in this crate will need an instance of this type
 /// for some type-level information usually provided by traits.
+///
+/// A token can be obtained from [`BitFlags::CONST_TOKEN`]. The relevant types
+/// should be readily inferred from context.
+///
 /// For an example of usage, see [`not_c`][BitFlags::not_c].
 pub struct ConstToken<T, N>(BitFlags<T, N>);
 
