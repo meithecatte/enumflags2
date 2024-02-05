@@ -268,12 +268,13 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     ///
     /// use enumflags2::BitFlag;
     ///
-    /// unsafe {
-    ///     let from_bits = MyFlag::from_bits_unchecked(0b011);
-    ///     assert_eq!(from_bits.contains(MyFlag::One), true);
-    ///     assert_eq!(from_bits.contains(MyFlag::Two), true);
-    ///     assert_eq!(from_bits.contains(MyFlag::Three), false);
-    /// }
+    /// let from_bits = unsafe {
+    ///     MyFlag::from_bits_unchecked(0b011)
+    /// };
+    ///
+    /// assert_eq!(from_bits.contains(MyFlag::One), true);
+    /// assert_eq!(from_bits.contains(MyFlag::Two), true);
+    /// assert_eq!(from_bits.contains(MyFlag::Three), false);
     /// ```
     ///
     /// # Safety
