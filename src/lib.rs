@@ -422,14 +422,14 @@ pub use crate::const_api::ConstToken;
 /// `BitFlags<T>` is marked with the `#[repr(transparent)]` trait, meaning
 /// it can be safely transmuted into the corresponding numeric type.
 ///
-/// Usually, the same can be achieved by using [`BitFlags::from_bits`],
-/// [`BitFlags::from_bits_truncate`] or [`BitFlags::from_bits_unchecked`],
-/// but transmuting might still be useful if, for example, you're dealing with
+/// Usually, the same can be achieved by using [`BitFlags::bits`] in one
+/// direction, and [`BitFlags::from_bits`], [`BitFlags::from_bits_truncate`],
+/// or [`BitFlags::from_bits_unchecked`] in the other direction. However,
+/// transmuting might still be useful if, for example, you're dealing with
 /// an entire array of `BitFlags`.
 ///
-/// Transmuting from a numeric type into `BitFlags` may also be done, but
-/// care must be taken to make sure that each set bit in the value corresponds
-/// to an existing flag
+/// When transmuting *into* a `BitFlags`, make sure that each set bit
+/// corresponds to an existing flag
 /// (cf. [`from_bits_unchecked`][BitFlags::from_bits_unchecked]).
 ///
 /// For example:
@@ -483,6 +483,9 @@ pub use crate::const_api::ConstToken;
 ///     marker: PhantomData<T>,
 /// }
 /// ```
+///
+/// Manually providing a type for the `N` type parameter shouldn't ever
+/// be necessary.
 ///
 /// The types substituted for `T` and `N` must always match, creating a
 /// `BitFlags` value where that isn't the case is only possible with
