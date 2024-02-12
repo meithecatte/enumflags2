@@ -418,6 +418,38 @@ pub use crate::const_api::ConstToken;
 /// A `BitFlags<T>` is as large as the `T` itself,
 /// and stores one flag per bit.
 ///
+/// ## Comparison operators, [`PartialOrd`] and [`Ord`]
+///
+/// To make it possible to use `BitFlags` as the key of a
+/// [`BTreeMap`][std::collections::BTreeMap], `BitFlags` implements
+/// [`Ord`]. There is no meaningful total order for bitflags,
+/// so the implementation simply compares the integer values of the bits.
+///
+/// Unfortunately, this means that comparing `BitFlags` with an operator
+/// like `<=` will compile, and return values that are probably useless
+/// and not what you expect. In particular, `<=` does *not* check whether
+/// one value is a subset of the other. Use [`BitFlags::contains`] for that.
+///
+/// ## Customizing `Default`
+///
+/// By default, creating an instance of `BitFlags<T>` with `Default` will result
+/// in an empty set. If that's undesirable, you may customize this:
+///
+/// ```
+/// # use enumflags2::{BitFlags, bitflags};
+/// #[bitflags(default = B | C)]
+/// #[repr(u8)]
+/// #[derive(Copy, Clone, Debug, PartialEq)]
+/// enum MyFlag {
+///     A = 0b0001,
+///     B = 0b0010,
+///     C = 0b0100,
+///     D = 0b1000,
+/// }
+///
+/// assert_eq!(BitFlags::default(), MyFlag::B | MyFlag::C);
+/// ```
+///
 /// ## Memory layout
 ///
 /// `BitFlags<T>` is marked with the `#[repr(transparent)]` trait, meaning
