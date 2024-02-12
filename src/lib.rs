@@ -201,10 +201,10 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     ///
     /// use enumflags2::BitFlag;
     ///
-    /// let from_bits = MyFlag::from_bits(0b11).unwrap();
-    /// assert_eq!(from_bits.contains(MyFlag::One), true);
-    /// assert_eq!(from_bits.contains(MyFlag::Two), true);
-    /// assert_eq!(from_bits.contains(MyFlag::Three), false);
+    /// let flags = MyFlag::from_bits(0b11).unwrap();
+    /// assert_eq!(flags.contains(MyFlag::One), true);
+    /// assert_eq!(flags.contains(MyFlag::Two), true);
+    /// assert_eq!(flags.contains(MyFlag::Three), false);
     /// let invalid = MyFlag::from_bits(1 << 3);
     /// assert!(invalid.is_err());
     /// ```
@@ -233,10 +233,10 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     ///
     /// use enumflags2::BitFlag;
     ///
-    /// let from_bits = MyFlag::from_bits_truncate(0b1_1011);
-    /// assert_eq!(from_bits.contains(MyFlag::One), true);
-    /// assert_eq!(from_bits.contains(MyFlag::Two), true);
-    /// assert_eq!(from_bits.contains(MyFlag::Three), false);
+    /// let flags = MyFlag::from_bits_truncate(0b1_1011);
+    /// assert_eq!(flags.contains(MyFlag::One), true);
+    /// assert_eq!(flags.contains(MyFlag::Two), true);
+    /// assert_eq!(flags.contains(MyFlag::Three), false);
     /// ```
     #[inline]
     fn from_bits_truncate(bits: Self::Numeric) -> BitFlags<Self> {
@@ -249,6 +249,11 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     /// Consider using [`from_bits`][BitFlag::from_bits]
     /// or [`from_bits_truncate`][BitFlag::from_bits_truncate] instead.
     ///
+    /// # Safety
+    ///
+    /// All bits set in `val` must correspond to a value of the enum.
+    ///
+    /// # Example 
     ///
     /// This is a convenience reexport of [`BitFlags::from_bits_unchecked`]. It can be
     /// called with `MyFlag::from_bits_unchecked(bits)`, thus bypassing the need for
@@ -267,18 +272,14 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     ///
     /// use enumflags2::BitFlag;
     ///
-    /// let from_bits = unsafe {
+    /// let flags = unsafe {
     ///     MyFlag::from_bits_unchecked(0b011)
     /// };
     ///
-    /// assert_eq!(from_bits.contains(MyFlag::One), true);
-    /// assert_eq!(from_bits.contains(MyFlag::Two), true);
-    /// assert_eq!(from_bits.contains(MyFlag::Three), false);
+    /// assert_eq!(flags.contains(MyFlag::One), true);
+    /// assert_eq!(flags.contains(MyFlag::Two), true);
+    /// assert_eq!(flags.contains(MyFlag::Three), false);
     /// ```
-    ///
-    /// # Safety
-    ///
-    /// All bits set in `val` must correspond to a value of the enum.
     #[inline]
     unsafe fn from_bits_unchecked(bits: Self::Numeric) -> BitFlags<Self> {
         BitFlags::from_bits_unchecked(bits)
@@ -558,8 +559,30 @@ impl<T> BitFlags<T>
 where
     T: BitFlag,
 {
-    /// Returns a `BitFlags<T>` if the raw value provided does not contain
+    /// Create a `BitFlags` if the raw value provided does not contain
     /// any illegal flags.
+    ///
+    /// See also: [a convenience re-export in the `BitFlag` trait][BitFlag::from_bits],
+    /// which can help avoid the need for type hints.
+    ///
+    /// ```
+    /// # use enumflags2::{bitflags, BitFlags};
+    /// #[bitflags]
+    /// #[repr(u8)]
+    /// #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+    /// enum MyFlag {
+    ///     One = 1 << 0,
+    ///     Two = 1 << 1,
+    ///     Three = 1 << 2,
+    /// }
+    ///
+    /// let flags: BitFlags<MyFlag> = BitFlags::from_bits(0b11).unwrap();
+    /// assert_eq!(flags.contains(MyFlag::One), true);
+    /// assert_eq!(flags.contains(MyFlag::Two), true);
+    /// assert_eq!(flags.contains(MyFlag::Three), false);
+    /// let invalid = BitFlags::<MyFlag>::from_bits(1 << 3);
+    /// assert!(invalid.is_err());
+    /// ```
     #[inline]
     pub fn from_bits(bits: T::Numeric) -> Result<Self, FromBitsError<T>> {
         let flags = Self::from_bits_truncate(bits);
@@ -573,8 +596,28 @@ where
         }
     }
 
-    /// Create a `BitFlags<T>` from an underlying bitwise value. If any
+    /// Create a `BitFlags` from an underlying bitwise value. If any
     /// invalid bits are set, ignore them.
+    ///
+    /// See also: [a convenience re-export in the `BitFlag` trait][BitFlag::from_bits_truncate],
+    /// which can help avoid the need for type hints.
+    ///
+    /// ```
+    /// # use enumflags2::{bitflags, BitFlags};
+    /// #[bitflags]
+    /// #[repr(u8)]
+    /// #[derive(Clone, Copy, PartialEq, Eq)]
+    /// enum MyFlag {
+    ///     One = 1 << 0,
+    ///     Two = 1 << 1,
+    ///     Three = 1 << 2,
+    /// }
+    ///
+    /// let flags: BitFlags<MyFlag> = BitFlags::from_bits_truncate(0b1_1011);
+    /// assert_eq!(flags.contains(MyFlag::One), true);
+    /// assert_eq!(flags.contains(MyFlag::Two), true);
+    /// assert_eq!(flags.contains(MyFlag::Three), false);
+    /// ```
     #[must_use]
     #[inline(always)]
     pub fn from_bits_truncate(bits: T::Numeric) -> Self {
@@ -592,6 +635,28 @@ where
     /// # Safety
     ///
     /// All bits set in `val` must correspond to a value of the enum.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use enumflags2::{bitflags, BitFlags};
+    /// #[bitflags]
+    /// #[repr(u8)]
+    /// #[derive(Clone, Copy, PartialEq, Eq)]
+    /// enum MyFlag {
+    ///     One = 1 << 0,
+    ///     Two = 1 << 1,
+    ///     Three = 1 << 2,
+    /// }
+    ///
+    /// let flags: BitFlags<MyFlag> = unsafe {
+    ///     BitFlags::from_bits_unchecked(0b011)
+    /// };
+    ///
+    /// assert_eq!(flags.contains(MyFlag::One), true);
+    /// assert_eq!(flags.contains(MyFlag::Two), true);
+    /// assert_eq!(flags.contains(MyFlag::Three), false);
+    /// ```
     #[must_use]
     #[inline(always)]
     pub unsafe fn from_bits_unchecked(val: T::Numeric) -> Self {
