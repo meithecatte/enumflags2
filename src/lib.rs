@@ -321,7 +321,6 @@ pub mod _internal {
         fn bits(self) -> Self::Numeric;
     }
 
-    use ::core::cmp::PartialOrd;
     use ::core::fmt;
     use ::core::ops::{BitAnd, BitOr, BitXor, Not, Sub};
     use ::core::hash::Hash;
