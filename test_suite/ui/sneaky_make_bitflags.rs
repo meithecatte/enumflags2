@@ -1,3 +1,6 @@
+extern crate enumflags2;
+extern crate core;
+
 use enumflags2::{bitflags, make_bitflags};
 
 #[bitflags]

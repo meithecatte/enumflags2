@@ -1,12 +1,12 @@
 error: #[bitflags] requires an enum
- --> $DIR/not_enum.rs:2:1
+ --> ui/not_enum.rs:5:1
   |
-2 | / #[derive(Copy, Clone)]
-3 | | struct Foo(u16);
+5 | / #[derive(Copy, Clone)]
+6 | | struct Foo(u16);
   | |________________^
 
 error: #[bitflags] requires an enum
- --> $DIR/not_enum.rs:6:1
+ --> ui/not_enum.rs:9:1
   |
-6 | const WTF: u8 = 42;
+9 | const WTF: u8 = 42;
   | ^^^^^^^^^^^^^^^^^^^

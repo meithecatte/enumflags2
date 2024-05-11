@@ -1,9 +1,9 @@
 error[E0081]: discriminant value `1` assigned more than once
- --> ui/overlapping_flags.rs:4:1
+ --> ui/overlapping_flags.rs:7:1
   |
-4 | enum Foo {
+7 | enum Foo {
   | ^^^^^^^^
-5 |     SomeFlag = 1 << 0,
+8 |     SomeFlag = 1 << 0,
   |                ------ `1` assigned here
-6 |     OverlappingFlag = 1 << 0,
+9 |     OverlappingFlag = 1 << 0,
   |                       ------ `1` assigned here

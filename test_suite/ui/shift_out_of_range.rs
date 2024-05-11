@@ -1,3 +1,6 @@
+extern crate enumflags2;
+extern crate core;
+
 #[enumflags2::bitflags]
 #[repr(u64)]
 #[derive(Copy, Clone)]

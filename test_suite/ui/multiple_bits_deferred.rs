@@ -1,3 +1,6 @@
+extern crate enumflags2;
+extern crate core;
+
 const THREE: u8 = 3;
 
 #[enumflags2::bitflags]

@@ -1,5 +1,5 @@
 error: Bitflag variants cannot contain additional data
- --> $DIR/with_fields.rs:5:8
+ --> ui/with_fields.rs:8:8
   |
-5 |     Bar(u32),
+8 |     Bar(u32),
   |        ^^^^^

@@ -1,5 +1,5 @@
 error: Flags must have exactly one set bit
- --> $DIR/multiple_bits.rs:6:5
+ --> ui/multiple_bits.rs:9:5
   |
-6 |     MultipleBits = 6,
+9 |     MultipleBits = 6,
   |     ^^^^^^^^^^^^^^^^

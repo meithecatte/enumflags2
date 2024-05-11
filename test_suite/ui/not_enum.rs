@@ -1,3 +1,6 @@
+extern crate enumflags2;
+extern crate core;
+
 #[enumflags2::bitflags]
 #[derive(Copy, Clone)]
 struct Foo(u16);

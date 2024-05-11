@@ -1,17 +1,17 @@
 error: repr must be an integer type for #[bitflags].
- --> $DIR/invalid_repr.rs:2:8
+ --> ui/invalid_repr.rs:5:8
   |
-2 | #[repr(C)]
+5 | #[repr(C)]
   |        ^
 
 error: Signed types in a repr are not supported.
-  --> $DIR/invalid_repr.rs:10:8
+  --> ui/invalid_repr.rs:13:8
    |
-10 | #[repr(i32)]
+13 | #[repr(i32)]
    |        ^^^
 
 error: #[repr(usize)] is not supported. Use u32 or u64 instead.
-  --> $DIR/invalid_repr.rs:18:8
+  --> ui/invalid_repr.rs:21:8
    |
-18 | #[repr(usize)]
+21 | #[repr(usize)]
    |        ^^^^^

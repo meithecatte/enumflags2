@@ -1,3 +1,6 @@
+extern crate enumflags2;
+extern crate core;
+
 const ZERO: u8 = 0;
 
 #[enumflags2::bitflags]

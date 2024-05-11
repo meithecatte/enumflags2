@@ -1,7 +1,7 @@
 error[E0277]: the trait bound `AssertionFailed: ExactlyOneBitSet` is not satisfied
- --> ui/multiple_bits_deferred.rs:7:5
-  |
-7 |     Three = THREE,
-  |     ^^^^^^^^^^^^^ the trait `ExactlyOneBitSet` is not implemented for `AssertionFailed`
-  |
-  = help: the trait `ExactlyOneBitSet` is implemented for `AssertionSucceeded`
+  --> ui/multiple_bits_deferred.rs:10:5
+   |
+10 |     Three = THREE,
+   |     ^^^^^^^^^^^^^ the trait `ExactlyOneBitSet` is not implemented for `AssertionFailed`
+   |
+   = help: the trait `ExactlyOneBitSet` is implemented for `AssertionSucceeded`
