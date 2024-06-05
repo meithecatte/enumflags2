@@ -1,12 +1,11 @@
-error: #[bitflags] requires an enum
- --> $DIR/not_enum.rs:2:1
+error: expected enum for #[bitflags], found struct
+ --> ui/not_enum.rs:3:1
   |
-2 | / #[derive(Copy, Clone)]
-3 | | struct Foo(u16);
-  | |________________^
+3 | struct Foo(u16);
+  | ^^^^^^
 
-error: #[bitflags] requires an enum
- --> $DIR/not_enum.rs:6:1
+error: expected one of: `struct`, `enum`, `union`
+ --> ui/not_enum.rs:6:1
   |
 6 | const WTF: u8 = 42;
-  | ^^^^^^^^^^^^^^^^^^^
+  | ^^^^^

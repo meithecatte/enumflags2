@@ -12,7 +12,11 @@ rust-version = "1.56"
 [lib]
 proc-macro = true
 
+[dependencies.syn]
+version = "^2.0"
+features = ["parsing", "printing", "derive", "proc-macro"]
+default-features = false
+
 [dependencies]
-syn = { version = "^2.0", features = ["full"] }
 quote = "^1.0"
 proc-macro2 = "^1.0"

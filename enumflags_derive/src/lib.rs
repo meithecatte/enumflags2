@@ -9,7 +9,7 @@ use syn::{
     parse::{Parse, ParseStream},
     parse_macro_input,
     spanned::Spanned,
-    Expr, Ident, Item, ItemEnum, Token, Variant,
+    Expr, Ident, DeriveInput, Data, Token, Variant,
 };
 
 struct Flag<'a> {
@@ -58,14 +58,8 @@ pub fn bitflags_internal(
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let Parameters { default } = parse_macro_input!(attr as Parameters);
-    let mut ast = parse_macro_input!(input as Item);
-    let output = match ast {
-        Item::Enum(ref mut item_enum) => gen_enumflags(item_enum, default),
-        _ => Err(syn::Error::new_spanned(
-            &ast,
-            "#[bitflags] requires an enum",
-        )),
-    };
+    let mut ast = parse_macro_input!(input as DeriveInput);
+    let output = gen_enumflags(&mut ast, default);
 
     output
         .unwrap_or_else(|err| {
@@ -247,17 +241,29 @@ fn check_flag(type_name: &Ident, flag: &Flag, bits: u8) -> Result<Option<TokenSt
     }
 }
 
-fn gen_enumflags(ast: &mut ItemEnum, default: Vec<Ident>) -> Result<TokenStream, syn::Error> {
+fn gen_enumflags(ast: &mut DeriveInput, default: Vec<Ident>) -> Result<TokenStream, syn::Error> {
     let ident = &ast.ident;
 
     let span = Span::call_site();
+
+    let ast_variants = match &mut ast.data {
+        Data::Enum(ref mut data) => &mut data.variants,
+        Data::Struct(data) => {
+            return Err(syn::Error::new_spanned(&data.struct_token,
+                "expected enum for #[bitflags], found struct"));
+        }
+        Data::Union(data) => {
+            return Err(syn::Error::new_spanned(&data.union_token,
+                "expected enum for #[bitflags], found union"));
+        }
+    };
 
     let repr = extract_repr(&ast.attrs)?
         .ok_or_else(|| syn::Error::new_spanned(ident,
                         "repr attribute missing. Add #[repr(u64)] or a similar attribute to specify the size of the bitfield."))?;
     let bits = type_bits(&repr)?;
 
-    let mut variants = collect_flags(ast.variants.iter_mut())?;
+    let mut variants = collect_flags(ast_variants.iter_mut())?;
     let deferred = variants
         .iter()
         .flat_map(|variant| check_flag(ident, variant, bits).transpose())
@@ -273,7 +279,12 @@ fn gen_enumflags(ast: &mut ItemEnum, default: Vec<Ident>) -> Result<TokenStream,
     }
 
     let std = quote_spanned!(span => ::enumflags2::_internal::core);
-    let variant_names = ast.variants.iter().map(|v| &v.ident).collect::<Vec<_>>();
+    let ast_variants = match &ast.data {
+        Data::Enum(ref data) => &data.variants,
+        _ => unreachable!(),
+    };
+
+    let variant_names = ast_variants.iter().map(|v| &v.ident).collect::<Vec<_>>();
 
     Ok(quote_spanned! {
         span =>
