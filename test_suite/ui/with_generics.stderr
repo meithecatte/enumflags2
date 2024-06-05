@@ -1,0 +1,14 @@
+error: bitflags cannot be generic
+ --> ui/with_generics.rs:3:9
+  |
+3 | enum Foo<A> {
+  |         ^^^
+
+error[E0392]: type parameter `A` is never used
+ --> ui/with_generics.rs:3:10
+  |
+3 | enum Foo<A> {
+  |          ^ unused type parameter
+  |
+  = help: consider removing `A`, referring to it in a field, or using a marker such as `PhantomData`
+  = help: if you intended `A` to be a const parameter, use `const A: /* Type */` instead

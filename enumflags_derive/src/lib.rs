@@ -258,6 +258,11 @@ fn gen_enumflags(ast: &mut DeriveInput, default: Vec<Ident>) -> Result<TokenStre
         }
     };
 
+    if ast.generics.lt_token.is_some() || ast.generics.where_clause.is_some() {
+        return Err(syn::Error::new_spanned(&ast.generics,
+            "bitflags cannot be generic"));
+    }
+
     let repr = extract_repr(&ast.attrs)?
         .ok_or_else(|| syn::Error::new_spanned(ident,
                         "repr attribute missing. Add #[repr(u64)] or a similar attribute to specify the size of the bitfield."))?;
