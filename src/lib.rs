@@ -46,6 +46,8 @@
 //!
 //! - [`serde`](https://serde.rs/) implements `Serialize` and `Deserialize`
 //!   for `BitFlags<T>`.
+//! - [`zerocopy`](https://github.com/google/zerocopy/) implements `Immutable`, `IntoBytes`,
+//! `FromZeros`, `TryFromBytes`, and `KnownLayout` for all `BitFlags<T>` and `Unaligned` if the value type is unaligned.
 //! - `std` implements `std::error::Error` for `FromBitsError`.
 //!
 //! ## `const fn`-compatible APIs
@@ -523,6 +525,14 @@ pub use crate::const_api::ConstToken;
 /// `BitFlags` value where that isn't the case is only possible with
 /// incorrect unsafe code.
 #[derive(Copy, Clone)]
+#[cfg_attr(
+    feature = "zerocopy",
+    derive(
+        zerocopy_derive::Immutable,
+        zerocopy_derive::KnownLayout,
+        zerocopy_derive::IntoBytes,
+    )
+)]
 #[repr(transparent)]
 pub struct BitFlags<T, N = <T as _internal::RawBitFlags>::Numeric> {
     val: N,
@@ -1029,6 +1039,72 @@ mod impl_serde {
     {
         fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
             T::Numeric::serialize(&self.val, s)
+        }
+    }
+}
+
+#[cfg(feature = "zerocopy")]
+mod impl_zerocopy {
+    use super::{BitFlag, BitFlags};
+    use zerocopy::{FromZeros, Immutable, TryFromBytes, Unaligned};
+
+    // All zeros is always valid
+    unsafe impl<T> FromZeros for BitFlags<T>
+    where
+        T: BitFlag,
+        T::Numeric: Immutable,
+        T::Numeric: FromZeros,
+    {
+        fn only_derive_is_allowed_to_implement_this_trait() {}
+    }
+
+    // Mark all BitFlags as Unaligned if the underlying number type is unaligned
+    unsafe impl<T> Unaligned for BitFlags<T>
+    where
+        T: BitFlag,
+        T::Numeric: Unaligned,
+    {
+        fn only_derive_is_allowed_to_implement_this_trait() {}
+    }
+
+    // Assert that there are no invalid bytes set
+    unsafe impl<T> TryFromBytes for BitFlags<T>
+    where
+        T: BitFlag,
+        T::Numeric: Immutable,
+        T::Numeric: TryFromBytes,
+    {
+        fn only_derive_is_allowed_to_implement_this_trait()
+        where
+            Self: Sized,
+        {
+        }
+
+        #[inline]
+        fn is_bit_valid<
+            ZerocopyAliasing: zerocopy::pointer::invariant::Aliasing
+                + zerocopy::pointer::invariant::AtLeast<zerocopy::pointer::invariant::Shared>,
+        >(
+            candidate: zerocopy::Maybe<'_, Self, ZerocopyAliasing>,
+        ) -> bool {
+            // SAFETY:
+            // - The cast preserves address. The caller has promised that the
+            //   cast results in an object of equal or lesser size, and so the
+            //   cast returns a pointer which references a subset of the bytes
+            //   of `p`.
+            // - The cast preserves provenance.
+            // - The caller has promised that the destination type has
+            //   `UnsafeCell`s at the same byte ranges as the source type.
+            let candidate = unsafe { candidate.cast_unsized::<T::Numeric, _>(|p| p as *mut _) };
+
+            // SAFETY: The caller has promised that the referenced memory region
+            // will contain a valid `$repr`.
+            let my_candidate =
+                unsafe { candidate.assume_validity::<zerocopy::pointer::invariant::Valid>() };
+            {
+                (my_candidate.read_unaligned::<zerocopy::pointer::BecauseImmutable>() ^ T::ALL_BITS)
+                    == T::EMPTY
+            }
         }
     }
 }
