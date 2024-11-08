@@ -253,7 +253,7 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     ///
     /// All bits set in `val` must correspond to a value of the enum.
     ///
-    /// # Example 
+    /// # Example
     ///
     /// This is a convenience reexport of [`BitFlags::from_bits_unchecked`]. It can be
     /// called with `MyFlag::from_bits_unchecked(bits)`, thus bypassing the need for
@@ -322,8 +322,8 @@ pub mod _internal {
     }
 
     use ::core::fmt;
-    use ::core::ops::{BitAnd, BitOr, BitXor, Not, Sub};
     use ::core::hash::Hash;
+    use ::core::ops::{BitAnd, BitOr, BitXor, Not, Sub};
 
     pub trait BitFlagNum:
         Default
