@@ -667,6 +667,33 @@ where
         unsafe { BitFlags::from_bits_unchecked(bits & T::ALL_BITS) }
     }
 
+    /// Validate if an underlying bitwise value can safely be converted to `BitFlags`.
+    /// Returns false if any invalid bits are set.
+    ///
+    /// ```
+    /// # use enumflags2::{bitflags, BitFlags};
+    /// #[bitflags]
+    /// #[repr(u8)]
+    /// #[derive(Clone, Copy, PartialEq, Eq)]
+    /// enum MyFlag {
+    ///     One = 0b0001,
+    ///     Two = 0b0010,
+    ///     Three = 0b1000,
+    /// }
+    ///
+    /// assert_eq!(BitFlags::<MyFlag>::validate_bits(0b1011), true);
+    /// assert_eq!(BitFlags::<MyFlag>::validate_bits(0b0000), true);
+    /// assert_eq!(BitFlags::<MyFlag>::validate_bits(0b0100), false);
+    /// assert_eq!(BitFlags::<MyFlag>::validate_bits(0b1111), false);
+    /// ```
+    #[must_use]
+    #[inline(always)]
+    pub fn validate_bits(bits: T::Numeric) -> bool {
+        // SAFETY: We're truncating out all the invalid bits so it will
+        // only be different if there are invalid bits set.
+        (bits & T::ALL_BITS) == bits
+    }
+
     /// Create a new BitFlags unsafely, without checking if the bits form
     /// a valid bit pattern for the type.
     ///
@@ -1102,8 +1129,11 @@ mod impl_zerocopy {
             let my_candidate =
                 unsafe { candidate.assume_validity::<zerocopy::pointer::invariant::Valid>() };
             {
-                (my_candidate.read_unaligned::<zerocopy::pointer::BecauseImmutable>() ^ T::ALL_BITS)
-                    == T::EMPTY
+                // TODO: Currently this assumes that the candidate is aligned. We actually need to check this beforehand
+                // Dereference the pointer to the candidate
+                let candidate =
+                    my_candidate.read_unaligned::<zerocopy::pointer::BecauseImmutable>();
+                return BitFlags::<T>::validate_bits(candidate);
             }
         }
     }
