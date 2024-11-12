@@ -1082,6 +1082,10 @@ mod impl_zerocopy {
         T::Numeric: Immutable,
         T::Numeric: FromZeros,
     {
+        // We are actually allowed to implement this trait. The scary name is just meant
+        // to convey that "this is dangerous and you'd better know what you're doing and
+        // be sure that you need to do this and can't just use the derives". (https://github.com/google/zerocopy/issues/287)
+        // We can not use the derives for this, because they dont support validation.
         fn only_derive_is_allowed_to_implement_this_trait() {}
     }
 
@@ -1091,6 +1095,10 @@ mod impl_zerocopy {
         T: BitFlag,
         T::Numeric: Unaligned,
     {
+        // We are actually allowed to implement this trait. The scary name is just meant
+        // to convey that "this is dangerous and you'd better know what you're doing and
+        // be sure that you need to do this and can't just use the derives". (https://github.com/google/zerocopy/issues/287)
+        // We can not use the derives for this, because they dont support validation.
         fn only_derive_is_allowed_to_implement_this_trait() {}
     }
 
@@ -1101,6 +1109,10 @@ mod impl_zerocopy {
         T::Numeric: Immutable,
         T::Numeric: TryFromBytes,
     {
+        // We are actually allowed to implement this trait. The scary name is just meant
+        // to convey that "this is dangerous and you'd better know what you're doing and
+        // be sure that you need to do this and can't just use the derives". (https://github.com/google/zerocopy/issues/287)
+        // We can not use the derives for this, because they dont support validation.
         fn only_derive_is_allowed_to_implement_this_trait()
         where
             Self: Sized,
