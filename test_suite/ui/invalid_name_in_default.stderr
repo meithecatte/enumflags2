@@ -2,10 +2,12 @@ error[E0599]: no variant or associated item named `C` found for enum `Test` in t
  --> ui/invalid_name_in_default.rs:3:26
   |
 3 | #[bitflags(default = A | C)]
-  |                          ^
-  |                          |
-  |                          variant or associated item not found in `Test`
-  |                          help: there is a variant with a similar name: `A`
+  |                          ^ variant or associated item not found in `Test`
 ...
 6 | enum Test {
   | --------- variant or associated item `C` not found for this enum
+  |
+help: there is a variant with a similar name
+  |
+3 | #[bitflags(default = A | A)]
+  |                          ~
