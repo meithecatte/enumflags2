@@ -558,7 +558,7 @@ pub struct BitFlags<T, N = <T as _internal::RawBitFlags>::Numeric> {
 /// assert_eq!(x, Test::A | Test::C);
 ///
 /// // Also works in const contexts:
-/// const X: BitFlags<Test> = make_bitflags!(Test::{A | C});
+/// const X: BitFlags<Test> = make_bitflags!(Test::A);
 /// ```
 #[macro_export]
 macro_rules! make_bitflags {
@@ -576,7 +576,17 @@ macro_rules! make_bitflags {
             unsafe { $crate::BitFlags::<$enum>::from_bits_unchecked_c(
                     n, $crate::BitFlags::CONST_TOKEN) }
         }
-    }
+    };
+    ( $enum:ident :: $variant:ident ) => {
+        {
+            let flag: $enum = $enum::$variant;
+            let n = flag as <$enum as $crate::_internal::RawBitFlags>::Numeric;
+            // SAFETY: The value has been created from the numeric value of
+            // the underlying enum, so only valid bits are set.
+            unsafe { $crate::BitFlags::<$enum>::from_bits_unchecked_c(
+                    n, $crate::BitFlags::CONST_TOKEN) }
+        }
+    };
 }
 
 /// The default value returned is one with all flags unset, i. e. [`empty`][Self::empty],
