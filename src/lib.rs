@@ -50,6 +50,8 @@
 //!
 //! - [`serde`](https://serde.rs/) implements `Serialize` and `Deserialize`
 //!   for `BitFlags<T>`.
+//! - [`zerocopy`](https://github.com/google/zerocopy/) implements `Immutable`, `IntoBytes`,
+//! `FromZeros`, `TryFromBytes`, and `KnownLayout` for all `BitFlags<T>` and `Unaligned` if the value type is unaligned.
 //! - `std` implements `std::error::Error` for `FromBitsError`.
 //!
 //! ## `const fn`-compatible APIs
@@ -260,7 +262,7 @@ pub trait BitFlag: Copy + Clone + 'static + _internal::RawBitFlags {
     ///
     /// All bits set in `val` must correspond to a value of the enum.
     ///
-    /// # Example 
+    /// # Example
     ///
     /// This is a convenience reexport of [`BitFlags::from_bits_unchecked`]. It can be
     /// called with `MyFlag::from_bits_unchecked(bits)`, thus bypassing the need for
@@ -334,8 +336,8 @@ pub mod _internal {
     }
 
     use ::core::fmt;
-    use ::core::ops::{BitAnd, BitOr, BitXor, Not, Sub};
     use ::core::hash::Hash;
+    use ::core::ops::{BitAnd, BitOr, BitXor, Not, Sub};
 
     pub trait BitFlagNum:
         Default
@@ -535,6 +537,14 @@ pub use crate::const_api::ConstToken;
 /// `BitFlags` value where that isn't the case is only possible with
 /// incorrect unsafe code.
 #[derive(Copy, Clone)]
+#[cfg_attr(
+    feature = "zerocopy",
+    derive(
+        zerocopy_derive::Immutable,
+        zerocopy_derive::KnownLayout,
+        zerocopy_derive::IntoBytes,
+    )
+)]
 #[repr(transparent)]
 pub struct BitFlags<T, N = <T as _internal::RawBitFlags>::Numeric> {
     val: N,
@@ -680,6 +690,33 @@ where
         // SAFETY: We're truncating out all the invalid bits, so the remaining
         // ones must be valid.
         unsafe { BitFlags::from_bits_unchecked(bits & T::ALL_BITS) }
+    }
+
+    /// Validate if an underlying bitwise value can safely be converted to `BitFlags`.
+    /// Returns false if any invalid bits are set.
+    ///
+    /// ```
+    /// # use enumflags2::{bitflags, BitFlags};
+    /// #[bitflags]
+    /// #[repr(u8)]
+    /// #[derive(Clone, Copy, PartialEq, Eq)]
+    /// enum MyFlag {
+    ///     One = 0b0001,
+    ///     Two = 0b0010,
+    ///     Three = 0b1000,
+    /// }
+    ///
+    /// assert_eq!(BitFlags::<MyFlag>::validate_bits(0b1011), true);
+    /// assert_eq!(BitFlags::<MyFlag>::validate_bits(0b0000), true);
+    /// assert_eq!(BitFlags::<MyFlag>::validate_bits(0b0100), false);
+    /// assert_eq!(BitFlags::<MyFlag>::validate_bits(0b1111), false);
+    /// ```
+    #[must_use]
+    #[inline(always)]
+    pub fn validate_bits(bits: T::Numeric) -> bool {
+        // SAFETY: We're truncating out all the invalid bits so it will
+        // only be different if there are invalid bits set.
+        (bits & T::ALL_BITS) == bits
     }
 
     /// Create a new BitFlags unsafely, without checking if the bits form
@@ -1054,6 +1091,87 @@ mod impl_serde {
     {
         fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
             T::Numeric::serialize(&self.val, s)
+        }
+    }
+}
+
+#[cfg(feature = "zerocopy")]
+mod impl_zerocopy {
+    use super::{BitFlag, BitFlags};
+    use zerocopy::{FromZeros, Immutable, TryFromBytes, Unaligned};
+
+    // All zeros is always valid
+    unsafe impl<T> FromZeros for BitFlags<T>
+    where
+        T: BitFlag,
+        T::Numeric: Immutable,
+        T::Numeric: FromZeros,
+    {
+        // We are actually allowed to implement this trait. The scary name is just meant
+        // to convey that "this is dangerous and you'd better know what you're doing and
+        // be sure that you need to do this and can't just use the derives". (https://github.com/google/zerocopy/issues/287)
+        // We can not use the derives for this, because they dont support validation.
+        fn only_derive_is_allowed_to_implement_this_trait() {}
+    }
+
+    // Mark all BitFlags as Unaligned if the underlying number type is unaligned
+    unsafe impl<T> Unaligned for BitFlags<T>
+    where
+        T: BitFlag,
+        T::Numeric: Unaligned,
+    {
+        // We are actually allowed to implement this trait. The scary name is just meant
+        // to convey that "this is dangerous and you'd better know what you're doing and
+        // be sure that you need to do this and can't just use the derives". (https://github.com/google/zerocopy/issues/287)
+        // We can not use the derives for this, because they dont support validation.
+        fn only_derive_is_allowed_to_implement_this_trait() {}
+    }
+
+    // Assert that there are no invalid bytes set
+    unsafe impl<T> TryFromBytes for BitFlags<T>
+    where
+        T: BitFlag,
+        T::Numeric: Immutable,
+        T::Numeric: TryFromBytes,
+    {
+        // We are actually allowed to implement this trait. The scary name is just meant
+        // to convey that "this is dangerous and you'd better know what you're doing and
+        // be sure that you need to do this and can't just use the derives". (https://github.com/google/zerocopy/issues/287)
+        // We can not use the derives for this, because they dont support validation.
+        fn only_derive_is_allowed_to_implement_this_trait()
+        where
+            Self: Sized,
+        {
+        }
+
+        #[inline]
+        fn is_bit_valid<
+            ZerocopyAliasing: zerocopy::pointer::invariant::Aliasing
+                + zerocopy::pointer::invariant::AtLeast<zerocopy::pointer::invariant::Shared>,
+        >(
+            candidate: zerocopy::Maybe<'_, Self, ZerocopyAliasing>,
+        ) -> bool {
+            // SAFETY:
+            // - The cast preserves address. The caller has promised that the
+            //   cast results in an object of equal or lesser size, and so the
+            //   cast returns a pointer which references a subset of the bytes
+            //   of `p`.
+            // - The cast preserves provenance.
+            // - The caller has promised that the destination type has
+            //   `UnsafeCell`s at the same byte ranges as the source type.
+            let candidate = unsafe { candidate.cast_unsized::<T::Numeric, _>(|p| p as *mut _) };
+
+            // SAFETY: The caller has promised that the referenced memory region
+            // will contain a valid `$repr`.
+            let my_candidate =
+                unsafe { candidate.assume_validity::<zerocopy::pointer::invariant::Valid>() };
+            {
+                // TODO: Currently this assumes that the candidate is aligned. We actually need to check this beforehand
+                // Dereference the pointer to the candidate
+                let candidate =
+                    my_candidate.read_unaligned::<zerocopy::pointer::BecauseImmutable>();
+                return BitFlags::<T>::validate_bits(candidate);
+            }
         }
     }
 }
