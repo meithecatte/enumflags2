@@ -334,18 +334,18 @@ fn gen_enumflags(ast: &mut DeriveInput, default: Vec<Ident>) -> Result<TokenStre
             unsafe impl ::enumflags2::_internal::RawBitFlags for #ident {
                 type Numeric = #repr;
 
-                const EMPTY: Self::Numeric = 0;
+                const EMPTY: <Self as ::enumflags2::_internal::RawBitFlags>::Numeric = 0;
 
-                const DEFAULT: Self::Numeric =
+                const DEFAULT: <Self as ::enumflags2::_internal::RawBitFlags>::Numeric =
                     0 #(| (Self::#default as #repr))*;
 
-                const ALL_BITS: Self::Numeric =
+                const ALL_BITS: <Self as ::enumflags2::_internal::RawBitFlags>::Numeric =
                     0 #(| (Self::#variant_names as #repr))*;
 
                 const BITFLAGS_TYPE_NAME : &'static str =
                     concat!("BitFlags<", stringify!(#ident), ">");
 
-                fn bits(self) -> Self::Numeric {
+                fn bits(self) -> <Self as ::enumflags2::_internal::RawBitFlags>::Numeric {
                     self as #repr
                 }
             }
