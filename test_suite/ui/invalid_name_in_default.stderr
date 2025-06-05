@@ -9,5 +9,6 @@ error[E0599]: no variant or associated item named `C` found for enum `Test` in t
   |
 help: there is a variant with a similar name
   |
-3 | #[bitflags(default = A | A)]
-  |                          ~
+3 - #[bitflags(default = A | C)]
+3 + #[bitflags(default = A | A)]
+  |

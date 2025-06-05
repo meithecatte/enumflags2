@@ -1,29 +1,29 @@
 error: Flag value out of range for u64
- --> $DIR/shift_out_of_range.rs:5:5
+ --> ui/shift_out_of_range.rs:5:5
   |
 5 |     BigNumber = 1 << 69,
   |     ^^^^^^^^^^^^^^^^^^^
 
 error: Flag value out of range for u16
-  --> $DIR/shift_out_of_range.rs:12:5
+  --> ui/shift_out_of_range.rs:12:5
    |
 12 |     BigNumber = 1 << 20,
    |     ^^^^^^^^^^^^^^^^^^^
 
 error: Flag value out of range for u16
-  --> $DIR/shift_out_of_range.rs:19:5
+  --> ui/shift_out_of_range.rs:19:5
    |
 19 |     BigNumber = (1 << 10) << 10,
    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-error[E0080]: evaluation of constant value failed
- --> $DIR/shift_out_of_range.rs:5:17
+error[E0080]: attempt to shift left by `69_i32`, which would overflow
+ --> ui/shift_out_of_range.rs:5:17
   |
 5 |     BigNumber = 1 << 69,
-  |                 ^^^^^^^ attempt to shift left by `69_i32`, which would overflow
+  |                 ^^^^^^^ evaluation of constant value failed here
 
-error[E0080]: evaluation of constant value failed
-  --> $DIR/shift_out_of_range.rs:12:17
+error[E0080]: attempt to shift left by `20_i32`, which would overflow
+  --> ui/shift_out_of_range.rs:12:17
    |
 12 |     BigNumber = 1 << 20,
-   |                 ^^^^^^^ attempt to shift left by `20_i32`, which would overflow
+   |                 ^^^^^^^ evaluation of constant value failed here
