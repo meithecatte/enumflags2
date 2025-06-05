@@ -29,6 +29,14 @@ enum Default6 {
     D = 1 << 3,
 }
 
+#[bitflags]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[repr(u8)]
+enum AssociatedTypeNameConflict {
+    Stringy = 1 << 0,
+    Numeric = 1 << 1,
+}
+
 #[test]
 fn test_ctors() {
     use enumflags2::BitFlags;
