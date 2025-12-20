@@ -20,10 +20,10 @@ error[E0080]: attempt to shift left by `69_i32`, which would overflow
  --> ui/shift_out_of_range.rs:5:17
   |
 5 |     BigNumber = 1 << 69,
-  |                 ^^^^^^^ evaluation of constant value failed here
+  |                 ^^^^^^^ evaluation of `Foo::BigNumber::{constant#0}` failed here
 
 error[E0080]: attempt to shift left by `20_i32`, which would overflow
   --> ui/shift_out_of_range.rs:12:17
    |
 12 |     BigNumber = 1 << 20,
-   |                 ^^^^^^^ evaluation of constant value failed here
+   |                 ^^^^^^^ evaluation of `Bar::BigNumber::{constant#0}` failed here

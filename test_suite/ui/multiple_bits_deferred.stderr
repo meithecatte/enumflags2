@@ -3,5 +3,3 @@ error[E0277]: the trait bound `AssertionFailed: ExactlyOneBitSet` is not satisfi
   |
 7 |     Three = THREE,
   |     ^^^^^^^^^^^^^ the trait `ExactlyOneBitSet` is not implemented for `AssertionFailed`
-  |
-  = help: the trait `ExactlyOneBitSet` is implemented for `AssertionSucceeded`
