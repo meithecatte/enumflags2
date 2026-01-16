@@ -8,7 +8,9 @@ jobs:
       matrix:
         include:
           - rust: nightly
+            do-update: true
           - rust: stable
+            do-update: true
             extra-test-opts: -- --skip ui
           - rust: 1.56
             extra-test-opts: -- --skip ui
@@ -22,6 +24,8 @@ jobs:
         profile: minimal
         default: true
     - uses: taiki-e/install-action@cargo-hack
+    - run: cargo update
+      if: ${{ matrix.do-update }}
     - run: cargo hack build --feature-powerset
     - run: cargo test --all ${{ matrix.extra-test-opts }}
   clippy:
