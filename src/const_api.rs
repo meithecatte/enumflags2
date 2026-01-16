@@ -34,7 +34,7 @@ where
     pub const CONST_TOKEN: ConstToken<T, T::Numeric> = ConstToken(Self::ALL);
 }
 
-for_each_uint! { $ty $hide_docs =>
+for_each_uint! { $ty $atomic $hide_docs =>
     impl<T> BitFlags<T, $ty> {
         /// Create a new BitFlags unsafely, without checking if the bits form
         /// a valid bit pattern for the type.

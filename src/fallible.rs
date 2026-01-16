@@ -5,7 +5,7 @@ use core::fmt;
 
 // Coherence doesn't let us use a generic type here. Work around by implementing
 // for each integer type manually.
-for_each_uint! { $ty $hide_docs =>
+for_each_uint! { $ty $atomic $hide_docs =>
     impl<T> TryFrom<$ty> for BitFlags<T>
     where
         T: BitFlag<Numeric=$ty>,

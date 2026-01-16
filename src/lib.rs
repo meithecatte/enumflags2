@@ -112,18 +112,18 @@ pub use enumflags2_derive::bitflags_internal as bitflags;
 
 // Internal macro: expand into a separate copy for each supported numeric type.
 macro_rules! for_each_uint {
-    ( $d:tt $tyvar:ident $dd:tt $docattr:ident => $($input:tt)* ) => {
+    ( $d:tt $tyvar:ident $dd:tt $atomic:ident $ddd:tt $docattr:ident => $($input:tt)* ) => {
         macro_rules! implement {
-            ( $d $tyvar:ty => $d($d $docattr:meta)? ) => {
+            ( $d $tyvar:ty, $d $atomic:ident => $d($d $docattr:meta)? ) => {
                 $($input)*
             }
         }
 
-        implement! { u8 => }
-        implement! { u16 => doc(hidden) }
-        implement! { u32 => doc(hidden) }
-        implement! { u64 => doc(hidden) }
-        implement! { u128 => doc(hidden) }
+        implement! { u8, AtomicU8 => }
+        implement! { u16, AtomicU16 => doc(hidden) }
+        implement! { u32, AtomicU32 => doc(hidden) }
+        implement! { u64, AtomicU64 => doc(hidden) }
+        implement! { u128, AtomicU128 => doc(hidden) }
     }
 }
 
@@ -334,8 +334,9 @@ pub mod _internal {
     }
 
     use ::core::fmt;
-    use ::core::ops::{BitAnd, BitOr, BitXor, Not, Sub};
     use ::core::hash::Hash;
+    use ::core::ops::{BitAnd, BitOr, BitXor, Not, Sub};
+    use ::core::sync::atomic;
 
     pub trait BitFlagNum:
         Default
@@ -353,15 +354,17 @@ pub mod _internal {
         + Clone
     {
         const ONE: Self;
+        type Atomic;
 
         fn is_power_of_two(self) -> bool;
         fn count_ones(self) -> u32;
         fn wrapping_neg(self) -> Self;
     }
 
-    for_each_uint! { $ty $hide_docs =>
+    for_each_uint! { $ty $atomic $hide_docs =>
         impl BitFlagNum for $ty {
             const ONE: Self = 1;
+            type Atomic = atomic::$atomic;
 
             fn is_power_of_two(self) -> bool {
                 <$ty>::is_power_of_two(self)
