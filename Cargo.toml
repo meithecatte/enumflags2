@@ -20,8 +20,18 @@ version = "^1.0.0"
 default-features = false
 optional = true
 
+[dependencies.zerocopy]
+version = "0.8.9"
+default-features = false
+optional = true
+[dependencies.zerocopy-derive]
+version = "0.8.9"
+default-features = false
+optional = true
+
 [features]
 std = []
+zerocopy = ["dep:zerocopy", "dep:zerocopy-derive"]
 
 [workspace]
 members = [
