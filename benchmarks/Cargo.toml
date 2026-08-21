@@ -9,7 +9,7 @@ rust-version.workspace = true
 path = "../"
 
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.5.1"
 
 [[bench]]
 name = "from_iterator"

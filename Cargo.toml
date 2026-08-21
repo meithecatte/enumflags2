@@ -16,7 +16,7 @@ version = "=0.7.12"
 path = "enumflags_derive"
 
 [dependencies.serde]
-version = "^1.0.0"
+version = "1.0.229"
 default-features = false
 optional = true
 
