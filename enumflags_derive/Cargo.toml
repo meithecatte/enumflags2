@@ -6,8 +6,8 @@ description = "Do not use directly, use the reexport in the `enumflags2` crate. 
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/meithecatte/enumflags2"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
-edition = "2018"
-rust-version = "1.56"
+edition.workspace = true
+rust-version.workspace = true
 
 [lib]
 proc-macro = true
