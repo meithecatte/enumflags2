@@ -118,13 +118,13 @@ impl<'a, F: Debug + Binary + 'a> Debug for DebugBinaryFormatter<'a, F> {
 
         if format_hex & 1 != 0 {
             // FlagV1::DebugLowerHex
-            write!(fmt, "{:#0width$x?}", &self.0, width = width)
+            write!(fmt, "{:#0width$x?}", self.0, width = width)
         } else if format_hex & 2 != 0 {
             // FlagV1::DebugUpperHex
-            write!(fmt, "{:#0width$X?}", &self.0, width = width)
+            write!(fmt, "{:#0width$X?}", self.0, width = width)
         } else {
             // Fall back to binary otheriwse
-            write!(fmt, "{:#0width$b}", &self.0, width = width)
+            write!(fmt, "{:#0width$b}", self.0, width = width)
         }
     }
 }
