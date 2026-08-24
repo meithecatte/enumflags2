@@ -11,6 +11,9 @@ documentation = "https://docs.rs/enumflags2"
 edition = "2018"
 rust-version = "1.56"
 
+# No need to pollute crates.io with the anti-AI notes
+exclude = ["AGENTS.md"]
+
 [dependencies.enumflags2_derive]
 version = "=0.7.12"
 path = "enumflags_derive"
