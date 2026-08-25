@@ -2,13 +2,14 @@
 name = "enumflags-benchmarks"
 version = "0.0.0"
 publish = false
-edition = "2018"
+edition.workspace = true
+rust-version.workspace = true
 
 [dependencies.enumflags2]
 path = "../"
 
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.5.1"
 
 [[bench]]
 name = "from_iterator"

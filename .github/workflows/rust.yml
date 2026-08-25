@@ -12,7 +12,7 @@ jobs:
           - rust: stable
             do-update: true
             extra-test-opts: -- --skip ui
-          - rust: 1.56
+          - rust: 1.71
             extra-test-opts: -- --skip ui
     runs-on: ubuntu-latest
 

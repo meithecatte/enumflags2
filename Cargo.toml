@@ -8,8 +8,8 @@ repository = "https://github.com/meithecatte/enumflags2"
 readme = "README.md"
 keywords = ["enum", "bitflag", "flag", "bitflags"]
 documentation = "https://docs.rs/enumflags2"
-edition = "2018"
-rust-version = "1.56"
+edition.workspace = true
+rust-version.workspace = true
 
 # No need to pollute crates.io with the anti-AI notes
 exclude = ["AGENTS.md"]
@@ -19,7 +19,7 @@ version = "=0.7.12"
 path = "enumflags_derive"
 
 [dependencies.serde]
-version = "^1.0.0"
+version = "1.0.229"
 default-features = false
 optional = true
 
@@ -32,3 +32,7 @@ members = [
     "test_suite",
     "benchmarks",
 ]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.71"
