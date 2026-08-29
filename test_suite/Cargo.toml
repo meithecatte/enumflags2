@@ -6,10 +6,14 @@ edition = "2018"
 
 [dependencies.enumflags2]
 path = "../"
-features = ["serde"]
+features = ["serde", "zerocopy"]
 
 [dependencies.serde]
 version = "1"
+features = ["derive"]
+
+[dependencies.zerocopy]
+version = "0.8.9"
 features = ["derive"]
 
 [dev-dependencies]
@@ -64,4 +68,9 @@ edition = "2018"
 [[test]]
 name = "not_literal"
 path = "tests/not_literal.rs"
+edition = "2018"
+
+[[test]]
+name = "zerocopy"
+path = "tests/zerocopy.rs"
 edition = "2018"
